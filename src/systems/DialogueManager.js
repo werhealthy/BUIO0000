@@ -100,6 +100,10 @@ export class DialogueManager {
 
     this.runAction(this.currentLine.action);
 
+    if (!this.active || !this.currentLine) {
+      return;
+    }
+
     this.speakerText.setText(this.currentLine.speaker ?? '');
     this.bodyText.setText(this.currentLine.text ?? '');
     this.choosing = Array.isArray(this.currentLine.choices) && this.currentLine.choices.length > 0;
@@ -146,7 +150,13 @@ export class DialogueManager {
     }
 
     GameState.lastChoice = choice.text;
-    this.startDialogue(choice.next);
+    this.runAction(choice.action);
+
+    if (choice.next) {
+      this.startDialogue(choice.next);
+    } else {
+      this.endDialogue();
+    }
   }
 
   endDialogue() {
@@ -186,6 +196,15 @@ export class DialogueManager {
       },
       useSpruzzinoOnHatter: () => {
         GameState.hatterColored = true;
+      },
+      transitionToAreaMadama: () => {
+        this.scene.transitionToArea?.('madama');
+      },
+      transitionToAreaSposine: () => {
+        this.scene.transitionToArea?.('sposine');
+      },
+      transitionToAreaPittore: () => {
+        this.scene.transitionToArea?.('pittore');
       }
     };
 
