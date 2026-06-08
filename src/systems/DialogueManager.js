@@ -98,12 +98,6 @@ export class DialogueManager {
       return;
     }
 
-    this.runAction(this.currentLine.action);
-
-    if (!this.active || !this.currentLine) {
-      return;
-    }
-
     this.speakerText.setText(this.currentLine.speaker ?? '');
     this.bodyText.setText(this.currentLine.text ?? '');
     this.choosing = Array.isArray(this.currentLine.choices) && this.currentLine.choices.length > 0;
@@ -121,6 +115,12 @@ export class DialogueManager {
 
   nextLine() {
     if (!this.active || this.choosing) {
+      return;
+    }
+
+    this.runAction(this.currentLine?.action);
+
+    if (!this.active) {
       return;
     }
 
@@ -196,6 +196,15 @@ export class DialogueManager {
       },
       useSpruzzinoOnHatter: () => {
         GameState.hatterColored = true;
+      },
+      transitionToMadamaArea: () => {
+        this.scene.transitionToArea?.('madama');
+      },
+      transitionToSposineArea: () => {
+        this.scene.transitionToArea?.('sposine');
+      },
+      transitionToPittoreArea: () => {
+        this.scene.transitionToArea?.('pittore');
       },
       transitionToAreaMadama: () => {
         this.scene.transitionToArea?.('madama');

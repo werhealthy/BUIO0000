@@ -12,7 +12,7 @@ const AREA_CONFIGS = {
   madama: {
     path: 'fragola',
     dialogue: 'madama_intro',
-    transitionText: 'Segui la fragola incisa nel legno...',
+    transitionText: 'Segui la fragola incisa nel legno. Il bosco profuma improvvisamente di zucchero, oro e cose che costano troppo.',
     background: '#4c3718',
     ground: 0xc78b2d,
     horizon: 0xffd978,
@@ -24,7 +24,7 @@ const AREA_CONFIGS = {
   sposine: {
     path: 'stella',
     dialogue: 'sposine_intro',
-    transitionText: 'Segui la stella che pulsa piano...',
+    transitionText: 'Segui la stella che pulsa piano. Tra gli alberi iniziano a comparire nastri, fiori e una musica lontana che sembra già in ritardo.',
     background: '#4b2344',
     ground: 0xde75b7,
     horizon: 0xffb8dd,
@@ -36,7 +36,7 @@ const AREA_CONFIGS = {
   pittore: {
     path: 'zampa',
     dialogue: 'pittore_intro',
-    transitionText: 'Segui la zampa di gatto tra le radici...',
+    transitionText: 'Segui la zampa di gatto tra le radici. Il sentiero diventa blu, silenzioso, e da lontano arriva il suono morbido di una chitarra.',
     background: '#132646',
     ground: 0x275b88,
     horizon: 0x73b8ff,
@@ -79,7 +79,6 @@ export class ForestScene extends Phaser.Scene {
     this.playerLabel.setPosition(this.player.x - 22, this.player.y - 52);
     this.handleMovement();
     this.checkCrossroadTrigger();
-    this.checkScenarioTrigger();
   }
 
   createWorldPlaceholders() {
@@ -241,6 +240,7 @@ export class ForestScene extends Phaser.Scene {
 
   tryInteract() {
     if (GameState.currentArea !== 'forest') {
+      this.tryScenarioInteract();
       return;
     }
 
@@ -268,17 +268,24 @@ export class ForestScene extends Phaser.Scene {
     }
   }
 
-  checkScenarioTrigger() {
+  tryScenarioInteract() {
+    const areaKey = GameState.currentArea;
+    const config = AREA_CONFIGS[areaKey];
+    const startedFlag = `${areaKey}Started`;
+
     if (
-      GameState.currentArea !== 'forest' &&
-      !GameState.scenarioStarted &&
-      !this.inputLocked &&
-      !this.dialogueManager.isActive() &&
-      Phaser.Geom.Intersects.RectangleToRectangle(this.player.getBounds(), this.scenarioTrigger.getBounds())
+      !config ||
+      GameState[startedFlag] ||
+      this.inputLocked ||
+      this.dialogueManager.isActive() ||
+      !this.isNear(this.scenarioNpc)
     ) {
-      GameState.scenarioStarted = true;
-      this.dialogueManager.startDialogue(AREA_CONFIGS[GameState.currentArea].dialogue);
+      return;
     }
+
+    GameState[startedFlag] = true;
+    GameState.scenarioStarted = true;
+    this.dialogueManager.startDialogue(config.dialogue);
   }
 
   transitionToArea(areaKey) {
@@ -303,6 +310,9 @@ export class ForestScene extends Phaser.Scene {
         GameState.currentArea = areaKey;
         GameState.currentPath = config.path;
         GameState.scenarioStarted = false;
+        GameState.madamaStarted = false;
+        GameState.sposineStarted = false;
+        GameState.pittoreStarted = false;
         this.applyAreaPlaceholder(config);
         this.player.setPosition(AREA_START_X, GROUND_Y - 28);
         this.player.body.updateFromGameObject();
@@ -346,6 +356,7 @@ export class ForestScene extends Phaser.Scene {
 
     this.scenarioNpc.setFillStyle(config.npcColor).setVisible(true);
     this.scenarioNpcLabel.setText(config.npcName).setVisible(true);
+    this.scenarioTrigger.setPosition(SCENARIO_NPC_X, GROUND_Y - 40);
   }
 
   updateDebugText() {
@@ -353,6 +364,7 @@ export class ForestScene extends Phaser.Scene {
       `currentArea: ${GameState.currentArea}`,
       `currentPath: ${GameState.currentPath ?? 'null'}`,
       `scenarioStarted: ${GameState.scenarioStarted}`,
+      `madama/sposine/pittore started: ${GameState.madamaStarted} / ${GameState.sposineStarted} / ${GameState.pittoreStarted}`,
       `hasDaisy: ${GameState.hasDaisy}`,
       `hasSpruzzino: ${GameState.hasSpruzzino}`,
       `onofrioCompleted: ${GameState.onofrioCompleted}`,
