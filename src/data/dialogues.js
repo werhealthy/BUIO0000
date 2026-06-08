@@ -1,3 +1,9 @@
+// Linee guida di tono per i dialoghi futuri:
+// - Romy comunica in modo positivo, dolce, carino ed empatico: è curiosa, si entusiasma facilmente,
+//   incoraggia gli altri e può essere confusa senza diventare sarcastica in modo cattivo.
+// - La Margherita/FIORE è scherzosa, ironica e pungente, ma affettuosa e protettiva: prende in giro
+//   senza diventare cinica o aggressiva.
+
 export const dialogues = {
   main_intro: [
     { speaker: "ROMY", text: "Dove sono?" },
@@ -108,18 +114,30 @@ export const dialogues = {
       choices: [
         {
           text: "Fragola",
-          next: "madama_intro"
+          next: "path_fragola_transition"
         },
         {
           text: "Stella",
-          next: "sposine_intro"
+          next: "path_stella_transition"
         },
         {
           text: "Zampa di gatto",
-          next: "pittore_intro"
+          next: "path_zampa_transition"
         }
       ]
     }
+  ],
+
+  path_fragola_transition: [
+    { speaker: "ROMY", text: "La fragola sembra brillare piano. Che tenera! La seguo.", action: "transitionToAreaMadama" }
+  ],
+
+  path_stella_transition: [
+    { speaker: "ROMY", text: "La stella pulsa come una piccola festa lontana. Andiamo a vedere!", action: "transitionToAreaSposine" }
+  ],
+
+  path_zampa_transition: [
+    { speaker: "ROMY", text: "La zampa di gatto sparisce tra le radici. Sembra un invito gentile.", action: "transitionToAreaPittore" }
   ],
 
   madama_intro: [
