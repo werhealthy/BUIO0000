@@ -87,6 +87,13 @@ export class DialogueManager {
     this.currentLine = this.currentDialogue[this.currentIndex];
 
     if (!this.currentLine) {
+      const nextDialogue = this.currentDialogue[this.currentIndex - 1]?.next;
+
+      if (nextDialogue) {
+        this.startDialogue(nextDialogue);
+        return;
+      }
+
       this.endDialogue();
       return;
     }
