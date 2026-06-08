@@ -249,8 +249,113 @@ export const dialogues = {
   ],
 
   sposine_intro: [
-    { speaker: "SPOSINE", text: "È arrivata!" },
-    { speaker: "ROMY", text: "A cosa sono stata invitata?" }
+    { speaker: "ROMY", text: "Adesso c’è un matrimonio?" },
+    { speaker: "FIORE", text: "Nel bosco le cose importanti appaiono senza preavviso." },
+    { speaker: "ROMY", text: "È bellissimo e leggermente preoccupante. Mi piace." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice che la torta sembra instabile." },
+    { speaker: "ROMY", text: "Allora dobbiamo proteggerla. O proteggerci da lei." },
+    { speaker: "SPOSINA UNO", text: "È arrivata!" },
+    { speaker: "SPOSINA DUE", text: "È arrivata davvero!" },
+    { speaker: "SPOSINA UNO", text: "Lo sapevo!" },
+    { speaker: "SPOSINA DUE", text: "No, tu hai detto che era un lampione!" },
+    { speaker: "SPOSINA UNO", text: "Un lampione importante!" },
+    { speaker: "ROMY", text: "Ciao! Io sono Romy. Non so se sono invitata, ma sono molto felice di essere qui." },
+    { speaker: "SPOSINA UNO", text: "Sei invitata!" },
+    { speaker: "SPOSINA DUE", text: "Ovviamente!" },
+    { speaker: "ROMY", text: "Che bello! A cosa?" },
+    { speaker: "SPOSINE", text: "Al matrimonio!" },
+    { speaker: "ROMY", text: "Di chi?" },
+    { speaker: "SPOSINA UNO", text: "Domanda aggressiva." },
+    { speaker: "SPOSINA DUE", text: "Molto istituzionale." },
+    { speaker: "FIORE", text: "Nel bosco non si chiede ‘di chi è il matrimonio’. Si chiede ‘perché la torta mi sta fissando’." },
+    { speaker: "ROMY", text: "La torta mi sta fissando con grande intensità." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice di fissarla per stabilire dominanza." },
+    { speaker: "SPOSINA UNO", text: "Noi ci sposiamo." },
+    { speaker: "SPOSINA DUE", text: "Sì." },
+    { speaker: "SPOSINA UNO", text: "Tra di noi." },
+    { speaker: "SPOSINA DUE", text: "Con noi." },
+    { speaker: "SPOSINA UNO", text: "Con il giorno." },
+    { speaker: "SPOSINA DUE", text: "Con la torta." },
+    { speaker: "SPOSINA UNO", text: "Con l’idea di essere invitate ovunque." },
+    { speaker: "ROMY", text: "È una definizione molto ampia di matrimonio. Però sembra piena di entusiasmo." },
+    { speaker: "SPOSINE", text: "È romanticissimo!" },
+    { speaker: "SPOSINA UNO", text: "Tu hai perso gli anelli!" },
+    { speaker: "SPOSINA DUE", text: "Tu hai sposato una sedia durante le prove!" },
+    { speaker: "SPOSINA UNO", text: "Era una sedia emotivamente disponibile!" },
+    { speaker: "SPOSINA DUE", text: "Questo è vero." },
+    { speaker: "SPOSINA UNO", text: "Ti amo." },
+    { speaker: "SPOSINA DUE", text: "Anch’io." },
+    { speaker: "ROMY", text: "Questo è stato un litigio o una promessa?" },
+    { speaker: "FIORE", text: "Con loro, spesso entrambe." },
+    { speaker: "SPOSINA UNO", text: "Però non puoi entrare al matrimonio senza un regalo." },
+    { speaker: "ROMY", text: "Giusto. Un regalo è importante. Però io non sapevo di venire." },
+    { speaker: "SPOSINA DUE", text: "Il regalo migliore è quello che non sapevi di avere." },
+    { speaker: "ROMY", text: "Questa frase è quasi saggia." },
+    { speaker: "SPOSINA UNO", text: "Grazie!" },
+    { speaker: "SPOSINA DUE", text: "L’abbiamo rubata a una tovaglia." },
+    { speaker: "SPOSINA UNO", text: "Scegli cosa lasciare sul tavolo degli sposi!" },
+    {
+      speaker: "SPOSINA DUE",
+      text: "Che poi forse siamo noi!",
+      choices: [
+        {
+          text: "Lascia una tovaglia calda con briciole, agrumi e sole.",
+          score: "calore",
+          next: "sposine_choice_calore"
+        },
+        {
+          text: "Lascia una canzone che fa ballare anche le sedie.",
+          score: "ritmo",
+          next: "sposine_choice_ritmo"
+        },
+        {
+          text: "Lascia un’ora lenta, da aprire quando tutti parlano troppo.",
+          score: "quiete",
+          next: "sposine_choice_quiete"
+        }
+      ]
+    }
+  ],
+
+  sposine_choice_calore: [
+    { speaker: "ROMY", text: "Lascio una tovaglia calda." },
+    { speaker: "SPOSINE", text: "Una tovaglia calda! Con le briciole! Questo matrimonio ha ufficialmente fame!" },
+    { speaker: "ROMY", text: "È una tovaglia che sa di colazione, domenica e finestre aperte." },
+    { speaker: "FIORE", text: "Praticamente hai regalato un abbraccio con gli angoli." },
+    { speaker: "SPOSINA UNO", text: "Ora sei ufficialmente invitata." },
+    { speaker: "SPOSINA DUE", text: "Anzi no." },
+    { speaker: "SPOSINA UNO", text: "Sei ufficialmente già stata invitata da sempre." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice che il matrimonio è pericoloso ma ben organizzato." },
+    { speaker: "SISTEMA", text: "Fine ramo Sposine — prossimo step: prato delle margherite." }
+  ],
+
+  sposine_choice_ritmo: [
+    { speaker: "ROMY", text: "Lascio una canzone." },
+    { speaker: "SPOSINE", text: "La canzone! Le sedie hanno capito! Le sedie stanno ballando!" },
+    { speaker: "ROMY", text: "Perfetto! Allora è una festa vera. Una festa deve sempre far muovere qualcosa." },
+    { speaker: "FIORE", text: "Anche il panico, in certi casi." },
+    { speaker: "SPOSINA UNO", text: "Ora sei ufficialmente invitata." },
+    { speaker: "SPOSINA DUE", text: "Anzi no." },
+    { speaker: "SPOSINA UNO", text: "Sei ufficialmente già stata invitata da sempre." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice che la torta sta seguendo il tempo in quattro quarti." },
+    { speaker: "SISTEMA", text: "Fine ramo Sposine — prossimo step: prato delle margherite." }
+  ],
+
+  sposine_choice_quiete: [
+    { speaker: "ROMY", text: "Lascio un’ora lenta." },
+    { speaker: "SPOSINE", text: "Oh. È un’ora lenta. Possiamo tenerla per dopo?" },
+    { speaker: "ROMY", text: "Certo. Per quando tutti avranno parlato, ballato e riso tantissimo." },
+    { speaker: "FIORE", text: "Un regalo per il momento in cui anche il caos si siede." },
+    { speaker: "SPOSINA UNO", text: "Ora sei ufficialmente invitata." },
+    { speaker: "SPOSINA DUE", text: "Anzi no." },
+    { speaker: "SPOSINA UNO", text: "Sei ufficialmente già stata invitata da sempre." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice che apprezza le ore lente. Soprattutto se includono sonnellini." },
+    { speaker: "SISTEMA", text: "Fine ramo Sposine — prossimo step: prato delle margherite." }
   ],
 
   pittore_intro: [
