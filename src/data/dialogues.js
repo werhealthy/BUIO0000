@@ -104,18 +104,18 @@ export const dialogues = {
   crossroad_choose_path: [
     {
       speaker: "SISTEMA",
-      text: "Tre strade aspettano Romy.",
+      text: "Il cartello non ha parole. Solo tre simboli incisi nel legno. Quale segui?",
       choices: [
         {
-          text: "Laboratorio che luccica troppo.",
+          text: "Fragola",
           next: "madama_intro"
         },
         {
-          text: "Radura del matrimonio impossibile.",
+          text: "Stella",
           next: "sposine_intro"
         },
         {
-          text: "Sentiero del blu e della chitarra.",
+          text: "Zampa di gatto",
           next: "pittore_intro"
         }
       ]
@@ -123,8 +123,99 @@ export const dialogues = {
   ],
 
   madama_intro: [
+    { speaker: "ROMY", text: "Questo bosco ha un laboratorio?" },
+    { speaker: "FIORE", text: "Il bosco ha tutto. Tranne il buon senso, ma quello era finito." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice di non toccare niente che luccica troppo." },
+    { speaker: "ROMY", text: "Perché?" },
+    { speaker: "FIORE", text: "Perché di solito vuole qualcosa in cambio." },
     { speaker: "MADAMA", text: "Oh. Una visitatrice. Che fortuna preziosa." },
-    { speaker: "ROMY", text: "Questo posto luccica troppo." }
+    { speaker: "ROMY", text: "Buongiorno." },
+    { speaker: "MADAMA", text: "Buongiorno? No, no, no. Qui i buongiorni si lucidano prima di essere detti." },
+    { speaker: "ROMY", text: "Mi dispiace?" },
+    { speaker: "MADAMA", text: "Lo accetto. Ma solo perché oggi sono generosa." },
+    { speaker: "FIORE", text: "Brutto segno." },
+    { speaker: "MADAMA", text: "Cara creatura smarrita. Se vuoi attraversare il mio laboratorio, devi aiutarmi con una piccola mansione." },
+    { speaker: "ROMY", text: "Quanto piccola?" },
+    { speaker: "MADAMA", text: "Minuscola. Devi solo lucidare settecento anelli, contare le perle che mentono, raddrizzare le collane malinconiche e sorridere mentre lo fai." },
+    { speaker: "ROMY", text: "Questa non è una piccola mansione." },
+    { speaker: "MADAMA", text: "Lo diventa se la chiami opportunità." },
+    { speaker: "ROMY", text: "Ah. Quel tipo di piccola mansione." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto ha detto una parolaccia." },
+    { speaker: "ROMY", text: "Ha fatto bene." },
+    { speaker: "MADAMA", text: "Naturalmente verrai ricompensata." },
+    { speaker: "ROMY", text: "Con cosa?" },
+    { speaker: "MADAMA", text: "Con gratitudine." },
+    { speaker: "ROMY", text: "Gratitudine non è una moneta." },
+    { speaker: "MADAMA", text: "Allora con un gelato." },
+    { speaker: "ROMY", text: "Un gelato?" },
+    { speaker: "MADAMA", text: "Se vuoi puoi andartelo a prendere tu." },
+    { speaker: "FIORE", text: "Io sto sviluppando un’allergia." },
+    { speaker: "ROMY", text: "No." },
+    { speaker: "MADAMA", text: "No?" },
+    { speaker: "ROMY", text: "No." },
+    { speaker: "MADAMA", text: "Temo tu non abbia capito." },
+    { speaker: "ROMY", text: "Invece sì. È per questo che ho detto no." },
+    { speaker: "MADAMA", text: "Che parola ruvida." },
+    { speaker: "FIORE", text: "Ma molto ben tagliata." },
+    { speaker: "MADAMA", text: "Nessuno esce dal mio laboratorio senza lasciare qualcosa." },
+    { speaker: "ROMY", text: "Allora lascerò una cosa." },
+    { speaker: "MADAMA", text: "Finalmente." },
+    { speaker: "ROMY", text: "La voglia di restare." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto approva con una certa violenza emotiva." },
+    {
+      speaker: "MADAMA",
+      text: "Se proprio devi andartene, scegli almeno un frammento dal banco. Il bosco ama chi porta via prove.",
+      choices: [
+        {
+          text: "Prendi la moneta tiepida che profuma di forno.",
+          score: "calore",
+          next: "madama_choice_calore"
+        },
+        {
+          text: "Prendi l’anello che vibra quando qualcuno ride lontano.",
+          score: "ritmo",
+          next: "madama_choice_ritmo"
+        },
+        {
+          text: "Prendi la chiave sottile che apre soltanto le porte stanche.",
+          score: "quiete",
+          next: "madama_choice_quiete"
+        }
+      ]
+    }
+  ],
+
+  madama_choice_calore: [
+    { speaker: "ROMY", text: "Prendo la moneta tiepida." },
+    { speaker: "MADAMA", text: "Una scelta molto domestica. Diffiderei. Tornerai." },
+    { speaker: "ROMY", text: "Forse. Ma non per restare." },
+    { speaker: "FIORE", text: "Splendida frase. La ricamerò su una foglia." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Sì, gatto. Anche io ho sentito un po’ di soddisfazione." },
+    { speaker: "SISTEMA", text: "Fine ramo Madama — prossimo step: prato delle margherite." }
+  ],
+
+  madama_choice_ritmo: [
+    { speaker: "ROMY", text: "Prendo l’anello che vibra." },
+    { speaker: "MADAMA", text: "Una scelta rumorosa. Costa più di quanto ammetta. Tornerai." },
+    { speaker: "ROMY", text: "Forse. Ma non per restare." },
+    { speaker: "FIORE", text: "Splendida frase. La ricamerò su una foglia." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Sì, gatto. Anche io ho sentito un po’ di soddisfazione." },
+    { speaker: "SISTEMA", text: "Fine ramo Madama — prossimo step: prato delle margherite." }
+  ],
+
+  madama_choice_quiete: [
+    { speaker: "ROMY", text: "Prendo la chiave sottile." },
+    { speaker: "MADAMA", text: "Una scelta stanca. Le porte stanche sono le più sincere. Tornerai." },
+    { speaker: "ROMY", text: "Forse. Ma non per restare." },
+    { speaker: "FIORE", text: "Splendida frase. La ricamerò su una foglia." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Sì, gatto. Anche io ho sentito un po’ di soddisfazione." },
+    { speaker: "SISTEMA", text: "Fine ramo Madama — prossimo step: prato delle margherite." }
   ],
 
   sposine_intro: [
