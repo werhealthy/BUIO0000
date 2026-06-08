@@ -129,15 +129,27 @@ export const dialogues = {
   ],
 
   path_fragola_transition: [
-    { speaker: "ROMY", text: "La fragola sembra brillare piano. Che tenera! La seguo.", action: "transitionToAreaMadama" }
+    {
+      speaker: "SISTEMA",
+      text: "Segui la fragola incisa nel legno. Il bosco profuma improvvisamente di zucchero, oro e cose che costano troppo.",
+      action: "transitionToMadamaArea"
+    }
   ],
 
   path_stella_transition: [
-    { speaker: "ROMY", text: "La stella pulsa come una piccola festa lontana. Andiamo a vedere!", action: "transitionToAreaSposine" }
+    {
+      speaker: "SISTEMA",
+      text: "Segui la stella che pulsa piano. Tra gli alberi iniziano a comparire nastri, fiori e una musica lontana che sembra già in ritardo.",
+      action: "transitionToSposineArea"
+    }
   ],
 
   path_zampa_transition: [
-    { speaker: "ROMY", text: "La zampa di gatto sparisce tra le radici. Sembra un invito gentile.", action: "transitionToAreaPittore" }
+    {
+      speaker: "SISTEMA",
+      text: "Segui la zampa di gatto tra le radici. Il sentiero diventa blu, silenzioso, e da lontano arriva il suono morbido di una chitarra.",
+      action: "transitionToPittoreArea"
+    }
   ],
 
   madama_intro: [
