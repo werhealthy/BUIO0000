@@ -98,12 +98,6 @@ export class DialogueManager {
       return;
     }
 
-    this.runAction(this.currentLine.action);
-
-    if (!this.active || !this.currentLine) {
-      return;
-    }
-
     this.speakerText.setText(this.currentLine.speaker ?? '');
     this.bodyText.setText(this.currentLine.text ?? '');
     this.choosing = Array.isArray(this.currentLine.choices) && this.currentLine.choices.length > 0;
@@ -117,6 +111,7 @@ export class DialogueManager {
 
     this.choicesText.setText('');
     this.hintText.setText('SPACE continua');
+    this.runAction(this.currentLine.action);
   }
 
   nextLine() {
@@ -204,6 +199,15 @@ export class DialogueManager {
         this.scene.transitionToArea?.('sposine');
       },
       transitionToAreaPittore: () => {
+        this.scene.transitionToArea?.('pittore');
+      },
+      transitionToMadamaArea: () => {
+        this.scene.transitionToArea?.('madama');
+      },
+      transitionToSposineArea: () => {
+        this.scene.transitionToArea?.('sposine');
+      },
+      transitionToPittoreArea: () => {
         this.scene.transitionToArea?.('pittore');
       }
     };
