@@ -86,18 +86,54 @@ export const dialogues = {
   cap_choice_calore: [
     { speaker: "ROMY", text: "Un posto che sappia di sole." },
     { speaker: "CAPPELLAIO", text: "Ah! Il sole che cola, che scalda, che resta." },
-    { speaker: "SISTEMA", text: "Più avanti sceglierai una direzione." }
+    { speaker: "SISTEMA", text: "Più avanti sceglierai una direzione.", next: "crossroad_choose_path" }
   ],
 
   cap_choice_ritmo: [
     { speaker: "ROMY", text: "Una luce lontana da seguire." },
     { speaker: "CAPPELLAIO", text: "Oh! La luce che chiama da sopra i cortili." },
-    { speaker: "SISTEMA", text: "Più avanti sceglierai una direzione." }
+    { speaker: "SISTEMA", text: "Più avanti sceglierai una direzione.", next: "crossroad_choose_path" }
   ],
 
   cap_choice_quiete: [
     { speaker: "ROMY", text: "Qualcosa che non chieda spiegazioni." },
     { speaker: "CAPPELLAIO", text: "Ah! Una cosa che resta vicino al cuore." },
-    { speaker: "SISTEMA", text: "Più avanti sceglierai una direzione." }
+    { speaker: "SISTEMA", text: "Più avanti sceglierai una direzione.", next: "crossroad_choose_path" }
+  ],
+
+  crossroad_choose_path: [
+    {
+      speaker: "SISTEMA",
+      text: "Tre strade aspettano Romy.",
+      choices: [
+        {
+          text: "Laboratorio che luccica troppo.",
+          next: "madama_intro"
+        },
+        {
+          text: "Radura del matrimonio impossibile.",
+          next: "sposine_intro"
+        },
+        {
+          text: "Sentiero del blu e della chitarra.",
+          next: "pittore_intro"
+        }
+      ]
+    }
+  ],
+
+  madama_intro: [
+    { speaker: "MADAMA", text: "Oh. Una visitatrice. Che fortuna preziosa." },
+    { speaker: "ROMY", text: "Questo posto luccica troppo." }
+  ],
+
+  sposine_intro: [
+    { speaker: "SPOSINE", text: "È arrivata!" },
+    { speaker: "ROMY", text: "A cosa sono stata invitata?" }
+  ],
+
+  pittore_intro: [
+    { speaker: "PITTORE", text: "Io non vivo nel bosco. Io lascio che il bosco mi attraversi." },
+    { speaker: "ROMY", text: "Quindi vivi nel bosco." }
   ]
 };
