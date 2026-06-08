@@ -139,6 +139,12 @@ export class DialogueManager {
 
     const choice = this.currentLine.choices[this.choiceIndex];
 
+    if (!choice.next) {
+      console.warn('Scelta senza prossimo dialogo:', choice);
+      this.endDialogue();
+      return;
+    }
+
     if (SCORE_KEYS.includes(choice.score)) {
       GameState[choice.score] += 1;
     }
@@ -148,13 +154,6 @@ export class DialogueManager {
     }
 
     GameState.lastChoice = choice.text;
-
-    if (!choice.next) {
-      console.warn('Scelta senza prossimo dialogo:', choice);
-      this.endDialogue();
-      return;
-    }
-
     this.startDialogue(choice.next);
   }
 
