@@ -25,6 +25,7 @@ export class DialogueManager {
     this.choosing = false;
     this.choiceIndex = 0;
     this.choiceRows = [];
+    this.systemMode = false;
 
     this.createUi();
     this.hideUi();
@@ -56,7 +57,7 @@ export class DialogueManager {
     this.boxShadow = this.scene.add.graphics().setScrollFactor(0).setDepth(999);
     this.box = this.scene.add.graphics().setScrollFactor(0).setDepth(1000);
     this.namePlate = this.scene.add.graphics().setScrollFactor(0).setDepth(1001);
-    this.choiceGraphics = this.scene.add.graphics().setScrollFactor(0).setDepth(1002);
+    this.choiceGraphics = this.scene.add.graphics().setScrollFactor(0).setDepth(1007);
 
     this.drawDialogueFrame();
 
@@ -97,6 +98,30 @@ export class DialogueManager {
       .setAlpha(0.72)
       .setScrollFactor(0)
       .setDepth(1004);
+
+    this.systemGraphics = this.scene.add.graphics().setScrollFactor(0).setDepth(1005);
+    this.systemText = this.scene.add
+      .text(width / 2, Math.round(height * 0.19), '', {
+        fontFamily: 'Georgia, Times New Roman, serif',
+        fontSize: '18px',
+        color: '#f8efd6',
+        align: 'center',
+        lineSpacing: 5,
+        wordWrap: { width: Math.round(width * 0.68) }
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1006);
+    this.systemHintText = this.scene.add
+      .text(width / 2, Math.round(height * 0.31), '', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '12px',
+        color: '#c7d7d0'
+      })
+      .setOrigin(0.5)
+      .setAlpha(0.76)
+      .setScrollFactor(0)
+      .setDepth(1006);
   }
 
   drawDialogueFrame() {
@@ -158,6 +183,15 @@ export class DialogueManager {
     this.runAction(this.currentLine.showAction);
 
     const speaker = this.currentLine.speaker ?? '';
+    this.systemMode = normalizeSpeaker(speaker) === 'SISTEMA';
+
+    if (this.systemMode) {
+      this.showSystemLine();
+      return;
+    }
+
+    this.hideSystemUi();
+    this.showStandardUi();
     const hasPortrait = this.updatePortrait(speaker);
     const textLeft = this.getTextLeft(hasPortrait);
     const wrapWidth = this.layout.boxRight - textLeft - this.layout.textRightPadding;
@@ -179,6 +213,45 @@ export class DialogueManager {
 
     this.clearChoices();
     this.hintText.setText('SPACE continua');
+  }
+
+  showSystemLine() {
+    this.hideStandardUi();
+    this.portraitContainer.setVisible(false);
+    this.systemGraphics.setVisible(true);
+    this.systemText.setVisible(true);
+    this.systemHintText.setVisible(true);
+
+    const { width, height } = this.layout;
+    const panelWidth = Math.round(width * 0.72);
+    const panelHeight = this.currentLine.choices ? 84 : 74;
+    const x = Math.round((width - panelWidth) / 2);
+    const y = Math.round(height * 0.1);
+
+    this.systemGraphics.clear();
+    this.systemGraphics.fillStyle(0x061620, 0.76);
+    this.systemGraphics.fillRoundedRect(x, y, panelWidth, panelHeight, 16);
+    this.systemGraphics.lineStyle(1, 0x9fd7c6, 0.58);
+    this.systemGraphics.strokeRoundedRect(x, y, panelWidth, panelHeight, 16);
+    this.systemGraphics.lineStyle(1, 0xf3df9b, 0.24);
+    this.systemGraphics.strokeRoundedRect(x + 5, y + 5, panelWidth - 10, panelHeight - 10, 12);
+
+    this.systemText.setPosition(width / 2, y + 30);
+    this.systemText.setText(this.currentLine.text ?? '');
+    this.choosing = Array.isArray(this.currentLine.choices) && this.currentLine.choices.length > 0;
+    this.choiceIndex = 0;
+
+    if (this.choosing) {
+      this.choiceGraphics.setVisible(true);
+      this.renderChoices();
+      this.systemHintText.setPosition(width / 2, y + panelHeight - 16);
+      this.systemHintText.setText('↑ ↓ scegli   E conferma');
+      return;
+    }
+
+    this.clearChoices();
+    this.systemHintText.setPosition(width / 2, y + panelHeight - 16);
+    this.systemHintText.setText('SPACE continua');
   }
 
   getTextLeft(hasPortrait) {
@@ -283,15 +356,19 @@ export class DialogueManager {
 
     const choices = this.currentLine.choices ?? [];
     const hasPortrait = this.portraitContainer.visible;
-    const left = this.getTextLeft(hasPortrait);
-    const rowWidth = this.layout.boxRight - left - this.layout.textRightPadding;
-    const rowHeight = 24;
-    const gap = 5;
+    const left = this.systemMode ? Math.round(this.layout.width * 0.17) : this.getTextLeft(hasPortrait);
+    const rowWidth = this.systemMode
+      ? Math.round(this.layout.width * 0.66)
+      : this.layout.boxRight - left - this.layout.textRightPadding;
+    const rowHeight = this.systemMode ? 30 : 24;
+    const gap = this.systemMode ? 7 : 5;
     const totalHeight = choices.length * rowHeight + Math.max(0, choices.length - 1) * gap;
-    const startY = Math.min(
-      this.layout.boxTop + Math.round(this.layout.boxHeight * 0.52),
-      this.layout.boxBottom - 20 - totalHeight
-    );
+    const startY = this.systemMode
+      ? Math.round(this.layout.height * 0.34)
+      : Math.min(
+          this.layout.boxTop + Math.round(this.layout.boxHeight * 0.52),
+          this.layout.boxBottom - 20 - totalHeight
+        );
 
     choices.forEach((choice, index) => {
       const selected = index === this.choiceIndex;
@@ -310,7 +387,7 @@ export class DialogueManager {
         })
         .setOrigin(0, 0.5)
         .setScrollFactor(0)
-        .setDepth(1004);
+        .setDepth(this.systemMode ? 1007 : 1004);
 
       const label = this.scene.add
         .text(left + 40, y + rowHeight / 2, choice.text, {
@@ -321,7 +398,7 @@ export class DialogueManager {
         })
         .setOrigin(0, 0.5)
         .setScrollFactor(0)
-        .setDepth(1004);
+        .setDepth(this.systemMode ? 1007 : 1004);
 
       this.choiceRows.push(arrow, label);
     });
@@ -417,6 +494,18 @@ export class DialogueManager {
 
 
   showUi() {
+    this.showStandardUi();
+    this.hideSystemUi();
+  }
+
+  hideUi() {
+    this.hideStandardUi();
+    this.hideSystemUi();
+    this.portraitContainer.setVisible(false);
+    this.clearChoices();
+  }
+
+  showStandardUi() {
     this.boxShadow.setVisible(true);
     this.box.setVisible(true);
     this.namePlate.setVisible(true);
@@ -426,7 +515,7 @@ export class DialogueManager {
     this.hintText.setVisible(true);
   }
 
-  hideUi() {
+  hideStandardUi() {
     this.boxShadow.setVisible(false);
     this.box.setVisible(false);
     this.namePlate.setVisible(false);
@@ -434,7 +523,11 @@ export class DialogueManager {
     this.bodyText.setVisible(false);
     this.choiceGraphics.setVisible(false);
     this.hintText.setVisible(false);
-    this.portraitContainer.setVisible(false);
-    this.clearChoices();
+  }
+
+  hideSystemUi() {
+    this.systemGraphics.setVisible(false);
+    this.systemText.setVisible(false);
+    this.systemHintText.setVisible(false);
   }
 }

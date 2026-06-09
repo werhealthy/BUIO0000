@@ -93,18 +93,21 @@ const CAT_IDLE_FRAME_RATE = 3;
 const DAISY_FRAME_RATE = 3;
 const ONOFRIO_FRAME_RATE = 2;
 const ROAD_Y = (canvasHeight) => canvasHeight - 118;
-const ROMY_DISPLAY_HEIGHT = 145;
-const CAT_DISPLAY_HEIGHT = 75;
-const DAISY_DISPLAY_HEIGHT = 58;
-const ONOFRIO_DISPLAY_HEIGHT = 286;
+const ROMY_DISPLAY_HEIGHT = 142;
+const CAT_DISPLAY_HEIGHT = 82;
+const DAISY_DISPLAY_HEIGHT = 56;
+const ONOFRIO_DISPLAY_HEIGHT = 312;
 const SIGN_SCALE = 0.9;
 const PLAYER_START_X = 260;
 const CAT_TARGET_X = 430;
-const DAISY_X = 760;
-const ONOFRIO_X = 1140;
+const DAISY_X = 720;
+const ONOFRIO_X = 920;
 const SIGN_X = 2520;
 const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
+const CAT_FOLLOW_DISTANCE = 92;
+const CAT_FOLLOW_DEADZONE = 24;
+const CAT_FOLLOW_SPEED = 118;
 const HINT_TEXT = 'Premi E per interagire';
 const ATMOSPHERE_ALPHA = 0.08;
 
@@ -138,6 +141,8 @@ export class ForestScene extends Phaser.Scene {
     this.catIntroStarted = false;
     this.daisyRevealed = false;
     this.isWakingUp = false;
+    this.blackIntroActive = false;
+    this.blackIntroIndex = 0;
     this.contactShadows = [];
 
     this.createBackground();
@@ -157,6 +162,7 @@ export class ForestScene extends Phaser.Scene {
     this.moveRomy();
     this.updateNpcVisibility();
     this.updateCatIntro();
+    this.updateCatFollower();
     this.updateNextSceneTrigger();
     this.updateContactShadows();
     this.updateInteractionHint();
@@ -354,7 +360,7 @@ export class ForestScene extends Phaser.Scene {
     }
     container.add([onofrio]);
     interactable.sprite = onofrio;
-    interactable.shadow = this.createContactShadow(container, { width: 138, height: 30, alpha: 0.32, depth: 12 });
+    interactable.shadow = this.createContactShadow(container, { width: 162, height: 34, alpha: 0.34, depth: 12 });
     return container;
   }
 
@@ -388,7 +394,7 @@ export class ForestScene extends Phaser.Scene {
     container.add([cat]);
     interactable.sprite = cat;
     interactable.textureKey = catTextureKey;
-    interactable.shadow = this.createContactShadow(container, { width: 36, height: 9, alpha: 0.3, depth: 10 });
+    interactable.shadow = this.createContactShadow(container, { width: 42, height: 10, alpha: 0.3, depth: 10 });
     return container;
   }
 
@@ -409,7 +415,7 @@ export class ForestScene extends Phaser.Scene {
     }
     container.add([daisy]);
     interactable.sprite = daisy;
-    interactable.shadow = this.createContactShadow(container, { width: 22, height: 6, alpha: 0.28, depth: 10 });
+    interactable.shadow = this.createContactShadow(container, { width: 24, height: 7, alpha: 0.28, depth: 10 });
     return container;
   }
 
@@ -434,7 +440,86 @@ export class ForestScene extends Phaser.Scene {
   startInitialIntro() {
     this.stopRomy();
     this.BlackTransition?.setVisible(true).setAlpha(1);
-    this.dialogueManager.startDialogue('intro_black');
+    this.startBlackIntro();
+  }
+
+  startBlackIntro() {
+    this.blackIntroLines = dialogues.intro_black ?? [];
+    this.blackIntroIndex = 0;
+    this.blackIntroActive = true;
+    this.isTransitioning = true;
+    this.dialogueManager?.hideUi();
+    this.interactHint?.setVisible(false);
+
+    const { width, height } = this.scale;
+
+    this.blackIntroText = this.add
+      .text(width / 2, height / 2 - 12, '', {
+        fontFamily: 'Georgia, Times New Roman, serif',
+        fontSize: '26px',
+        color: '#f5eed8',
+        align: 'center',
+        lineSpacing: 9,
+        wordWrap: { width: Math.round(width * 0.72) }
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(970);
+
+    this.blackIntroHint = this.add
+      .text(width / 2, height - 54, 'SPACE / E continua', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '13px',
+        color: '#b8c6c0'
+      })
+      .setOrigin(0.5)
+      .setAlpha(0.72)
+      .setScrollFactor(0)
+      .setDepth(970);
+
+    this.showBlackIntroLine();
+  }
+
+  showBlackIntroLine() {
+    const line = this.blackIntroLines?.[this.blackIntroIndex];
+
+    if (!line) {
+      this.finishBlackIntro();
+      return;
+    }
+
+    this.blackIntroText?.setAlpha(0).setText(line.text ?? '');
+    this.tweens.add({
+      targets: this.blackIntroText,
+      alpha: 1,
+      duration: 240,
+      ease: 'Sine.easeOut'
+    });
+  }
+
+  advanceBlackIntro() {
+    if (!this.blackIntroActive) {
+      return;
+    }
+
+    const line = this.blackIntroLines?.[this.blackIntroIndex];
+    this.dialogueManager?.runAction(line?.action);
+
+    if (!this.blackIntroActive) {
+      return;
+    }
+
+    this.blackIntroIndex += 1;
+    this.showBlackIntroLine();
+  }
+
+  finishBlackIntro() {
+    this.blackIntroActive = false;
+    this.blackIntroText?.destroy();
+    this.blackIntroHint?.destroy();
+    this.blackIntroText = null;
+    this.blackIntroHint = null;
+    this.revealForestIntro();
   }
 
   createCamera() {
@@ -478,6 +563,11 @@ export class ForestScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on('keydown-SPACE', () => {
+      if (this.blackIntroActive) {
+        this.advanceBlackIntro();
+        return;
+      }
+
       this.dialogueManager.nextLine();
     });
 
@@ -498,6 +588,11 @@ export class ForestScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on('keydown-E', () => {
+      if (this.blackIntroActive) {
+        this.advanceBlackIntro();
+        return;
+      }
+
       if (this.dialogueManager.isChoosing()) {
         this.dialogueManager.confirmChoice();
         return;
@@ -572,7 +667,7 @@ export class ForestScene extends Phaser.Scene {
 
   isNpcVisible(interactable) {
     if (interactable.id === 'onofrio') {
-      return GameState.currentArea === 'forest' && !GameState.onofrioCompleted;
+      return GameState.currentArea === 'forest';
     }
 
     if (interactable.id === 'cat') {
@@ -624,6 +719,48 @@ export class ForestScene extends Phaser.Scene {
     }
   }
 
+  updateCatFollower() {
+    const cat = this.interactables?.find((interactable) => interactable.id === 'cat');
+
+    if (!cat?.sprite || !cat.container.visible || !cat.entranceComplete) {
+      return;
+    }
+
+    if (this.dialogueManager?.isActive() || this.blackIntroActive || this.isTransitioning || this.isWakingUp) {
+      this.setCatIdle(cat);
+      return;
+    }
+
+    const romyVelocity = this.romy.body?.velocity?.x ?? 0;
+    const offsetDirection = this.romy.flipX ? 1 : -1;
+    const targetX = Phaser.Math.Clamp(this.romy.x + offsetDirection * CAT_FOLLOW_DISTANCE, 0, this.worldWidth);
+    const distance = targetX - cat.container.x;
+
+    cat.container.y = this.getRomyY();
+
+    if (Math.abs(distance) <= CAT_FOLLOW_DEADZONE && Math.abs(romyVelocity) < 1) {
+      this.setCatIdle(cat);
+      return;
+    }
+
+    const step = Phaser.Math.Clamp(distance * 0.055, -CAT_FOLLOW_SPEED / 60, CAT_FOLLOW_SPEED / 60);
+    cat.container.x += step * (this.game.loop.delta / 16.6667);
+    cat.sprite.setFlipX(distance < 0);
+
+    if (cat.walkAnimationKey) {
+      cat.sprite.anims.play(cat.walkAnimationKey, true);
+    }
+  }
+
+  setCatIdle(cat) {
+    if (cat?.idleAnimationKey) {
+      cat.sprite.anims.play(cat.idleAnimationKey, true);
+      return;
+    }
+
+    cat?.sprite?.anims?.stop();
+  }
+
   updateNextSceneTrigger() {
     if (this.isTransitioning || GameState.currentArea !== 'forest' || !GameState.crossroadStarted || !GameState.currentPath) {
       return;
@@ -667,6 +804,11 @@ export class ForestScene extends Phaser.Scene {
   }
 
   revealForestIntro() {
+    this.blackIntroActive = false;
+    this.blackIntroText?.destroy();
+    this.blackIntroHint?.destroy();
+    this.blackIntroText = null;
+    this.blackIntroHint = null;
     this.isTransitioning = true;
     this.interactHint.setVisible(false);
     this.dialogueManager.hideUi();
