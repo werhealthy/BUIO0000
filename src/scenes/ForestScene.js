@@ -17,27 +17,29 @@ import daisySprite1Url from '../assets/sprites/characters/daisy/daisy_sprite_1.p
 import daisySprite2Url from '../assets/sprites/characters/daisy/daisy_sprite_2.png?url';
 import daisySprite3Url from '../assets/sprites/characters/daisy/daisy_sprite_3.png?url';
 import daisySprite4Url from '../assets/sprites/characters/daisy/daisy_sprite_4.png?url';
+import onofrioSprite1Url from '../assets/sprites/characters/onofrio/Onofrio_sprite_1.png?url';
+import onofrioSprite2Url from '../assets/sprites/characters/onofrio/Onofrio_sprite_2.png?url';
+import onofrioSprite3Url from '../assets/sprites/characters/onofrio/Onofrio_sprite_3.png?url';
+import onofrioSprite4Url from '../assets/sprites/characters/onofrio/Onofrio_sprite_4.png?url';
 
 const PLAYER_SPEED = 220;
 const ROMY_FRAME_RATE = 8;
 const CAT_FRAME_RATE = 7;
 const DAISY_FRAME_RATE = 5;
-const ROMY_SCALE = 0.92;
-const CAT_SCALE = 0.43;
-const DAISY_SCALE = 0.64;
-const ONOFRIO_SCALE = 0.65;
+const ROAD_OFFSET_FROM_BOTTOM = 80;
+const ROMY_SCALE = 1.02;
+const CAT_SCALE = 0.56;
+const DAISY_SCALE = 0.34;
+const ONOFRIO_SCALE = 1.12;
 const SIGN_SCALE = 0.9;
-const BACKGROUND_SCALE = 1.5;
-const PATH_Y_IN_BACKGROUND = 232;
+const BACKGROUND_SCALE = 1.69;
 const PLAYER_START_X = 150;
-const CAT_PATROL_DISTANCE = 220;
+const CAT_INTRO_TARGET_OFFSET = 150;
 const TRIGGER_NEXT_SCENE_X = 3230;
 const INTERACTION_DISTANCE = 110;
 const HINT_TEXT = 'Premi E per interagire';
 const ROMY_FRAME_COUNT = 4;
-const ROMY_FEET_PADDING = 13;
-const CAT_FEET_PADDING = 9;
-const DAISY_FEET_PADDING = 12;
+const ATMOSPHERE_ALPHA = 0.1;
 
 const AREA_SPAWN_X = {
   forest: PLAYER_START_X,
@@ -66,20 +68,30 @@ export class ForestScene extends Phaser.Scene {
     this.load.image('daisy-idle-2', daisySprite2Url);
     this.load.image('daisy-idle-3', daisySprite3Url);
     this.load.image('daisy-idle-4', daisySprite4Url);
+    this.load.image('onofrio-idle-1', onofrioSprite1Url);
+    this.load.image('onofrio-idle-2', onofrioSprite2Url);
+    this.load.image('onofrio-idle-3', onofrioSprite3Url);
+    this.load.image('onofrio-idle-4', onofrioSprite4Url);
   }
 
   create() {
+    GameState.resetForNewRun?.();
     this.isTransitioning = false;
+    this.catIntroStarted = false;
+    this.daisyRevealed = false;
+    this.contactShadows = [];
 
     this.createBackground();
     this.createRomy();
     this.createNpcPlaceholders();
+    this.createAtmosphereOverlay();
     this.createNarrativeTriggers();
     this.createCamera();
     this.createUi();
     this.createDialogueManager();
     this.createInput();
     this.updateNpcVisibility();
+    this.startInitialIntro();
   }
 
   update() {
@@ -87,6 +99,7 @@ export class ForestScene extends Phaser.Scene {
     this.updateNpcVisibility();
     this.updateCatIntro();
     this.updateNextSceneTrigger();
+    this.updateContactShadows();
     this.updateInteractionHint();
     this.cameras.main.scrollY = 0;
   }
@@ -95,11 +108,12 @@ export class ForestScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Lo sfondo 2293x320 viene scalato in modo uniforme: niente stretching e meno zoom del vecchio moltiplicatore 1.28.
-    this.background = this.add.image(0, height, 'background-01').setOrigin(0, 1).setDepth(0);
+    this.background = this.add.image(0, 0, 'background-01').setOrigin(0, 0).setDepth(0);
     this.background.setScale(BACKGROUND_SCALE);
 
     this.worldWidth = Math.max(width, this.background.displayWidth);
-    this.groundY = height - (this.background.height - PATH_Y_IN_BACKGROUND) * BACKGROUND_SCALE;
+    this.roadY = height - ROAD_OFFSET_FROM_BOTTOM;
+    this.groundY = this.roadY;
     this.physics.world.setBounds(0, 0, this.worldWidth, height);
   }
 
@@ -114,6 +128,7 @@ export class ForestScene extends Phaser.Scene {
     // Corpo fisico allineato al corpo visibile e non all'intero canvas trasparente 128x128.
     this.romy.body.setSize(40, 80);
     this.romy.body.setOffset(44, 36);
+    this.romyShadow = this.createContactShadow(this.romy, { width: 70, height: 18, alpha: 0.34, depth: 19 });
 
     const romyFrames = [
       { key: 'romy-walk-01' },
@@ -136,13 +151,13 @@ export class ForestScene extends Phaser.Scene {
         id: 'onofrio',
         objectName: 'Trigger_Onofrio',
         label: 'Onofrio',
-        x: 900,
+        x: 820,
         color: 0xb28cff,
         scale: ONOFRIO_SCALE,
         width: 58,
         height: 84,
         dialogueKey: 'onofrio',
-        isAvailable: () => !GameState.onofrioCompleted
+        isAvailable: () => GameState.hasDaisy && !GameState.onofrioCompleted
       },
       {
         id: 'cat',
@@ -151,7 +166,7 @@ export class ForestScene extends Phaser.Scene {
         x: 1500,
         color: 0x7fd1ff,
         dialogueKey: 'cat_intro',
-        isAvailable: () => GameState.onofrioCompleted && !GameState.catIntroSeen,
+        isAvailable: () => false,
         onInteract: () => {
           GameState.catIntroSeen = true;
         }
@@ -160,10 +175,10 @@ export class ForestScene extends Phaser.Scene {
         id: 'daisy',
         objectName: 'Trigger_DaisyIntro',
         label: 'Daisy',
-        x: 2075,
+        x: 430,
         color: 0xf6f2a4,
         dialogueKey: 'daisy_picked',
-        isAvailable: () => GameState.catIntroSeen && !GameState.hasDaisy,
+        isAvailable: () => this.daisyRevealed && !GameState.hasDaisy,
         onInteract: () => {
           GameState.hasDaisy = true;
         }
@@ -178,7 +193,7 @@ export class ForestScene extends Phaser.Scene {
         height: 96,
         scale: SIGN_SCALE,
         dialogueKey: 'crossroad_cappellaio',
-        isAvailable: () => GameState.hasDaisy && GameState.onofrioCompleted && !GameState.crossroadStarted,
+        isAvailable: () => GameState.hasSpruzzino && !GameState.crossroadStarted,
         onInteract: () => {
           GameState.crossroadStarted = true;
         }
@@ -219,6 +234,11 @@ export class ForestScene extends Phaser.Scene {
     ];
 
     this.interactables.forEach((interactable) => {
+      if (interactable.id === 'onofrio') {
+        interactable.container = this.createOnofrio(interactable.x, this.groundY, interactable);
+        return;
+      }
+
       if (interactable.id === 'cat') {
         interactable.container = this.createCat(interactable.x, this.groundY, interactable);
         return;
@@ -231,6 +251,14 @@ export class ForestScene extends Phaser.Scene {
 
       interactable.container = this.createPlaceholder(interactable.x, this.groundY, interactable);
     });
+  }
+
+  createAtmosphereOverlay() {
+    this.atmosphereOverlay = this.add
+      .rectangle(0, 0, this.scale.width, this.scale.height, 0x071226, ATMOSPHERE_ALPHA)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(850);
   }
 
   createPlaceholder(x, y, interactable) {
@@ -250,11 +278,44 @@ export class ForestScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     container.add([body, name]);
+    interactable.shadow = this.createContactShadow(container, { width: width * scale, height: 18 * scale, alpha: 0.28, depth: 9 });
+    return container;
+  }
+
+  createOnofrio(x, y, interactable) {
+    const container = this.add.container(x, y).setDepth(13);
+    const onofrio = this.add.sprite(0, 0, 'onofrio-idle-1').setOrigin(0.5, 1).setScale(interactable.scale);
+    const name = this.add
+      .text(0, -118, interactable.label, {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#ffffff',
+        backgroundColor: '#000000',
+        padding: { x: 6, y: 3 }
+      })
+      .setOrigin(0.5);
+
+    this.anims.create({
+      key: 'onofrio-idle',
+      frames: [
+        { key: 'onofrio-idle-1' },
+        { key: 'onofrio-idle-2' },
+        { key: 'onofrio-idle-3' },
+        { key: 'onofrio-idle-4' }
+      ],
+      frameRate: 4,
+      repeat: -1
+    });
+
+    onofrio.anims.play('onofrio-idle');
+    container.add([onofrio, name]);
+    interactable.sprite = onofrio;
+    interactable.shadow = this.createContactShadow(container, { width: 92, height: 24, alpha: 0.3, depth: 12 });
     return container;
   }
 
   createCat(x, y, interactable) {
-    const container = this.add.container(x, y + CAT_FEET_PADDING * CAT_SCALE).setDepth(11);
+    const container = this.add.container(x, y).setDepth(11);
     const cat = this.add.sprite(0, 0, 'cat-walk-1').setOrigin(0.5, 1).setScale(CAT_SCALE);
     const name = this.add
       .text(0, -68, interactable.label, {
@@ -280,11 +341,12 @@ export class ForestScene extends Phaser.Scene {
 
     container.add([cat, name]);
     interactable.sprite = cat;
+    interactable.shadow = this.createContactShadow(container, { width: 42, height: 12, alpha: 0.3, depth: 10 });
     return container;
   }
 
   createDaisy(x, y, interactable) {
-    const container = this.add.container(x, y + DAISY_FEET_PADDING * DAISY_SCALE).setDepth(11);
+    const container = this.add.container(x, y).setDepth(11);
     const daisy = this.add.sprite(0, 0, 'daisy-idle-1').setOrigin(0.5, 1).setScale(DAISY_SCALE);
     const name = this.add
       .text(0, -88, interactable.label, {
@@ -311,14 +373,15 @@ export class ForestScene extends Phaser.Scene {
     daisy.anims.play('daisy-idle');
     container.add([daisy, name]);
     interactable.sprite = daisy;
+    interactable.shadow = this.createContactShadow(container, { width: 24, height: 8, alpha: 0.28, depth: 10 });
     return container;
   }
 
   createNarrativeTriggers() {
     this.narrativeTriggers = {
-      Trigger_Onofrio: 720,
-      Trigger_CatIntro: 1320,
-      Trigger_DaisyIntro: 1880,
+      Trigger_Onofrio: 760,
+      Trigger_CatIntro: 0,
+      Trigger_DaisyIntro: 430,
       Trigger_DirectionsSign: 2860,
       Trigger_NextScene: TRIGGER_NEXT_SCENE_X
     };
@@ -332,13 +395,19 @@ export class ForestScene extends Phaser.Scene {
       .setVisible(false);
   }
 
+  startInitialIntro() {
+    this.stopRomy();
+    this.BlackTransition?.setVisible(true).setAlpha(1);
+    this.dialogueManager.startDialogue('intro_black');
+  }
+
   createCamera() {
     const { width, height } = this.scale;
     this.cameras.main.setBounds(0, 0, this.worldWidth, height);
     this.cameras.main.scrollX = 0;
     this.cameras.main.scrollY = 0;
     this.cameras.main.setZoom(1);
-    this.cameras.main.startFollow(this.romy, true, 0.12, 0, 0, 0);
+    this.cameras.main.startFollow(this.romy, true, 0.12, 1, 0, 0);
     this.cameras.main.setDeadzone(Math.round(width * 0.4), height);
   }
 
@@ -414,7 +483,7 @@ export class ForestScene extends Phaser.Scene {
   }
 
   getRomyY() {
-    return this.groundY + ROMY_FEET_PADDING * ROMY_SCALE;
+    return this.roadY;
   }
 
   moveRomy() {
@@ -462,15 +531,15 @@ export class ForestScene extends Phaser.Scene {
     }
 
     if (interactable.id === 'cat') {
-      return GameState.currentArea === 'forest' && GameState.onofrioCompleted && !GameState.catIntroSeen;
+      return GameState.currentArea === 'forest' && this.catIntroStarted;
     }
 
     if (interactable.id === 'daisy') {
-      return GameState.currentArea === 'forest' && GameState.catIntroSeen && !GameState.hasDaisy;
+      return GameState.currentArea === 'forest' && this.daisyRevealed && !GameState.hasDaisy;
     }
 
     if (interactable.id === 'sign_directions') {
-      return GameState.currentArea === 'forest' && GameState.hasDaisy && GameState.onofrioCompleted;
+      return GameState.currentArea === 'forest' && GameState.hasSpruzzino;
     }
 
     if (['madama', 'sposine', 'pittore'].includes(interactable.id)) {
@@ -483,21 +552,23 @@ export class ForestScene extends Phaser.Scene {
   updateCatIntro() {
     const cat = this.interactables?.find((interactable) => interactable.id === 'cat');
 
-    if (!cat?.sprite || !cat.container.visible) {
+    if (!cat?.sprite || !cat.container.visible || cat.entranceComplete) {
       return;
     }
 
-    if (this.romy.x >= this.narrativeTriggers.Trigger_CatIntro && !cat.patrolTween) {
+    if (!cat.entranceTween && this.catIntroStarted) {
+      cat.sprite.setFlipX(true);
       cat.sprite.anims.play('cat-walk', true);
-      cat.patrolTween = this.tweens.add({
+      cat.entranceTween = this.tweens.add({
         targets: cat.container,
-        x: cat.x + CAT_PATROL_DISTANCE,
-        duration: 3600,
+        x: PLAYER_START_X + CAT_INTRO_TARGET_OFFSET,
+        duration: 2400,
         ease: 'Sine.easeInOut',
-        yoyo: true,
-        repeat: -1,
-        onYoyo: () => cat.sprite.setFlipX(true),
-        onRepeat: () => cat.sprite.setFlipX(false)
+        onComplete: () => {
+          cat.sprite.anims.stop();
+          cat.sprite.setTexture('cat-walk-1');
+          cat.entranceComplete = true;
+        }
       });
     }
   }
@@ -527,7 +598,8 @@ export class ForestScene extends Phaser.Scene {
         return false;
       }
 
-      return Math.abs(this.romy.x - interactable.x) <= INTERACTION_DISTANCE;
+      const targetX = interactable.container?.x ?? interactable.x;
+      return Math.abs(this.romy.x - targetX) <= INTERACTION_DISTANCE;
     }) ?? null;
   }
 
@@ -541,6 +613,69 @@ export class ForestScene extends Phaser.Scene {
     interactable.onInteract?.();
     this.interactHint.setVisible(false);
     this.dialogueManager.startDialogue(interactable.dialogueKey);
+  }
+
+  revealForestIntro() {
+    this.isTransitioning = true;
+    this.interactHint.setVisible(false);
+    this.tweens.add({
+      targets: this.BlackTransition,
+      alpha: 0,
+      duration: 650,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.BlackTransition?.setVisible(false);
+        this.isTransitioning = false;
+        this.dialogueManager.startDialogue('main_intro');
+      }
+    });
+  }
+
+  startCatEntrance() {
+    const cat = this.interactables?.find((interactable) => interactable.id === 'cat');
+
+    if (!cat) {
+      return;
+    }
+
+    this.catIntroStarted = true;
+    cat.container.setPosition(this.cameras.main.scrollX + this.scale.width + 80, this.getRomyY());
+    cat.x = cat.container.x;
+    this.updateNpcVisibility();
+  }
+
+  revealDaisy() {
+    this.daisyRevealed = true;
+    this.updateNpcVisibility();
+  }
+
+  finishMainIntro() {
+    GameState.catIntroSeen = true;
+    this.revealDaisy();
+  }
+
+  createContactShadow(target, options = {}) {
+    const shadow = this.add
+      .ellipse(target.x, target.y - (options.offsetY ?? 4), options.width ?? 56, options.height ?? 14, options.color ?? 0x020815, options.alpha ?? 0.32)
+      .setDepth(options.depth ?? Math.max(1, (target.depth ?? 10) - 1));
+
+    shadow.trackedTarget = target;
+    shadow.offsetY = options.offsetY ?? 4;
+    this.contactShadows.push(shadow);
+    return shadow;
+  }
+
+  updateContactShadows() {
+    this.contactShadows.forEach((shadow) => {
+      const target = shadow.trackedTarget;
+
+      if (!target) {
+        return;
+      }
+
+      shadow.setPosition(target.x, target.y - shadow.offsetY);
+      shadow.setVisible(target.visible);
+    });
   }
 
   transitionToArea(area) {

@@ -1,4 +1,4 @@
-export const GameState = {
+const initialState = {
   hasDaisy: false,
   hasSpruzzino: false,
   onofrioCompleted: false,
@@ -15,4 +15,12 @@ export const GameState = {
   quiete: 0,
   lastChoice: null,
   hatterColored: false
+};
+
+export const GameState = {
+  ...initialState,
+
+  resetForNewRun() {
+    Object.assign(this, initialState);
+  }
 };
