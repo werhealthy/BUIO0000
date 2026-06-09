@@ -12,12 +12,19 @@ export const dialogues = {
 
   daisy_picked: [
     { speaker: "SISTEMA", text: "Hai raccolto il fiore." },
-    { speaker: "FIORE", text: "Ah. Molto meglio." }
+    { speaker: "FIORE", text: "Ah. Molto meglio. Finalmente qualcuno con gusto botanico." },
+    { speaker: "ROMY", text: "Vieni con me? C'è un cartello in fondo al sentiero." }
+  ],
+
+  cat_intro: [
+    { speaker: "ROMY", text: "Un gatto! Sta camminando come se conoscesse già la strada." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "ROMY", text: "Va bene, va bene. Ti seguo piano." }
   ],
 
   onofrio: [
-    { speaker: "ROMY", text: "Il fungo mi sta ancora guardando." },
-    { speaker: "FIORE", text: "Quello è Onofrio." },
+    { speaker: "ROMY", text: "Laggiù c'è un fungo. Forse mi stava aspettando." },
+    { speaker: "ONOFRIO", text: "Mi chiamo Onofrio, e aspetto solo chi procede senza correre." },
     { speaker: "ONOFRIO", text: "Prima di darti lo Spruzzino, rispondi." },
     {
       speaker: "ONOFRIO",
@@ -63,9 +70,9 @@ export const dialogues = {
   crossroad_cappellaio: [
     { speaker: "ROMY", text: "Tre direzioni. Una fragola, una stella e una zampa." },
     { speaker: "CAPPELLAIO", text: "Mi hanno rubato i colori!" },
-    { speaker: "ROMY", text: "Va bene. Ecco a te lo Spruzzino di Onofrio." },
-    { speaker: "SISTEMA", text: "Hai donato lo Spruzzino di Onofrio al Cappellaio.", action: "useSpruzzinoOnHatter" },
-    { speaker: "CAPPELLAIO", text: "Oh! Il rosso ritorna, il blu fa rumore, il giallo mi morde!" },
+    { speaker: "ROMY", text: "Lo Spruzzino di Onofrio fa brillare i simboli." },
+    { speaker: "SISTEMA", text: "Il cartello si accende appena.", action: "useSpruzzinoOnHatter" },
+    { speaker: "CAPPELLAIO", text: "Oh! Fragola, stella e zampa hanno ritrovato il colore!" },
     {
       speaker: "CAPPELLAIO",
       text: "Cosa cerchi davvero, quando cerchi te?",
@@ -92,19 +99,19 @@ export const dialogues = {
   cap_choice_calore: [
     { speaker: "ROMY", text: "Un posto che sappia di sole." },
     { speaker: "CAPPELLAIO", text: "Ah! Il sole che cola, che scalda, che resta." },
-    { speaker: "SISTEMA", text: "Più avanti sceglierai una direzione.", next: "crossroad_choose_path" }
+    { speaker: "SISTEMA", text: "Scegli una direzione sul cartello, poi prosegui oltre per entrare nel sentiero nero.", next: "crossroad_choose_path" }
   ],
 
   cap_choice_ritmo: [
     { speaker: "ROMY", text: "Una luce lontana da seguire." },
     { speaker: "CAPPELLAIO", text: "Oh! La luce che chiama da sopra i cortili." },
-    { speaker: "SISTEMA", text: "Più avanti sceglierai una direzione.", next: "crossroad_choose_path" }
+    { speaker: "SISTEMA", text: "Scegli una direzione sul cartello, poi prosegui oltre per entrare nel sentiero nero.", next: "crossroad_choose_path" }
   ],
 
   cap_choice_quiete: [
     { speaker: "ROMY", text: "Qualcosa che non chieda spiegazioni." },
     { speaker: "CAPPELLAIO", text: "Ah! Una cosa che resta vicino al cuore." },
-    { speaker: "SISTEMA", text: "Più avanti sceglierai una direzione.", next: "crossroad_choose_path" }
+    { speaker: "SISTEMA", text: "Scegli una direzione sul cartello, poi prosegui oltre per entrare nel sentiero nero.", next: "crossroad_choose_path" }
   ],
 
   crossroad_choose_path: [
@@ -132,7 +139,7 @@ export const dialogues = {
     {
       speaker: "SISTEMA",
       text: "Segui la fragola incisa nel legno. Il bosco profuma improvvisamente di zucchero, oro e cose che costano troppo.",
-      action: "transitionToMadamaArea"
+      action: "setPathMadama"
     }
   ],
 
@@ -140,7 +147,7 @@ export const dialogues = {
     {
       speaker: "SISTEMA",
       text: "Segui la stella che pulsa piano. Tra gli alberi iniziano a comparire nastri, fiori e una musica lontana che sembra già in ritardo.",
-      action: "transitionToSposineArea"
+      action: "setPathSposine"
     }
   ],
 
@@ -148,7 +155,7 @@ export const dialogues = {
     {
       speaker: "SISTEMA",
       text: "Segui la zampa di gatto tra le radici. Il sentiero diventa blu, silenzioso, e da lontano arriva il suono morbido di una chitarra.",
-      action: "transitionToPittoreArea"
+      action: "setPathPittore"
     }
   ],
 

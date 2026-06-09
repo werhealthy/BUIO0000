@@ -3,6 +3,7 @@ export const GameState = {
   hasSpruzzino: false,
   onofrioCompleted: false,
   crossroadStarted: false,
+  catIntroSeen: false,
   currentArea: 'forest',
   currentPath: null,
   scenarioStarted: false,

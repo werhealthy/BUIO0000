@@ -197,11 +197,20 @@ export class DialogueManager {
       useSpruzzinoOnHatter: () => {
         GameState.hatterColored = true;
       },
+      setPathMadama: () => {
+        GameState.currentPath = 'madama';
+      },
       transitionToMadamaArea: () => {
         this.scene.transitionToArea?.('madama');
       },
+      setPathSposine: () => {
+        GameState.currentPath = 'sposine';
+      },
       transitionToSposineArea: () => {
         this.scene.transitionToArea?.('sposine');
+      },
+      setPathPittore: () => {
+        GameState.currentPath = 'pittore';
       },
       transitionToPittoreArea: () => {
         this.scene.transitionToArea?.('pittore');
