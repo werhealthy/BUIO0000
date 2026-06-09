@@ -160,19 +160,28 @@ export const dialogues = {
   onofrio_choice_calore: [
     { speaker: "ROMY", text: "Una luce calda. Tipo pane e sole." },
     { speaker: "ONOFRIO", text: "Risposta morbida. Profuma di muri che hanno visto l’estate." },
-    { speaker: "SISTEMA", text: "Hai ottenuto lo Spruzzino di Onofrio.", action: "giveSpruzzino" }
+    { speaker: "SISTEMA", text: "Hai ottenuto lo Spruzzino di Onofrio.", action: "giveSpruzzino", next: "onofrio_after_choice" }
   ],
 
   onofrio_choice_ritmo: [
     { speaker: "ROMY", text: "Un rumore che fa muovere i piedi." },
     { speaker: "ONOFRIO", text: "Risposta frizzante. Il bosco approva con due funghi e mezzo." },
-    { speaker: "SISTEMA", text: "Hai ottenuto lo Spruzzino di Onofrio.", action: "giveSpruzzino" }
+    { speaker: "SISTEMA", text: "Hai ottenuto lo Spruzzino di Onofrio.", action: "giveSpruzzino", next: "onofrio_after_choice" }
   ],
 
   onofrio_choice_quiete: [
     { speaker: "ROMY", text: "Un respiro lento. Senza fretta." },
     { speaker: "ONOFRIO", text: "Risposta calma. Pericolosamente vicina alla saggezza." },
-    { speaker: "SISTEMA", text: "Hai ottenuto lo Spruzzino di Onofrio.", action: "giveSpruzzino" }
+    { speaker: "SISTEMA", text: "Hai ottenuto lo Spruzzino di Onofrio.", action: "giveSpruzzino", next: "onofrio_after_choice" }
+  ],
+
+  onofrio_after_choice: [
+    { speaker: "ONOFRIO", text: "Usalo quando qualcuno avrà perso i colori. Oppure quando il mondo farà troppo il serio." },
+    { speaker: "ROMY", text: "Quindi è una cosa sicura?" },
+    { speaker: "FIORE", text: "Nel bosco “sicuro” è un concetto decorativo." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice di non spruzzarlo sul gatto." },
+    { speaker: "ROMY", text: "Finalmente un consiglio chiaro." }
   ],
 
   crossroad_cappellaio: [

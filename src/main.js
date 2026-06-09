@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { MenuScene } from './scenes/MenuScene.js';
 import { ForestScene } from './scenes/ForestScene.js';
 import './style.css';
 
@@ -20,7 +21,7 @@ const config = {
       debug: false
     }
   },
-  scene: [ForestScene]
+  scene: [MenuScene, ForestScene]
 };
 
 new Phaser.Game(config);
