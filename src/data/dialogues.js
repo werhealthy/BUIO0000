@@ -256,7 +256,16 @@ export const dialogues = {
     {
       speaker: "SISTEMA",
       text: "Segui la fragola incisa nel legno. Il bosco profuma improvvisamente di zucchero, oro e cose che costano troppo.",
-      action: "setPathMadama"
+      action: "setPathMadama",
+      autoAdvance: true,
+      autoAdvanceDelay: 2500
+    },
+    {
+      speaker: "SISTEMA",
+      text: "La strada si chiude alle tue spalle. Davanti, una luce calda diventa quasi dorata.",
+      action: "transitionToAreaMadama",
+      autoAdvance: true,
+      autoAdvanceDelay: 2100
     }
   ],
 
@@ -264,7 +273,16 @@ export const dialogues = {
     {
       speaker: "SISTEMA",
       text: "Segui la stella che pulsa piano. Tra gli alberi iniziano a comparire nastri, fiori e una musica lontana che sembra già in ritardo.",
-      action: "setPathSposine"
+      action: "setPathSposine",
+      autoAdvance: true,
+      autoAdvanceDelay: 2600
+    },
+    {
+      speaker: "SISTEMA",
+      text: "Il buio scende piano, come un sipario. La stella resta accesa un istante in più.",
+      action: "transitionToAreaSposine",
+      autoAdvance: true,
+      autoAdvanceDelay: 2100
     }
   ],
 
@@ -272,7 +290,16 @@ export const dialogues = {
     {
       speaker: "SISTEMA",
       text: "Segui la zampa di gatto tra le radici. Il sentiero diventa blu, silenzioso, e da lontano arriva il suono morbido di una chitarra.",
-      action: "setPathPittore"
+      action: "setPathPittore",
+      autoAdvance: true,
+      autoAdvanceDelay: 2600
+    },
+    {
+      speaker: "SISTEMA",
+      text: "Qualcosa nel bosco trattiene il respiro. Poi tutto sfuma in nero, senza fretta.",
+      action: "transitionToAreaPittore",
+      autoAdvance: true,
+      autoAdvanceDelay: 2000
     }
   ],
 
