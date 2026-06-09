@@ -9,6 +9,10 @@ import romyWalk01Url from '../assets/sprites/characters/romy/romy_walk_01.png?ur
 import romyWalk02Url from '../assets/sprites/characters/romy/romy_walk_02.png?url';
 import romyWalk03Url from '../assets/sprites/characters/romy/romy_walk_03.png?url';
 import romyWalk04Url from '../assets/sprites/characters/romy/romy_walk_04.png?url';
+import romyWake01Url from '../assets/sprites/characters/romy/romy_wake_01.png?url';
+import romyWake02Url from '../assets/sprites/characters/romy/romy_wake_02.png?url';
+import romyWake03Url from '../assets/sprites/characters/romy/romy_wake_03.png?url';
+import romyWake04Url from '../assets/sprites/characters/romy/romy_wake_04.png?url';
 import catWalk1Url from '../assets/sprites/characters/cat/cat_walk_1.png?url';
 import catWalk2Url from '../assets/sprites/characters/cat/cat_walk_2.png?url';
 import catWalk3Url from '../assets/sprites/characters/cat/cat_walk_3.png?url';
@@ -23,14 +27,14 @@ import onofrioSprite3Url from '../assets/sprites/characters/onofrio/Onofrio_spri
 import onofrioSprite4Url from '../assets/sprites/characters/onofrio/Onofrio_sprite_4.png?url';
 
 const PLAYER_SPEED = 220;
-const ROMY_FRAME_RATE = 8;
-const CAT_FRAME_RATE = 7;
-const DAISY_FRAME_RATE = 5;
-const ROAD_OFFSET_FROM_BOTTOM = 80;
+const ROMY_FRAME_RATE = 5;
+const CAT_FRAME_RATE = 4;
+const DAISY_FRAME_RATE = 3;
+const ROAD_OFFSET_FROM_BOTTOM = 112;
 const ROMY_SCALE = 1.02;
 const CAT_SCALE = 0.56;
 const DAISY_SCALE = 0.34;
-const ONOFRIO_SCALE = 1.12;
+const ONOFRIO_SCALE = 1.38;
 const SIGN_SCALE = 0.9;
 const BACKGROUND_SCALE = 1.69;
 const PLAYER_START_X = 150;
@@ -39,7 +43,7 @@ const TRIGGER_NEXT_SCENE_X = 3230;
 const INTERACTION_DISTANCE = 110;
 const HINT_TEXT = 'Premi E per interagire';
 const ROMY_FRAME_COUNT = 4;
-const ATMOSPHERE_ALPHA = 0.1;
+const ATMOSPHERE_ALPHA = 0.08;
 
 const AREA_SPAWN_X = {
   forest: PLAYER_START_X,
@@ -60,6 +64,10 @@ export class ForestScene extends Phaser.Scene {
     this.load.image('romy-walk-02', romyWalk02Url);
     this.load.image('romy-walk-03', romyWalk03Url);
     this.load.image('romy-walk-04', romyWalk04Url);
+    this.load.image('romy-wake-01', romyWake01Url);
+    this.load.image('romy-wake-02', romyWake02Url);
+    this.load.image('romy-wake-03', romyWake03Url);
+    this.load.image('romy-wake-04', romyWake04Url);
     this.load.image('cat-walk-1', catWalk1Url);
     this.load.image('cat-walk-2', catWalk2Url);
     this.load.image('cat-walk-3', catWalk3Url);
@@ -79,6 +87,7 @@ export class ForestScene extends Phaser.Scene {
     this.isTransitioning = false;
     this.catIntroStarted = false;
     this.daisyRevealed = false;
+    this.isWakingUp = false;
     this.contactShadows = [];
 
     this.createBackground();
@@ -118,7 +127,7 @@ export class ForestScene extends Phaser.Scene {
   }
 
   createRomy() {
-    this.romy = this.physics.add.sprite(PLAYER_START_X, this.getRomyY(), 'romy-walk-01');
+    this.romy = this.physics.add.sprite(PLAYER_START_X, this.getRomyY(), 'romy-wake-01');
     this.romy.setName('Romy');
     this.romy.setDepth(20);
     this.romy.setOrigin(0.5, 1);
@@ -142,6 +151,18 @@ export class ForestScene extends Phaser.Scene {
       frames: romyFrames,
       frameRate: ROMY_FRAME_RATE,
       repeat: -1
+    });
+
+    this.anims.create({
+      key: 'romy-wake',
+      frames: [
+        { key: 'romy-wake-01' },
+        { key: 'romy-wake-02' },
+        { key: 'romy-wake-03' },
+        { key: 'romy-wake-04' }
+      ],
+      frameRate: 3,
+      repeat: 0
     });
   }
 
@@ -262,22 +283,12 @@ export class ForestScene extends Phaser.Scene {
   }
 
   createPlaceholder(x, y, interactable) {
-    const { label, color, scale = 1, width = 74, height = 84 } = interactable;
+    const { color, scale = 1, width = 74, height = 84 } = interactable;
     const container = this.add.container(x, y).setDepth(10).setScale(scale);
     const body = this.add
       .rectangle(0, -height / 2, width, height, color, 0.82)
       .setStrokeStyle(3, 0x1a1a1a);
-    const name = this.add
-      .text(0, -height - 16, label, {
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        color: '#ffffff',
-        backgroundColor: '#000000',
-        padding: { x: 6, y: 3 }
-      })
-      .setOrigin(0.5);
-
-    container.add([body, name]);
+    container.add([body]);
     interactable.shadow = this.createContactShadow(container, { width: width * scale, height: 18 * scale, alpha: 0.28, depth: 9 });
     return container;
   }
@@ -285,15 +296,6 @@ export class ForestScene extends Phaser.Scene {
   createOnofrio(x, y, interactable) {
     const container = this.add.container(x, y).setDepth(13);
     const onofrio = this.add.sprite(0, 0, 'onofrio-idle-1').setOrigin(0.5, 1).setScale(interactable.scale);
-    const name = this.add
-      .text(0, -118, interactable.label, {
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        color: '#ffffff',
-        backgroundColor: '#000000',
-        padding: { x: 6, y: 3 }
-      })
-      .setOrigin(0.5);
 
     this.anims.create({
       key: 'onofrio-idle',
@@ -303,12 +305,12 @@ export class ForestScene extends Phaser.Scene {
         { key: 'onofrio-idle-3' },
         { key: 'onofrio-idle-4' }
       ],
-      frameRate: 4,
+      frameRate: 2,
       repeat: -1
     });
 
     onofrio.anims.play('onofrio-idle');
-    container.add([onofrio, name]);
+    container.add([onofrio]);
     interactable.sprite = onofrio;
     interactable.shadow = this.createContactShadow(container, { width: 92, height: 24, alpha: 0.3, depth: 12 });
     return container;
@@ -317,15 +319,6 @@ export class ForestScene extends Phaser.Scene {
   createCat(x, y, interactable) {
     const container = this.add.container(x, y).setDepth(11);
     const cat = this.add.sprite(0, 0, 'cat-walk-1').setOrigin(0.5, 1).setScale(CAT_SCALE);
-    const name = this.add
-      .text(0, -68, interactable.label, {
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        color: '#ffffff',
-        backgroundColor: '#000000',
-        padding: { x: 6, y: 3 }
-      })
-      .setOrigin(0.5);
 
     this.anims.create({
       key: 'cat-walk',
@@ -339,7 +332,7 @@ export class ForestScene extends Phaser.Scene {
       repeat: -1
     });
 
-    container.add([cat, name]);
+    container.add([cat]);
     interactable.sprite = cat;
     interactable.shadow = this.createContactShadow(container, { width: 42, height: 12, alpha: 0.3, depth: 10 });
     return container;
@@ -348,15 +341,6 @@ export class ForestScene extends Phaser.Scene {
   createDaisy(x, y, interactable) {
     const container = this.add.container(x, y).setDepth(11);
     const daisy = this.add.sprite(0, 0, 'daisy-idle-1').setOrigin(0.5, 1).setScale(DAISY_SCALE);
-    const name = this.add
-      .text(0, -88, interactable.label, {
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        color: '#ffffff',
-        backgroundColor: '#000000',
-        padding: { x: 6, y: 3 }
-      })
-      .setOrigin(0.5);
 
     this.anims.create({
       key: 'daisy-idle',
@@ -371,7 +355,7 @@ export class ForestScene extends Phaser.Scene {
     });
 
     daisy.anims.play('daisy-idle');
-    container.add([daisy, name]);
+    container.add([daisy]);
     interactable.sprite = daisy;
     interactable.shadow = this.createContactShadow(container, { width: 24, height: 8, alpha: 0.28, depth: 10 });
     return container;
@@ -390,7 +374,7 @@ export class ForestScene extends Phaser.Scene {
       .rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 1)
       .setOrigin(0, 0)
       .setScrollFactor(0)
-      .setDepth(1200)
+      .setDepth(950)
       .setAlpha(0)
       .setVisible(false);
   }
@@ -487,6 +471,11 @@ export class ForestScene extends Phaser.Scene {
   }
 
   moveRomy() {
+    if (this.isWakingUp) {
+      this.romy.setVelocity(0, 0);
+      return;
+    }
+
     if (this.dialogueManager?.isActive() || this.isTransitioning) {
       this.stopRomy();
       return;
@@ -562,7 +551,7 @@ export class ForestScene extends Phaser.Scene {
       cat.entranceTween = this.tweens.add({
         targets: cat.container,
         x: PLAYER_START_X + CAT_INTRO_TARGET_OFFSET,
-        duration: 2400,
+        duration: 3600,
         ease: 'Sine.easeInOut',
         onComplete: () => {
           cat.sprite.anims.stop();
@@ -618,16 +607,31 @@ export class ForestScene extends Phaser.Scene {
   revealForestIntro() {
     this.isTransitioning = true;
     this.interactHint.setVisible(false);
+    this.dialogueManager.hideUi();
     this.tweens.add({
       targets: this.BlackTransition,
       alpha: 0,
-      duration: 650,
+      duration: 900,
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.BlackTransition?.setVisible(false);
-        this.isTransitioning = false;
-        this.dialogueManager.startDialogue('main_intro');
+        this.playRomyWakeUp(() => {
+          this.isTransitioning = false;
+          this.dialogueManager.startDialogue('main_intro');
+        });
       }
+    });
+  }
+
+  playRomyWakeUp(onComplete) {
+    this.isWakingUp = true;
+    this.romy.setVelocity(0, 0);
+    this.romy.setTexture('romy-wake-01');
+    this.romy.play('romy-wake');
+    this.romy.once('animationcomplete-romy-wake', () => {
+      this.isWakingUp = false;
+      this.romy.setTexture('romy-walk-01');
+      onComplete?.();
     });
   }
 

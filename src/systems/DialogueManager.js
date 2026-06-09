@@ -22,45 +22,45 @@ export class DialogueManager {
     const { width, height } = this.scene.scale;
 
     this.box = this.scene.add
-      .rectangle(width / 2, height - 92, width - 48, 160, 0x050505, 0.86)
-      .setStrokeStyle(3, 0xffffff)
+      .rectangle(width / 2, height - 76, width - 112, 118, 0x071016, 0.72)
+      .setStrokeStyle(2, 0xd8f0ff, 0.55)
       .setScrollFactor(0)
       .setDepth(1000);
 
     this.speakerText = this.scene.add
-      .text(48, height - 160, '', {
+      .text(76, height - 126, '', {
         fontFamily: 'monospace',
-        fontSize: '18px',
+        fontSize: '16px',
         color: '#ffe680'
       })
       .setScrollFactor(0)
       .setDepth(1001);
 
     this.bodyText = this.scene.add
-      .text(48, height - 128, '', {
+      .text(76, height - 100, '', {
         fontFamily: 'monospace',
-        fontSize: '16px',
+        fontSize: '14px',
         color: '#ffffff',
-        wordWrap: { width: width - 96 }
+        wordWrap: { width: width - 152 }
       })
       .setScrollFactor(0)
       .setDepth(1001);
 
     this.choicesText = this.scene.add
-      .text(64, height - 80, '', {
+      .text(88, height - 62, '', {
         fontFamily: 'monospace',
-        fontSize: '15px',
+        fontSize: '14px',
         color: '#d8ffd8',
-        lineSpacing: 8,
-        wordWrap: { width: width - 128 }
+        lineSpacing: 6,
+        wordWrap: { width: width - 176 }
       })
       .setScrollFactor(0)
       .setDepth(1001);
 
     this.hintText = this.scene.add
-      .text(width - 48, height - 36, '', {
+      .text(width - 76, height - 28, '', {
         fontFamily: 'monospace',
-        fontSize: '13px',
+        fontSize: '12px',
         color: '#a8a8a8'
       })
       .setOrigin(1, 0.5)
