@@ -203,6 +203,11 @@ export class DialogueManager {
       return;
     }
 
+    if (typeof action === 'string' && action.startsWith('set_romy_pose ')) {
+      this.scene.setRomyPose?.(action.replace('set_romy_pose ', ''));
+      return;
+    }
+
     const actions = {
       giveSpruzzino: () => {
         GameState.hasSpruzzino = true;
