@@ -5,69 +5,77 @@ import { GameState } from '../systems/GameState.js';
 
 // Gli asset restano in src/assets: Vite li trasforma in URL sicuri.
 import backgroundUrl from '../assets/backgrounds/background_01.png?url';
+import romyIdle01Url from '../assets/sprites/characters/romy/romy_idle_01.png?url';
+import romyIdle02Url from '../assets/sprites/characters/romy/romy_idle_02.png?url';
+import romyIdle03Url from '../assets/sprites/characters/romy/romy_idle_03.png?url';
+import romyWake01Url from '../assets/sprites/characters/romy/romy_wake_01.png?url';
+import romyWake02Url from '../assets/sprites/characters/romy/romy_wake_02.png?url';
+import romyWake03Url from '../assets/sprites/characters/romy/romy_wake_03.png?url';
+import romyWake04Url from '../assets/sprites/characters/romy/romy_wake_04.png?url';
+import romyWalk01Url from '../assets/sprites/characters/romy/romy_walk_01.png?url';
+import romyWalk02Url from '../assets/sprites/characters/romy/romy_walk_02.png?url';
+import romyWalk03Url from '../assets/sprites/characters/romy/romy_walk_03.png?url';
+import romyWalk04Url from '../assets/sprites/characters/romy/romy_walk_04.png?url';
+import catIdle01Url from '../assets/sprites/characters/cat/cat_idle_01.png?url';
+import catIdle02Url from '../assets/sprites/characters/cat/cat_idle_02.png?url';
+import catIdle03Url from '../assets/sprites/characters/cat/cat_idle_03.png?url';
+import catWalk01Url from '../assets/sprites/characters/cat/cat_walk_01.png?url';
+import catWalk02Url from '../assets/sprites/characters/cat/cat_walk_02.png?url';
+import catWalk03Url from '../assets/sprites/characters/cat/cat_walk_03.png?url';
+import catWalk04Url from '../assets/sprites/characters/cat/cat_walk_04.png?url';
+import daisyIdle01Url from '../assets/sprites/characters/daisy/daisy_idle_01.png?url';
+import daisyIdle02Url from '../assets/sprites/characters/daisy/daisy_idle_02.png?url';
+import daisyIdle03Url from '../assets/sprites/characters/daisy/daisy_idle_03.png?url';
+import onofrioIdle01Url from '../assets/sprites/characters/onofrio/onofrio_sprite_01.png?url';
+import onofrioIdle02Url from '../assets/sprites/characters/onofrio/onofrio_sprite_02.png?url';
+import onofrioIdle03Url from '../assets/sprites/characters/onofrio/onofrio_sprite_03.png?url';
 
-const characterAssetUrls = import.meta.glob('../assets/sprites/characters/**/*.png', {
-  eager: true,
-  query: '?url',
-  import: 'default'
-});
+const frame = (key, url) => ({ key, url });
 
-const frame = (key, character, file) => ({
-  key,
-  file,
-  url: characterAssetUrls[`../assets/sprites/characters/${character}/${file}`]
-});
+const ROMY_IDLE_FRAMES = [
+  frame('romy-idle-01', romyIdle01Url),
+  frame('romy-idle-02', romyIdle02Url),
+  frame('romy-idle-03', romyIdle03Url)
+];
 
-const existingFrames = (frames) => frames.filter(({ url }) => Boolean(url));
+const ROMY_WALK_FRAMES = [
+  frame('romy-walk-01', romyWalk01Url),
+  frame('romy-walk-02', romyWalk02Url),
+  frame('romy-walk-03', romyWalk03Url),
+  frame('romy-walk-04', romyWalk04Url)
+];
 
-const ROMY_IDLE_FRAMES = existingFrames([
-  frame('romy-idle-01', 'romy', 'romy_idle_01.png'),
-  frame('romy-idle-02', 'romy', 'romy_idle_02.png'),
-  frame('romy-idle-03', 'romy', 'romy_idle_03.png')
-]);
+const ROMY_WAKE_FRAMES = [
+  frame('romy-wake-01', romyWake01Url),
+  frame('romy-wake-02', romyWake02Url),
+  frame('romy-wake-03', romyWake03Url),
+  frame('romy-wake-04', romyWake04Url)
+];
 
-const ROMY_WALK_FRAMES = existingFrames([
-  frame('romy-walk-01', 'romy', 'romy_walk_01.png'),
-  frame('romy-walk-02', 'romy', 'romy_walk_02.png'),
-  frame('romy-walk-03', 'romy', 'romy_walk_03.png'),
-  frame('romy-walk-04', 'romy', 'romy_walk_04.png')
-]);
+const CAT_IDLE_FRAMES = [
+  frame('cat-idle-01', catIdle01Url),
+  frame('cat-idle-02', catIdle02Url),
+  frame('cat-idle-03', catIdle03Url)
+];
 
-const ROMY_WAKE_FRAMES = existingFrames([
-  frame('romy-wake-01', 'romy', 'romy_wake_01.png'),
-  frame('romy-wake-02', 'romy', 'romy_wake_02.png'),
-  frame('romy-wake-03', 'romy', 'romy_wake_03.png'),
-  frame('romy-wake-04', 'romy', 'romy_wake_04.png')
-]);
+const CAT_WALK_FRAMES = [
+  frame('cat-walk-01', catWalk01Url),
+  frame('cat-walk-02', catWalk02Url),
+  frame('cat-walk-03', catWalk03Url),
+  frame('cat-walk-04', catWalk04Url)
+];
 
-const CAT_WALK_FRAMES = existingFrames([
-  frame('cat-walk-1', 'cat', 'cat_walk_01.png'),
-  frame('cat-walk-2', 'cat', 'cat_walk_02.png'),
-  frame('cat-walk-3', 'cat', 'cat_walk_03.png'),
-  frame('cat-walk-4', 'cat', 'cat_walk_04.png')
-]);
+const DAISY_IDLE_FRAMES = [
+  frame('daisy-idle-01', daisyIdle01Url),
+  frame('daisy-idle-02', daisyIdle02Url),
+  frame('daisy-idle-03', daisyIdle03Url)
+];
 
-const CAT_IDLE_FRAMES = existingFrames([
-  frame('cat-idle-1', 'cat', 'cat_idle_01.png'),
-  frame('cat-idle-2', 'cat', 'cat_idle_02.png'),
-  frame('cat-idle-3', 'cat', 'cat_idle_03.png')
-]);
-
-const CAT_HAS_COMPLETE_WALK = CAT_WALK_FRAMES.length === 4;
-const CAT_SPRITE_FRAMES = CAT_HAS_COMPLETE_WALK ? CAT_WALK_FRAMES : [...CAT_IDLE_FRAMES, ...CAT_WALK_FRAMES].slice(0, 1);
-
-const DAISY_IDLE_FRAMES = existingFrames([
-  frame('daisy-idle-1', 'daisy', 'daisy_sprite_1.png'),
-  frame('daisy-idle-2', 'daisy', 'daisy_sprite_2.png'),
-  frame('daisy-idle-3', 'daisy', 'daisy_sprite_3.png'),
-  frame('daisy-idle-4', 'daisy', 'daisy_sprite_4.png')
-]);
-
-const ONOFRIO_IDLE_FRAMES = existingFrames([
-  frame('onofrio-idle-1', 'onofrio', 'onofrio_sprite_01.png'),
-  frame('onofrio-idle-2', 'onofrio', 'onofrio_sprite_02.png'),
-  frame('onofrio-idle-3', 'onofrio', 'onofrio_sprite_03.png')
-]);
+const ONOFRIO_IDLE_FRAMES = [
+  frame('onofrio-idle-01', onofrioIdle01Url),
+  frame('onofrio-idle-02', onofrioIdle02Url),
+  frame('onofrio-idle-03', onofrioIdle03Url)
+];
 
 const loadFrames = (scene, frames) => {
   frames.forEach(({ key, url }) => {
@@ -78,11 +86,13 @@ const loadFrames = (scene, frames) => {
 const phaserFrames = (frames) => frames.map(({ key }) => ({ key }));
 
 const PLAYER_SPEED = 220;
-const ROMY_FRAME_RATE = 5;
+const ROMY_FRAME_RATE = 7;
 const ROMY_IDLE_FRAME_RATE = 3;
-const CAT_FRAME_RATE = 4;
+const CAT_WALK_FRAME_RATE = 6;
+const CAT_IDLE_FRAME_RATE = 3;
 const DAISY_FRAME_RATE = 3;
-const ROAD_Y = (canvasHeight) => canvasHeight - 140;
+const ONOFRIO_FRAME_RATE = 2;
+const ROAD_Y = (canvasHeight) => canvasHeight - 118;
 const ROMY_DISPLAY_HEIGHT = 145;
 const CAT_DISPLAY_HEIGHT = 75;
 const DAISY_DISPLAY_HEIGHT = 48;
@@ -96,7 +106,6 @@ const SIGN_X = 2520;
 const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
 const HINT_TEXT = 'Premi E per interagire';
-const ROMY_FRAME_COUNT = 4;
 const ATMOSPHERE_ALPHA = 0.08;
 
 const AREA_SPAWN_X = {
@@ -112,12 +121,13 @@ export class ForestScene extends Phaser.Scene {
   }
 
   preload() {
-    // Romy ha quattro frame disponibili nel progetto: li carichiamo senza crearne di fittizi.
+    // Carica solo gli asset reali elencati per personaggio.
     this.load.image('background-01', backgroundUrl);
     loadFrames(this, ROMY_IDLE_FRAMES);
     loadFrames(this, ROMY_WALK_FRAMES);
     loadFrames(this, ROMY_WAKE_FRAMES);
-    loadFrames(this, CAT_SPRITE_FRAMES);
+    loadFrames(this, CAT_IDLE_FRAMES);
+    loadFrames(this, CAT_WALK_FRAMES);
     loadFrames(this, DAISY_IDLE_FRAMES);
     loadFrames(this, ONOFRIO_IDLE_FRAMES);
   }
@@ -191,12 +201,10 @@ export class ForestScene extends Phaser.Scene {
       });
     }
 
-    const romyFrames = ROMY_WALK_FRAMES.slice(0, ROMY_FRAME_COUNT);
-
-    if (romyFrames.length > 1) {
+    if (ROMY_WALK_FRAMES.length > 1) {
       this.anims.create({
         key: 'romy-walk',
-        frames: phaserFrames(romyFrames),
+        frames: phaserFrames(ROMY_WALK_FRAMES),
         frameRate: ROMY_FRAME_RATE,
         repeat: -1
       });
@@ -331,14 +339,14 @@ export class ForestScene extends Phaser.Scene {
 
   createOnofrio(x, y, interactable) {
     const container = this.add.container(x, y).setDepth(13);
-    const onofrio = this.add.sprite(0, 0, 'onofrio-idle-1').setOrigin(0.5, 1);
+    const onofrio = this.add.sprite(0, 0, 'onofrio-idle-01').setOrigin(0.5, 1);
     this.setSpriteDisplayHeight(onofrio, ONOFRIO_DISPLAY_HEIGHT);
 
     if (ONOFRIO_IDLE_FRAMES.length > 1) {
       this.anims.create({
         key: 'onofrio-idle',
         frames: phaserFrames(ONOFRIO_IDLE_FRAMES),
-        frameRate: 2,
+        frameRate: ONOFRIO_FRAME_RATE,
         repeat: -1
       });
 
@@ -352,28 +360,29 @@ export class ForestScene extends Phaser.Scene {
 
   createCat(x, y, interactable) {
     const container = this.add.container(x, y).setDepth(11);
-    if (CAT_SPRITE_FRAMES.length === 0) {
-      const placeholder = this.add
-        .rectangle(0, -CAT_DISPLAY_HEIGHT / 2, 56, CAT_DISPLAY_HEIGHT, interactable.color, 0.88)
-        .setStrokeStyle(3, 0x1a1a1a);
-      container.add([placeholder]);
-      interactable.sprite = null;
-      interactable.shadow = this.createContactShadow(container, { width: 36, height: 9, alpha: 0.3, depth: 10 });
-      return container;
-    }
-
-    const catTextureKey = CAT_SPRITE_FRAMES[0].key;
+    const catTextureKey = CAT_IDLE_FRAMES[0].key;
     const cat = this.add.sprite(0, 0, catTextureKey).setOrigin(0.5, 1);
     this.setSpriteDisplayHeight(cat, CAT_DISPLAY_HEIGHT);
 
-    if (CAT_HAS_COMPLETE_WALK) {
+    if (CAT_IDLE_FRAMES.length > 1) {
+      this.anims.create({
+        key: 'cat-idle',
+        frames: phaserFrames(CAT_IDLE_FRAMES),
+        frameRate: CAT_IDLE_FRAME_RATE,
+        repeat: -1
+      });
+      cat.anims.play('cat-idle');
+    }
+
+    if (CAT_WALK_FRAMES.length > 1) {
       this.anims.create({
         key: 'cat-walk',
         frames: phaserFrames(CAT_WALK_FRAMES),
-        frameRate: CAT_FRAME_RATE,
+        frameRate: CAT_WALK_FRAME_RATE,
         repeat: -1
       });
-      interactable.animationKey = 'cat-walk';
+      interactable.walkAnimationKey = 'cat-walk';
+      interactable.idleAnimationKey = 'cat-idle';
     }
 
     container.add([cat]);
@@ -385,7 +394,7 @@ export class ForestScene extends Phaser.Scene {
 
   createDaisy(x, y, interactable) {
     const container = this.add.container(x, y).setDepth(11);
-    const daisy = this.add.sprite(0, 0, 'daisy-idle-1').setOrigin(0.5, 1);
+    const daisy = this.add.sprite(0, 0, 'daisy-idle-01').setOrigin(0.5, 1);
     this.setSpriteDisplayHeight(daisy, DAISY_DISPLAY_HEIGHT);
 
     if (DAISY_IDLE_FRAMES.length > 1) {
@@ -594,8 +603,8 @@ export class ForestScene extends Phaser.Scene {
 
     if (!cat.entranceTween && this.catIntroStarted) {
       cat.sprite.setFlipX(true);
-      if (cat.animationKey) {
-        cat.sprite.anims.play(cat.animationKey, true);
+      if (cat.walkAnimationKey) {
+        cat.sprite.anims.play(cat.walkAnimationKey, true);
       }
       cat.entranceTween = this.tweens.add({
         targets: cat.container,
@@ -603,8 +612,12 @@ export class ForestScene extends Phaser.Scene {
         duration: 3600,
         ease: 'Sine.easeInOut',
         onComplete: () => {
-          cat.sprite.anims.stop();
-          cat.sprite.setTexture(cat.textureKey);
+          if (cat.idleAnimationKey) {
+            cat.sprite.anims.play(cat.idleAnimationKey, true);
+          } else {
+            cat.sprite.anims.stop();
+            cat.sprite.setTexture(cat.textureKey);
+          }
           cat.entranceComplete = true;
         }
       });
