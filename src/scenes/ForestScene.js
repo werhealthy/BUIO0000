@@ -95,13 +95,13 @@ const ONOFRIO_FRAME_RATE = 2;
 const ROAD_Y = (canvasHeight) => canvasHeight - 118;
 const ROMY_DISPLAY_HEIGHT = 145;
 const CAT_DISPLAY_HEIGHT = 75;
-const DAISY_DISPLAY_HEIGHT = 48;
-const ONOFRIO_DISPLAY_HEIGHT = 220;
+const DAISY_DISPLAY_HEIGHT = 58;
+const ONOFRIO_DISPLAY_HEIGHT = 286;
 const SIGN_SCALE = 0.9;
 const PLAYER_START_X = 260;
 const CAT_TARGET_X = 430;
 const DAISY_X = 760;
-const ONOFRIO_X = 1650;
+const ONOFRIO_X = 1140;
 const SIGN_X = 2520;
 const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
@@ -219,8 +219,8 @@ export class ForestScene extends Phaser.Scene {
         label: 'Onofrio',
         x: ONOFRIO_X,
         color: 0xb28cff,
-        width: 58,
-        height: 84,
+        width: 88,
+        height: 150,
         dialogueKey: 'onofrio',
         isAvailable: () => GameState.hasDaisy && !GameState.onofrioCompleted
       },
@@ -354,7 +354,7 @@ export class ForestScene extends Phaser.Scene {
     }
     container.add([onofrio]);
     interactable.sprite = onofrio;
-    interactable.shadow = this.createContactShadow(container, { width: 108, height: 24, alpha: 0.3, depth: 12 });
+    interactable.shadow = this.createContactShadow(container, { width: 138, height: 30, alpha: 0.32, depth: 12 });
     return container;
   }
 
