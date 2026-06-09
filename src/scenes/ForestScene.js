@@ -2,10 +2,10 @@ import Phaser from 'phaser';
 
 // Gli asset restano in src/assets: Vite li trasforma in URL sicuri.
 import backgroundUrl from '../assets/backgrounds/background_01.png?url';
-import romyWalk01Url from '../assets/sprites/characters/romy_walk_01.png?url';
-import romyWalk02Url from '../assets/sprites/characters/romy_walk_02.png?url';
-import romyWalk03Url from '../assets/sprites/characters/romy_walk_03.png?url';
-import romyWalk04Url from '../assets/sprites/characters/romy_walk_04.png?url';
+import romyWalk01Url from '../assets/sprites/characters/romy/romy_walk_01.png?url';
+import romyWalk02Url from '../assets/sprites/characters/romy/romy_walk_02.png?url';
+import romyWalk03Url from '../assets/sprites/characters/romy/romy_walk_03.png?url';
+import romyWalk04Url from '../assets/sprites/characters/romy/romy_walk_04.png?url';
 
 const PLAYER_SPEED = 220;
 const ROMY_FRAME_RATE = 8;
