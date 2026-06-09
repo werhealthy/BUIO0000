@@ -16,6 +16,13 @@ import romyWalk01Url from '../assets/sprites/characters/romy/romy_walk_01.png?ur
 import romyWalk02Url from '../assets/sprites/characters/romy/romy_walk_02.png?url';
 import romyWalk03Url from '../assets/sprites/characters/romy/romy_walk_03.png?url';
 import romyWalk04Url from '../assets/sprites/characters/romy/romy_walk_04.png?url';
+import romyDaisyIdle01Url from '../assets/sprites/characters/romy/romy_daisy_idle_01.png?url';
+import romyDaisyIdle02Url from '../assets/sprites/characters/romy/romy_daisy_idle_02.png?url';
+import romyDaisyIdle03Url from '../assets/sprites/characters/romy/romy_daisy_idle_03.png?url';
+import romyDaisyWalk01Url from '../assets/sprites/characters/romy/romy_daisy_walk_01.png?url';
+import romyDaisyWalk02Url from '../assets/sprites/characters/romy/romy_daisy_walk_02.png?url';
+import romyDaisyWalk03Url from '../assets/sprites/characters/romy/romy_daisy_walk_03.png?url';
+import romyDaisyWalk04Url from '../assets/sprites/characters/romy/romy_daisy_walk_04.png?url';
 import catIdle01Url from '../assets/sprites/characters/cat/cat_idle_01.png?url';
 import catIdle02Url from '../assets/sprites/characters/cat/cat_idle_02.png?url';
 import catIdle03Url from '../assets/sprites/characters/cat/cat_idle_03.png?url';
@@ -29,6 +36,13 @@ import daisyIdle03Url from '../assets/sprites/characters/daisy/daisy_idle_03.png
 import onofrioIdle01Url from '../assets/sprites/characters/onofrio/onofrio_sprite_01.png?url';
 import onofrioIdle02Url from '../assets/sprites/characters/onofrio/onofrio_sprite_02.png?url';
 import onofrioIdle03Url from '../assets/sprites/characters/onofrio/onofrio_sprite_03.png?url';
+
+const signpostAssets = import.meta.glob('../assets/sprites/objects/signpost/signpost_crossroad.png', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+const signpostCrossroadUrl = signpostAssets['../assets/sprites/objects/signpost/signpost_crossroad.png'];
 
 const frame = (key, url) => ({ key, url });
 
@@ -50,6 +64,19 @@ const ROMY_WAKE_FRAMES = [
   frame('romy-wake-02', romyWake02Url),
   frame('romy-wake-03', romyWake03Url),
   frame('romy-wake-04', romyWake04Url)
+];
+
+const ROMY_DAISY_IDLE_FRAMES = [
+  frame('romy-daisy-idle-01', romyDaisyIdle01Url),
+  frame('romy-daisy-idle-02', romyDaisyIdle02Url),
+  frame('romy-daisy-idle-03', romyDaisyIdle03Url)
+];
+
+const ROMY_DAISY_WALK_FRAMES = [
+  frame('romy-daisy-walk-01', romyDaisyWalk01Url),
+  frame('romy-daisy-walk-02', romyDaisyWalk02Url),
+  frame('romy-daisy-walk-03', romyDaisyWalk03Url),
+  frame('romy-daisy-walk-04', romyDaisyWalk04Url)
 ];
 
 const CAT_IDLE_FRAMES = [
@@ -97,7 +124,7 @@ const ROMY_DISPLAY_HEIGHT = 142;
 const CAT_DISPLAY_HEIGHT = 82;
 const DAISY_DISPLAY_HEIGHT = 56;
 const ONOFRIO_DISPLAY_HEIGHT = 312;
-const SIGN_SCALE = 0.9;
+const SIGN_SCALE = 0.58;
 const PLAYER_START_X = 260;
 const CAT_TARGET_X = 430;
 const DAISY_X = 720;
@@ -129,10 +156,16 @@ export class ForestScene extends Phaser.Scene {
     loadFrames(this, ROMY_IDLE_FRAMES);
     loadFrames(this, ROMY_WALK_FRAMES);
     loadFrames(this, ROMY_WAKE_FRAMES);
+    loadFrames(this, ROMY_DAISY_IDLE_FRAMES);
+    loadFrames(this, ROMY_DAISY_WALK_FRAMES);
     loadFrames(this, CAT_IDLE_FRAMES);
     loadFrames(this, CAT_WALK_FRAMES);
     loadFrames(this, DAISY_IDLE_FRAMES);
     loadFrames(this, ONOFRIO_IDLE_FRAMES);
+
+    if (signpostCrossroadUrl) {
+      this.load.image('signpost-crossroad', signpostCrossroadUrl);
+    }
   }
 
   create() {
@@ -215,6 +248,24 @@ export class ForestScene extends Phaser.Scene {
         repeat: -1
       });
     }
+
+    if (ROMY_DAISY_IDLE_FRAMES.length > 1) {
+      this.anims.create({
+        key: 'romy-daisy-idle',
+        frames: phaserFrames(ROMY_DAISY_IDLE_FRAMES),
+        frameRate: ROMY_IDLE_FRAME_RATE,
+        repeat: -1
+      });
+    }
+
+    if (ROMY_DAISY_WALK_FRAMES.length > 1) {
+      this.anims.create({
+        key: 'romy-daisy-walk',
+        frames: phaserFrames(ROMY_DAISY_WALK_FRAMES),
+        frameRate: ROMY_FRAME_RATE,
+        repeat: -1
+      });
+    }
   }
 
   createNpcPlaceholders() {
@@ -252,6 +303,8 @@ export class ForestScene extends Phaser.Scene {
         isAvailable: () => this.daisyRevealed && !GameState.hasDaisy,
         onInteract: () => {
           GameState.hasDaisy = true;
+          this.playRomyIdleAnimation();
+          this.updateNpcVisibility();
         }
       },
       {
@@ -317,6 +370,11 @@ export class ForestScene extends Phaser.Scene {
 
       if (interactable.id === 'daisy') {
         interactable.container = this.createDaisy(interactable.x, this.groundY, interactable);
+        return;
+      }
+
+      if (interactable.id === 'sign_directions') {
+        interactable.container = this.createSignpost(interactable.x, this.groundY, interactable);
         return;
       }
 
@@ -416,6 +474,37 @@ export class ForestScene extends Phaser.Scene {
     container.add([daisy]);
     interactable.sprite = daisy;
     interactable.shadow = this.createContactShadow(container, { width: 24, height: 7, alpha: 0.28, depth: 10 });
+    return container;
+  }
+
+  createSignpost(x, y, interactable) {
+    if (this.textures.exists('signpost-crossroad')) {
+      const container = this.add.container(x, y).setDepth(10);
+      const signpost = this.add.sprite(0, 0, 'signpost-crossroad').setOrigin(0.5, 1);
+      signpost.setScale(interactable.scale ?? SIGN_SCALE);
+      container.add([signpost]);
+      interactable.sprite = signpost;
+      interactable.shadow = this.createContactShadow(container, {
+        width: Math.max(70, signpost.displayWidth * 0.78),
+        height: 18,
+        alpha: 0.3,
+        depth: 9
+      });
+      return container;
+    }
+
+    const container = this.createPlaceholder(x, y, interactable);
+    const label = this.add
+      .text(0, -110, '↙  ★  ↘\n🍓  🐾', {
+        fontFamily: 'Georgia, Times New Roman, serif',
+        fontSize: '20px',
+        color: '#f8e7a2',
+        align: 'center',
+        backgroundColor: '#392414',
+        padding: { x: 8, y: 6 }
+      })
+      .setOrigin(0.5);
+    container.add(label);
     return container;
   }
 
@@ -598,9 +687,12 @@ export class ForestScene extends Phaser.Scene {
         return;
       }
 
-      if (!this.dialogueManager.isActive()) {
-        this.interactWithNearest();
+      if (this.dialogueManager.isActive()) {
+        this.dialogueManager.nextLine();
+        return;
       }
+
+      this.interactWithNearest();
     });
 
     this.input.keyboard.on('keydown-F', () => {
@@ -643,10 +735,10 @@ export class ForestScene extends Phaser.Scene {
     this.romy.setVelocity(velocityX, 0);
 
     if (velocityX !== 0) {
-      this.romy.anims.play('romy-walk', true);
+      this.romy.anims.play(this.getRomyWalkAnimationKey(), true);
       this.romy.setFlipX(velocityX < 0);
     } else {
-      this.romy.anims.play('romy-idle', true);
+      this.playRomyIdleAnimation();
     }
   }
 
@@ -657,6 +749,28 @@ export class ForestScene extends Phaser.Scene {
 
     this.romy.y = this.getRomyY();
     this.romy.setVelocity(0, 0);
+    this.playRomyIdleAnimation();
+  }
+
+  getRomyIdleAnimationKey() {
+    return GameState.hasDaisy && this.anims.exists('romy-daisy-idle') ? 'romy-daisy-idle' : 'romy-idle';
+  }
+
+  getRomyWalkAnimationKey() {
+    return GameState.hasDaisy && this.anims.exists('romy-daisy-walk') ? 'romy-daisy-walk' : 'romy-walk';
+  }
+
+  playRomyIdleAnimation() {
+    if (!this.romy) {
+      return;
+    }
+
+    const idleKey = this.getRomyIdleAnimationKey();
+
+    if (this.anims.exists(idleKey)) {
+      this.romy.anims.play(idleKey, true);
+      this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
+    }
   }
 
   updateNpcVisibility() {
@@ -843,7 +957,7 @@ export class ForestScene extends Phaser.Scene {
 
     if (pose === 'idle') {
       this.isWakingUp = false;
-      this.romy.anims.play('romy-idle', true);
+      this.playRomyIdleAnimation();
       return;
     }
 

@@ -4,13 +4,29 @@ import { GameState } from './GameState.js';
 
 const SCORE_KEYS = ['calore', 'ritmo', 'quiete'];
 
+const PORTRAIT_MAX_HEIGHT = 166;
+const PORTRAIT_MAX_WIDTH = 142;
+
 const PORTRAITS = {
-  ROMY: { texture: 'romy-idle-01', height: 184, flipX: false },
-  GATTO: { texture: 'cat-idle-01', height: 150, flipX: true },
-  DAISY: { texture: 'daisy-idle-01', height: 142, flipX: false },
-  FIORE: { texture: 'daisy-idle-01', height: 142, flipX: false },
-  MARGHERITA: { texture: 'daisy-idle-01', height: 142, flipX: false },
-  ONOFRIO: { texture: 'onofrio-idle-01', height: 236, flipX: false }
+  ROMY: { texture: 'romy-idle-01', daisyTexture: 'romy-daisy-idle-01', height: 146, maxWidth: 118, flipX: false },
+  GATTO: { texture: 'cat-idle-01', height: 118, maxWidth: 118, flipX: true },
+  DAISY: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
+  FIORE: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
+  MARGHERITA: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
+  ONOFRIO: { texture: 'onofrio-idle-01', height: 166, maxWidth: 138, flipX: false }
+};
+
+const getAutoAdvanceDelay = (line = {}) => {
+  if (!line.autoAdvance) {
+    return null;
+  }
+
+  if (Number.isFinite(line.autoAdvanceDelay)) {
+    return line.autoAdvanceDelay;
+  }
+
+  const textLength = (line.text ?? '').length;
+  return Phaser.Math.Clamp(textLength < 95 ? 1600 : 2400, 1200, 2800);
 };
 
 const normalizeSpeaker = (speaker = '') => speaker.trim().toUpperCase();
@@ -26,6 +42,7 @@ export class DialogueManager {
     this.choiceIndex = 0;
     this.choiceRows = [];
     this.systemMode = false;
+    this.autoAdvanceEvent = null;
 
     this.createUi();
     this.hideUi();
@@ -34,9 +51,9 @@ export class DialogueManager {
   createUi() {
     const { width, height } = this.scene.scale;
 
-    const boxWidth = Math.round(width * 0.86);
-    const boxHeight = Math.round(height * 0.26);
-    const boxBottomMargin = 18;
+    const boxWidth = Math.round(width * 0.81);
+    const boxHeight = Math.round(height * 0.2);
+    const boxBottomMargin = 24;
     const boxTop = height - boxBottomMargin - boxHeight;
     const boxLeft = Math.round((width - boxWidth) / 2);
 
@@ -49,9 +66,9 @@ export class DialogueManager {
       boxTop,
       boxRight: boxLeft + boxWidth,
       boxBottom: boxTop + boxHeight,
-      textLeftWithPortrait: boxLeft + 172,
-      textLeftNoPortrait: boxLeft + 28,
-      textRightPadding: 32
+      textLeftWithPortrait: boxLeft + 138,
+      textLeftNoPortrait: boxLeft + 24,
+      textRightPadding: 26
     };
 
     this.boxShadow = this.scene.add.graphics().setScrollFactor(0).setDepth(999);
@@ -61,7 +78,7 @@ export class DialogueManager {
 
     this.drawDialogueFrame();
 
-    this.portraitContainer = this.scene.add.container(boxLeft + 84, boxTop + boxHeight + 10).setScrollFactor(0).setDepth(1003);
+    this.portraitContainer = this.scene.add.container(boxLeft + 70, boxTop + boxHeight + 6).setScrollFactor(0).setDepth(1003);
     this.portraitGlow = this.scene.add.graphics();
     this.portraitSprite = this.scene.add.sprite(0, 0, 'romy-idle-01').setOrigin(0.5, 1);
     this.portraitContainer.add([this.portraitGlow, this.portraitSprite]);
@@ -69,7 +86,7 @@ export class DialogueManager {
     this.speakerText = this.scene.add
       .text(this.layout.textLeftWithPortrait, boxTop + 15, '', {
         fontFamily: 'Georgia, Times New Roman, serif',
-        fontSize: '17px',
+        fontSize: '15px',
         color: '#ffe9a8',
         fontStyle: 'bold',
         letterSpacing: 1
@@ -78,12 +95,12 @@ export class DialogueManager {
       .setDepth(1004);
 
     this.bodyText = this.scene.add
-      .text(this.layout.textLeftWithPortrait, boxTop + 50, '', {
+      .text(this.layout.textLeftWithPortrait, boxTop + 43, '', {
         fontFamily: 'Georgia, Times New Roman, serif',
-        fontSize: '17px',
+        fontSize: '15px',
         color: '#fffaf0',
-        lineSpacing: 5,
-        wordWrap: { width: boxWidth - 210 }
+        lineSpacing: 4,
+        wordWrap: { width: boxWidth - 172 }
       })
       .setScrollFactor(0)
       .setDepth(1004);
@@ -91,7 +108,7 @@ export class DialogueManager {
     this.hintText = this.scene.add
       .text(boxLeft + boxWidth - 22, boxTop + boxHeight - 16, '', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '12px',
+        fontSize: '10px',
         color: '#c8d4cf'
       })
       .setOrigin(1, 0.5)
@@ -103,7 +120,7 @@ export class DialogueManager {
     this.systemText = this.scene.add
       .text(width / 2, Math.round(height * 0.19), '', {
         fontFamily: 'Georgia, Times New Roman, serif',
-        fontSize: '18px',
+        fontSize: '16px',
         color: '#f8efd6',
         align: 'center',
         lineSpacing: 5,
@@ -129,15 +146,15 @@ export class DialogueManager {
 
     this.boxShadow.clear();
     this.boxShadow.fillStyle(0x000000, 0.34);
-    this.boxShadow.fillRoundedRect(boxLeft + 8, boxTop + 8, boxWidth, boxHeight, 18);
+    this.boxShadow.fillRoundedRect(boxLeft + 7, boxTop + 7, boxWidth, boxHeight, 16);
 
     this.box.clear();
     this.box.fillStyle(0x08131c, 0.84);
-    this.box.fillRoundedRect(boxLeft, boxTop, boxWidth, boxHeight, 18);
+    this.box.fillRoundedRect(boxLeft, boxTop, boxWidth, boxHeight, 16);
     this.box.lineStyle(2, 0xf3df9b, 0.74);
-    this.box.strokeRoundedRect(boxLeft, boxTop, boxWidth, boxHeight, 18);
+    this.box.strokeRoundedRect(boxLeft, boxTop, boxWidth, boxHeight, 16);
     this.box.lineStyle(1, 0x9fd7c6, 0.28);
-    this.box.strokeRoundedRect(boxLeft + 5, boxTop + 5, boxWidth - 10, boxHeight - 10, 14);
+    this.box.strokeRoundedRect(boxLeft + 5, boxTop + 5, boxWidth - 10, boxHeight - 10, 12);
   }
 
   drawNamePlate(hasPortrait) {
@@ -145,9 +162,9 @@ export class DialogueManager {
 
     this.namePlate.clear();
     this.namePlate.fillStyle(0x2b1d32, 0.9);
-    this.namePlate.fillRoundedRect(textLeft - 12, this.layout.boxTop + 9, 150, 28, 10);
+    this.namePlate.fillRoundedRect(textLeft - 10, this.layout.boxTop + 8, 132, 24, 9);
     this.namePlate.lineStyle(1, 0xf3df9b, 0.56);
-    this.namePlate.strokeRoundedRect(textLeft - 12, this.layout.boxTop + 9, 150, 28, 10);
+    this.namePlate.strokeRoundedRect(textLeft - 10, this.layout.boxTop + 8, 132, 24, 9);
   }
 
   startDialogue(dialogueKey) {
@@ -158,6 +175,7 @@ export class DialogueManager {
       return;
     }
 
+    this.clearAutoAdvance();
     this.currentDialogue = dialogue;
     this.currentIndex = 0;
     this.active = true;
@@ -166,6 +184,7 @@ export class DialogueManager {
   }
 
   showCurrentLine() {
+    this.clearAutoAdvance();
     this.currentLine = this.currentDialogue[this.currentIndex];
 
     if (!this.currentLine) {
@@ -199,7 +218,7 @@ export class DialogueManager {
     this.drawNamePlate(hasPortrait && speaker);
     this.speakerText.setPosition(textLeft, this.layout.boxTop + 14);
     this.speakerText.setText(speaker);
-    this.bodyText.setPosition(textLeft, this.layout.boxTop + 50);
+    this.bodyText.setPosition(textLeft, this.layout.boxTop + 43);
     this.bodyText.setWordWrapWidth(wrapWidth);
     this.bodyText.setText(this.currentLine.text ?? '');
     this.choosing = Array.isArray(this.currentLine.choices) && this.currentLine.choices.length > 0;
@@ -207,12 +226,13 @@ export class DialogueManager {
 
     if (this.choosing) {
       this.renderChoices();
-      this.hintText.setText('↑ ↓ scegli   E conferma');
+      this.hintText.setText('↑↓ scegli · E');
       return;
     }
 
     this.clearChoices();
-    this.hintText.setText('SPACE continua');
+    this.hintText.setText(this.currentLine.autoAdvance ? 'SPACE/E salta' : 'SPACE continua');
+    this.scheduleAutoAdvance();
   }
 
   showSystemLine() {
@@ -223,8 +243,8 @@ export class DialogueManager {
     this.systemHintText.setVisible(true);
 
     const { width, height } = this.layout;
-    const panelWidth = Math.round(width * 0.72);
-    const panelHeight = this.currentLine.choices ? 84 : 74;
+    const panelWidth = Math.round(width * 0.62);
+    const panelHeight = this.currentLine.choices ? 94 : 70;
     const x = Math.round((width - panelWidth) / 2);
     const y = Math.round(height * 0.1);
 
@@ -245,13 +265,14 @@ export class DialogueManager {
       this.choiceGraphics.setVisible(true);
       this.renderChoices();
       this.systemHintText.setPosition(width / 2, y + panelHeight - 16);
-      this.systemHintText.setText('↑ ↓ scegli   E conferma');
+      this.systemHintText.setText('↑↓ scegli · E');
       return;
     }
 
     this.clearChoices();
     this.systemHintText.setPosition(width / 2, y + panelHeight - 16);
-    this.systemHintText.setText('SPACE continua');
+    this.systemHintText.setText(this.currentLine.autoAdvance ? 'SPACE/E salta' : 'SPACE continua');
+    this.scheduleAutoAdvance();
   }
 
   getTextLeft(hasPortrait) {
@@ -259,33 +280,58 @@ export class DialogueManager {
   }
 
   updatePortrait(speaker) {
-    const portrait = PORTRAITS[normalizeSpeaker(speaker)];
+    const normalizedSpeaker = normalizeSpeaker(speaker);
+    const portrait = PORTRAITS[normalizedSpeaker];
+    const texture = normalizedSpeaker === 'ROMY' && GameState.hasDaisy && this.scene.textures.exists(portrait?.daisyTexture)
+      ? portrait.daisyTexture
+      : portrait?.texture;
 
-    if (!portrait || !this.scene.textures.exists(portrait.texture)) {
+    if (!portrait || !this.scene.textures.exists(texture)) {
       this.portraitContainer.setVisible(false);
       return false;
     }
 
-    this.portraitSprite.setTexture(portrait.texture);
+    this.portraitSprite.setTexture(texture);
     this.portraitSprite.setFlipX(portrait.flipX);
-    this.setPortraitHeight(portrait.height);
+    this.setPortraitSize(portrait);
 
     this.portraitGlow.clear();
     this.portraitGlow.fillStyle(0xf5df9a, 0.14);
-    this.portraitGlow.fillEllipse(0, -Math.round(portrait.height * 0.44), 118, Math.min(142, portrait.height));
+    this.portraitGlow.fillEllipse(0, -Math.round(this.portraitSprite.displayHeight * 0.44), 96, Math.min(118, this.portraitSprite.displayHeight));
     this.portraitGlow.lineStyle(1, 0xffffff, 0.18);
-    this.portraitGlow.strokeEllipse(0, -Math.round(portrait.height * 0.44), 128, Math.min(152, portrait.height + 10));
+    this.portraitGlow.strokeEllipse(0, -Math.round(this.portraitSprite.displayHeight * 0.44), 106, Math.min(128, this.portraitSprite.displayHeight + 8));
 
     this.portraitContainer.setVisible(true);
     return true;
   }
 
-  setPortraitHeight(targetHeight) {
-    if (!this.portraitSprite || this.portraitSprite.height === 0) {
+  setPortraitSize(portrait) {
+    if (!this.portraitSprite || this.portraitSprite.height === 0 || this.portraitSprite.width === 0) {
       return;
     }
 
-    this.portraitSprite.setScale(targetHeight / this.portraitSprite.height);
+    const maxHeight = Math.min(portrait.height ?? PORTRAIT_MAX_HEIGHT, PORTRAIT_MAX_HEIGHT);
+    const maxWidth = Math.min(portrait.maxWidth ?? PORTRAIT_MAX_WIDTH, PORTRAIT_MAX_WIDTH);
+    const scale = Math.min(maxHeight / this.portraitSprite.height, maxWidth / this.portraitSprite.width);
+    this.portraitSprite.setScale(scale);
+  }
+
+  scheduleAutoAdvance() {
+    const delay = getAutoAdvanceDelay(this.currentLine);
+
+    if (!delay || this.choosing) {
+      return;
+    }
+
+    this.autoAdvanceEvent = this.scene.time.delayedCall(delay, () => {
+      this.autoAdvanceEvent = null;
+      this.nextLine();
+    });
+  }
+
+  clearAutoAdvance() {
+    this.autoAdvanceEvent?.remove(false);
+    this.autoAdvanceEvent = null;
   }
 
   nextLine() {
@@ -293,6 +339,7 @@ export class DialogueManager {
       return;
     }
 
+    this.clearAutoAdvance();
     this.runAction(this.currentLine?.action);
 
     if (!this.active) {
@@ -335,6 +382,7 @@ export class DialogueManager {
   }
 
   endDialogue() {
+    this.clearAutoAdvance();
     this.active = false;
     this.choosing = false;
     this.currentDialogue = [];
@@ -360,14 +408,14 @@ export class DialogueManager {
     const rowWidth = this.systemMode
       ? Math.round(this.layout.width * 0.66)
       : this.layout.boxRight - left - this.layout.textRightPadding;
-    const rowHeight = this.systemMode ? 30 : 24;
-    const gap = this.systemMode ? 7 : 5;
+    const rowHeight = this.systemMode ? 30 : 26;
+    const gap = this.systemMode ? 7 : 6;
     const totalHeight = choices.length * rowHeight + Math.max(0, choices.length - 1) * gap;
     const startY = this.systemMode
       ? Math.round(this.layout.height * 0.34)
       : Math.min(
-          this.layout.boxTop + Math.round(this.layout.boxHeight * 0.52),
-          this.layout.boxBottom - 20 - totalHeight
+          this.layout.boxTop + Math.round(this.layout.boxHeight * 0.56),
+          this.layout.boxBottom - 18 - totalHeight
         );
 
     choices.forEach((choice, index) => {
