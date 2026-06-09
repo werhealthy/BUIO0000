@@ -5,26 +5,45 @@
 //   senza diventare cinica o aggressiva.
 
 export const dialogues = {
+  intro_black: [
+    { speaker: "ROMY", text: "...mmm." },
+    { speaker: "ROMY", text: "No, aspetta." },
+    { speaker: "ROMY", text: "Questo non è il mio letto.", action: "revealForestIntro" }
+  ],
+
   main_intro: [
-    { speaker: "ROMY", text: "Dove sono?" },
-    { speaker: "FIORE", text: "Sei nel Bosco delle Mille Direzioni." }
+    { speaker: "ROMY", text: "E questo è decisamente un bosco. Un bosco bellissimo, ma... notturno. Molto notturno." },
+    { speaker: "ROMY", text: "Va bene, Romy. Respira. Strada sotto i piedi, alberi intorno, cuore acceso." },
+    { speaker: "ROMY", text: "Aspetta. Ho sentito qualcosa tra i cespugli.", action: "startCatEntrance" },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "ROMY", text: "Ciao, micio! Tu sembri sapere esattamente dove andare. Io per ora so solo che non sono nel mio letto." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "ROMY", text: "Lo prendo come un incoraggiamento felino." },
+    { speaker: "FIORE", text: "Traduzione: dice che cammini bene per una creatura appena caduta in un bosco impossibile.", action: "revealDaisy" },
+    { speaker: "ROMY", text: "Chi ha parlato?" },
+    { speaker: "FIORE", text: "Quaggiù. Margherita parlante, guida simpatica, altezza strategicamente ridotta." },
+    { speaker: "ROMY", text: "Sei adorabile! E anche un po’ sorprendente, che è una combinazione ottima." },
+    { speaker: "FIORE", text: "Lo so. Raccoglimi e ti spiego come non perderti entro i prossimi tre alberi.", action: "finishMainIntro" }
   ],
 
   daisy_picked: [
-    { speaker: "SISTEMA", text: "Hai raccolto il fiore." },
-    { speaker: "FIORE", text: "Ah. Molto meglio. Finalmente qualcuno con gusto botanico." },
-    { speaker: "ROMY", text: "Vieni con me? C'è un cartello in fondo al sentiero." }
+    { speaker: "SISTEMA", text: "Hai raccolto la Margherita." },
+    { speaker: "FIORE", text: "Ah. Molto meglio. Finalmente qualcuno con gusto botanico e mani abbastanza gentili." },
+    { speaker: "ROMY", text: "Vieni con me? Laggiù intravedo qualcuno sulla strada." },
+    { speaker: "FIORE", text: "Onofrio. Grande fungo, grandi silenzi, grande tendenza a fare domande importanti prima di regalare oggetti." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice: procedere con dignità. O almeno con passi piccoli." }
   ],
 
   cat_intro: [
-    { speaker: "ROMY", text: "Un gatto! Sta camminando come se conoscesse già la strada." },
     { speaker: "GATTO", text: "Miao." },
-    { speaker: "ROMY", text: "Va bene, va bene. Ti seguo piano." }
+    { speaker: "FIORE", text: "Il gatto dice che questo dialogo non dovrebbe più comparire come tappa obbligatoria. E ha ragione." }
   ],
 
   onofrio: [
-    { speaker: "ROMY", text: "Laggiù c'è un fungo. Forse mi stava aspettando." },
+    { speaker: "ROMY", text: "Ciao, Onofrio! Ti vedevo da lontano. Sei molto scenografico." },
     { speaker: "ONOFRIO", text: "Mi chiamo Onofrio, e aspetto solo chi procede senza correre." },
+    { speaker: "FIORE", text: "Vedi? Te l’avevo detto: grande fungo, grande ingresso." },
     { speaker: "ONOFRIO", text: "Prima di darti lo Spruzzino, rispondi." },
     {
       speaker: "ONOFRIO",

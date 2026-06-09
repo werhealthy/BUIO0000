@@ -223,6 +223,18 @@ export class DialogueManager {
       },
       transitionToAreaPittore: () => {
         this.scene.transitionToArea?.('pittore');
+      },
+      revealForestIntro: () => {
+        this.scene.revealForestIntro?.();
+      },
+      startCatEntrance: () => {
+        this.scene.startCatEntrance?.();
+      },
+      revealDaisy: () => {
+        this.scene.revealDaisy?.();
+      },
+      finishMainIntro: () => {
+        this.scene.finishMainIntro?.();
       }
     };
 
