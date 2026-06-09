@@ -1,7 +1,9 @@
 html,
 body {
   margin: 0;
+  width: 100%;
   min-height: 100%;
+  overflow: hidden;
   background: #111a12;
   color: #ffffff;
   font-family: monospace;
@@ -11,11 +13,15 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100vw;
   min-height: 100vh;
+  background: #111a12;
 }
 
 canvas {
+  display: block;
+  max-width: 100vw;
+  max-height: 100vh;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  border: 4px solid #0b0f0c;
 }
