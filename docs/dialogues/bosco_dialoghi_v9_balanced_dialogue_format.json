@@ -1,0 +1,342 @@
+[
+  {
+    "title": "intro_black",
+    "tags": "optional black screen intro",
+    "body": "<<speaker ROMY>>\n...mmm.\nNo, aspetta.\nQuesto non è il mio letto.\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "main_intro",
+    "tags": "main game intro after intro_black",
+    "body": "<<speaker ROMY>>\nA meno che il mio letto non abbia deciso di diventare umido, pieno di foglie...\ne con un fungo che mi sta giudicando.\n...\nOkay. Il fungo mi sta decisamente giudicando.\nDove sono? Pronto? C’è qualcuno?\n<<show_cat>>\n<<speaker ROMY>>\nOh.\nCiao, micetto.\nTu sai dove siamo?\n<<speaker GATTO>>\nMiao.\n<<speaker ROMY>>\nQuesto non è tecnicamente un consiglio.\n<<speaker VOCE>>\nLo è, se sei un gatto.\n<<speaker ROMY>>\nChi ha parlato?\n<<speaker GATTO>>\nMiao.\n<<speaker ROMY>>\nNon dirmi che sei ventriloquo.\n<<speaker VOCE>>\nPiù in basso, creatura verticale.\n<<speaker ROMY>>\nCreatura... verticale?\n<<show_daisy>>\n<<speaker FIORE>>\nFinalmente.\nStavo iniziando a pensare che mi avresti calpestata con molta convinzione.\n<<speaker ROMY>>\nTu sei una margherita.\n<<speaker FIORE>>\nE tu sei sdraiata in un bosco a parlare con una margherita. Direi che nessuna delle due è nella posizione di giudicare.\n<<speaker ROMY>>\nLe margherite parlano?\n<<speaker FIORE>>\nSolo quando hanno qualcosa da dire. Oppure quando sono molto annoiate.\n<<speaker ROMY>>\nOkay. Sto sognando.\n<<speaker FIORE>>\nForse.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice di no.\n<<speaker ROMY>>\nIl gatto ha detto “miao”.\n<<speaker FIORE>>\nSì. È stato molto chiaro.\n<<speaker ROMY>>\nVa bene. Allora, margherita molto chiara, dove sono?\n<<speaker FIORE>>\nSei nel Bosco delle Mille Direzioni.\n<<speaker ROMY>>\nNon sembra un posto in cui volevo andare.\n<<speaker FIORE>>\nOh, nessuno vuole mai venire qui.\nDi solito ci si arriva per sbaglio, per magia, per distrazione...\no perché qualcuno, da qualche parte, ha pensato che fosse un modo elegante per non dire subito la verità.\n<<speaker ROMY>>\nQuale verità?\n<<speaker FIORE>>\nQuella dopo.\n<<speaker ROMY>>\nQuella dopo cosa?\n<<speaker FIORE>>\nDopo il bosco.\n<<speaker ROMY>>\nIo vorrei semplicemente uscire.\n<<speaker FIORE>>\nSemplicemente?\nChe parola buffa da usare in un bosco che non sa contare fino a uno.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nSì, hai ragione. A volte arriva a due, ma solo di martedì.\n<<speaker ROMY>>\nOggi è martedì?\n<<speaker FIORE>>\nNel bosco, quasi mai.\n<<speaker ROMY>>\nSto già odiando questa conversazione.\n<<speaker FIORE>>\nOttimo. Vuol dire che stai ascoltando.\nAscolta bene, creatura smarrita.\nNel Bosco delle Mille Direzioni le strade bisbigliano opinioni.\nSe dici “di qua”, si sposta di là.\nSe corri sicura, ti perde a metà.\nLe foglie fan mappe, i sassi fan finta, la nebbia si annoda se viene convinta.\nUna parola può aprire un cancello, un dubbio può crescere e diventare un ruscello.\nNon c’è una porta già pronta e già scritta: qui l’uscita si accende da una scelta non detta.\nTre volte il bosco ti chiederà piano: che forma ha il futuro che tieni nella mano?\nRispondi col cuore, col dubbio o col naso.\nTanto il destino è un gatto distratto con pessimo caso.\n<<speaker ROMY>>\nAspetta. Il destino è un gatto distratto?\n<<speaker FIORE>>\nTerribilmente.\nUna volta ha trasformato un principe in una teiera solo perché aveva detto “sono bollito”.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nSì, molto triste. Anche se comodo per il tè.\n<<speaker ROMY>>\nQuindi ogni cosa che scelgo cambia l’uscita?\n<<speaker FIORE>>\nPiù o meno.\n<<speaker ROMY>>\n“Più o meno” non mi rassicura.\n<<speaker FIORE>>\nLa rassicurazione è una coperta. Io sono un fiore.\n<<speaker ROMY>>\nE tu cosa c’entri?\n<<speaker FIORE>>\nIo conosco il bosco.\nConosco i suoi sentieri, le sue trappole, le sue scorciatoie e almeno tre dei suoi pettegolezzi più gravi.\n<<speaker ROMY>>\nE puoi aiutarmi a uscire?\n<<speaker FIORE>>\nPosso accompagnarti.\n<<speaker ROMY>>\nTu?\n<<speaker FIORE>>\nSì.\n<<speaker ROMY>>\nSei piantata a terra.\n<<speaker FIORE>>\nQuesto è un dettaglio logistico.\n<<speaker ROMY>>\nE quindi?\n<<speaker FIORE>>\nE quindi vienimi a raccogliere.\n<<speaker ROMY>>\nNon è... crudele?\n<<speaker FIORE>>\nCrudele è lasciare una margherita intelligente a parlare con i funghi.\nSenza offesa, Onofrio.\n<<speaker ROMY>>\nIl fungo si chiama Onofrio?\n<<speaker FIORE>>\nPurtroppo sì. Se l’è scelto da solo.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice che dobbiamo andare.\n<<speaker ROMY>>\nIl gatto ha solo detto “miao”.\n<<speaker FIORE>>\nEppure continua ad avere ragione.\n<<speaker SISTEMA>>\nAvvicinati al fiore e premi E per raccoglierlo.\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "daisy_picked",
+    "tags": "daisy pickup confirmation, compact formatted",
+    "body": "<<speaker SISTEMA>>\nHai raccolto il fiore.\n<<speaker FIORE>>\nAh. Molto meglio.\n<<speaker ROMY>>\nTi ho appena raccolta e tu dici “molto meglio”?\n<<speaker FIORE>>\nCerto. Da qui la vista è più drammatica.\n<<speaker ROMY>>\nDove sei finita?\n<<speaker FIORE>>\nNel tuo taschino.\n<<speaker ROMY>>\nIo non ho un taschino.\n<<speaker FIORE>>\nAllora in un concetto equivalente.\n<<speaker ROMY>>\nQuesta frase non mi rassicura.\n<<speaker FIORE>>\nNel Bosco delle Mille Direzioni la rassicurazione è un lusso. Io sono una guida tascabile.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nDice che preferisce “compagno d’ombra”.\n<<speaker ROMY>>\nQuindi adesso siamo io, una margherita parlante e un gatto nero.\n<<speaker FIORE>>\nUn ottimo inizio per perdersi con stile.\n<<speaker ROMY>>\nNon posso credere che questa sia la mia mattina.\n<<speaker FIORE>>\nNel Bosco delle Mille Direzioni non è mattina.\n<<speaker ROMY>>\nE cos’è?\n<<speaker FIORE>>\nÈ “quasi”.\n<<speaker ROMY>>\nQuasi cosa?\n<<speaker FIORE>>\nEsattamente.\n<<speaker SISTEMA>>\nMuoviti con Freccia Sinistra / Destra o A / D. Premi E vicino agli oggetti strani.\n<<speaker FIORE>>\nAvanti, creatura verticale. Il bosco non aspetta.\n<<speaker ROMY>>\nMi sembrava proprio il tipo di bosco che aspetta.\n<<speaker FIORE>>\nSì, ma in modo passivo-aggressivo.\n<<speaker GATTO>>\nMiao.\n<<speaker ROMY>>\nVa bene. Andiamo.\n",
+    "position": {
+      "x": 100,
+      "y": 300
+    },
+    "colorID": 0
+  },
+  {
+    "title": "onofrio",
+    "tags": "onofrio spruzzino with choice",
+    "body": "<<speaker ROMY>>\nIl fungo mi sta ancora guardando.\n<<speaker FIORE>>\nQuello è Onofrio.\n<<speaker ROMY>>\nIl fungo ha un nome?\n<<speaker FIORE>>\nPurtroppo sì. Se l’è scelto da solo.\n<<speaker ONOFRIO>>\nNon guardo. Valuto l’umidità dell’anima.\n<<speaker ROMY>>\nQuesta frase mi ha fatto pentire di essermi svegliata.\n<<speaker ONOFRIO>>\nOttimo segno. Sei pronta.\n<<speaker ROMY>>\nPer cosa?\n<<speaker ONOFRIO>>\nPer lo Spruzzino.\n<<speaker ROMY>>\nLo... spruzzino?\n<<speaker ONOFRIO>>\nUn dispositivo di riordino cromatico interiore.\n<<speaker FIORE>>\nLui li chiama così. Noi li chiamiamo “non metterlo vicino agli occhi”.\n<<speaker ONOFRIO>>\nQuando il mondo diventa opaco, un piccolo spruzzo e i colori ricordano di avere un lavoro.\n<<speaker ROMY>>\nNon so se questa cosa mi rassicura.\n<<speaker ONOFRIO>>\nLe migliori rassicurazioni non lo fanno. Prima di dartelo, rispondi. Quando il mondo diventa grigio, cosa dovrebbe tornare per prima?\n[[Una luce calda, tipo pane e sole.|onofrio_choice_calore]]\n[[Un rumore che fa muovere i piedi.|onofrio_choice_ritmo]]\n[[Un respiro lento, senza fretta.|onofrio_choice_quiete]]\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "onofrio_test",
+    "tags": "alias onofrio test",
+    "body": "<<go_to_onofrio>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "onofrio_choice_calore",
+    "tags": "score calore",
+    "body": "<<add_score calore 1>>\n<<set_ultima_scelta calore>>\n<<speaker ROMY>>\nUna luce calda. Tipo pane e sole.\n<<speaker ONOFRIO>>\nRisposta morbida. Profuma di muri che hanno visto l’estate.\n<<go_to_onofrio_after_choice>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "onofrio_choice_ritmo",
+    "tags": "score ritmo",
+    "body": "<<add_score ritmo 1>>\n<<set_ultima_scelta ritmo>>\n<<speaker ROMY>>\nUn rumore che fa muovere i piedi.\n<<speaker ONOFRIO>>\nRisposta frizzante. Il bosco approva con due funghi e mezzo.\n<<go_to_onofrio_after_choice>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "onofrio_choice_quiete",
+    "tags": "score quiete",
+    "body": "<<add_score quiete 1>>\n<<set_ultima_scelta quiete>>\n<<speaker ROMY>>\nUn respiro lento. Senza fretta.\n<<speaker ONOFRIO>>\nRisposta calma. Pericolosamente vicina alla saggezza.\n<<go_to_onofrio_after_choice>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "onofrio_after_choice",
+    "tags": "onofrio after spruzzino",
+    "body": "<<give_spruzzino>>\n<<speaker SISTEMA>>\nHai ottenuto lo Spruzzino di Onofrio.\n<<speaker ONOFRIO>>\nUsalo quando qualcuno avrà perso i colori. Oppure quando il mondo farà troppo il serio.\n<<speaker ROMY>>\nQuindi è una cosa sicura?\n<<speaker FIORE>>\nNel bosco “sicuro” è un concetto decorativo.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice di non spruzzarlo sul gatto.\n<<speaker ROMY>>\nFinalmente un consiglio chiaro.\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "crossroad_cappellaio",
+    "tags": "crossroad with hatter and first choice",
+    "body": "<<show_crossroad_symbols>>\n<<speaker ROMY>>\nTre direzioni. Una fragola, una stella e una zampa. Nessuna parola. Solo simboli.\n<<speaker FIORE>>\nIl bosco ama la comunicazione indiretta.\n<<speaker ROMY>>\nQuesto cartello è stato scritto da qualcuno con una febbre molto creativa.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice che sono tutte pessime opzioni. Quindi sono perfette.\n<<show_hatter>>\n<<speaker CAPPELLAIO>>\nNo, no, no. Ferma lì. Non si sceglie una strada guardandola male.\n<<speaker ROMY>>\nTu da dove sei uscito?\n<<speaker CAPPELLAIO>>\nDa una tasca sbagliata. O da una festa finita troppo presto. Non ricordo. Qualcuno ha versato il cielo sul tappeto.\n<<speaker FIORE>>\nNon provare a capirlo troppo in fretta. Fa male alla grammatica.\n<<speaker CAPPELLAIO>>\nTre segni sul legno, tre morsi al destino: una zampa, una stella, un frutto piccino.\n<<speaker ROMY>>\nEcco. Adesso fa anche le rime.\n<<speaker CAPPELLAIO>>\nMa senza colori non scelgo più, mi hanno lasciato un mondo a metà del blu.\n<<speaker ROMY>>\nSenza colori?\n<<speaker CAPPELLAIO>>\nMi hanno rubato il rosso dal naso, il blu dal bicchiere, il verde dal caso. Mi resta il grigio, mi resta il rumore, ridammi, ti prego, almeno un colore!\n<<speaker ROMY>>\nChi te li ha rubati?\n<<speaker CAPPELLAIO>>\nLoro.\n<<speaker ROMY>>\nLoro chi?\n<<speaker CAPPELLAIO>>\nQuelli con le mani piene di niente, quelli che ridono solo di fronte.\n<<speaker FIORE>>\nNon cercare troppo senso. Scappa se lo trovi.\n<<speaker CAPPELLAIO>>\nAvevo coriandoli, carte e tamburi, balli stortissimi sotto muri scuri. Poi vennero in tre, o forse in trentuno, presero il giallo e non dissero a nessuno.\n<<speaker ROMY>>\nQuindi tu mi aiuterai se ti ridò i colori?\n<<speaker CAPPELLAIO>>\nUna promessa, un patto, un fiocco sul fiato: ridammi i colori e sarò delicato.\n<<speaker FIORE>>\nTraduzione: vuole lo spruzzino.\n<<speaker ROMY>>\nQuello di Onofrio?\n<<speaker FIORE>>\nEsatto. Se non serve adesso, allora era davvero solo arredamento pericoloso.\n<<use_spruzzino_on_hatter>>\n<<speaker CAPPELLAIO>>\nOh! Il rosso ritorna, il blu fa rumore, il giallo mi morde, che splendido errore! Ora che il colore mi torna nel petto, rispondi, viandante, ma fallo di getto. Tre strade ti guardano, tutte storte, tre chiavi ridono dietro le porte. Ma prima del passo, del sì, del perché: cosa cerchi davvero, quando cerchi te?\n[[Un posto che sappia di sole.|cap_choice_calore]]\n[[Una luce lontana da seguire.|cap_choice_ritmo]]\n[[Qualcosa che non chieda spiegazioni.|cap_choice_quiete]]\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "cap_choice_calore",
+    "tags": "cappellaio score calore",
+    "body": "<<add_score calore 1>>\n<<set_ultima_scelta calore>>\n<<speaker ROMY>>\nUn posto che sappia di sole.\n<<speaker CAPPELLAIO>>\nAh! Il sole che cola, che scalda, che resta, che entra nei muri e ti spettina in testa.\n<<go_to_crossroad_after_question>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "cap_choice_ritmo",
+    "tags": "cappellaio score ritmo",
+    "body": "<<add_score ritmo 1>>\n<<set_ultima_scelta ritmo>>\n<<speaker ROMY>>\nUna luce lontana da seguire.\n<<speaker CAPPELLAIO>>\nOh! La luce che chiama da sopra i cortili, che sembra vicina ma cambia profili.\n<<go_to_crossroad_after_question>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "cap_choice_quiete",
+    "tags": "cappellaio score quiete",
+    "body": "<<add_score quiete 1>>\n<<set_ultima_scelta quiete>>\n<<speaker ROMY>>\nQualcosa che non chieda spiegazioni.\n<<speaker CAPPELLAIO>>\nAh! Una cosa che resta, che non fa rumore, che dorme di lato vicino al cuore.\n<<go_to_crossroad_after_question>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "crossroad_after_question",
+    "tags": "choose path after hatter",
+    "body": "<<speaker ROMY>>\nQuindi? Qual è la strada giusta?\n<<speaker CAPPELLAIO>>\nLa via più sincera, lo dico col cuore, non sta nella freccia, ma nel tuo rumore. Se il bosco ti imbroglia, se il dubbio ti sfiora, segui ciò che senti. E fallo ora.\n<<speaker ROMY>>\nQuindi non sai quale devo prendere.\n<<speaker CAPPELLAIO>>\nLo so perfettamente, ma sarebbe scortese: le scelte migliori non vogliono attese!\n<<speaker FIORE>>\nTradotto: non ne ha idea.\n<<speaker CAPPELLAIO>>\nTradotto male, fiore pungente! Io so moltissimo, ma in modo indecente. Tre strade, tre facce, tre guai ben vestiti. Da una parte luccica chi pesa il valore. Dall’altra ballano due disastri in fiore. E laggiù, col mantello e la chitarra, c’è uno che chiama “destino” anche una sbarra.\n<<speaker ROMY>>\nNon so se mi sento aiutata.\n<<speaker CAPPELLAIO>>\nAiutata no, ma più colorata sì.\n<<hide_hatter>>\n<<speaker SISTEMA>>\nScegli una direzione.\n[[Laboratorio che luccica troppo.|go_madama]]\n[[Radura del matrimonio impossibile.|go_sposine]]\n[[Sentiero del blu e della chitarra.|go_pittore]]\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "go_madama",
+    "tags": "transition to madama",
+    "body": "<<transition_black madama_caratura>>\n<<go_to_madama_caratura>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "go_sposine",
+    "tags": "transition to sposine",
+    "body": "<<transition_black sposine_scomposte>>\n<<go_to_sposine_scomposte>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "go_pittore",
+    "tags": "transition to pittore",
+    "body": "<<transition_black pittore_blu>>\n<<go_to_pittore_blu>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "madama_caratura",
+    "tags": "scenario madama caratura",
+    "body": "<<scenario_start madama_caratura>>\n<<speaker ROMY>>\nQuesto bosco ha un laboratorio?\n<<speaker FIORE>>\nIl bosco ha tutto. Tranne il buon senso, ma quello era finito.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice di non toccare niente che luccica troppo.\n<<speaker ROMY>>\nPerché?\n<<speaker FIORE>>\nPerché di solito vuole qualcosa in cambio.\n<<show_madama>>\n<<speaker MADAMA>>\nOh. Una visitatrice. Che fortuna preziosa.\n<<speaker ROMY>>\nBuongiorno.\n<<speaker MADAMA>>\nBuongiorno? No, no, no. Qui i buongiorni si lucidano prima di essere detti.\n<<speaker ROMY>>\nMi dispiace?\n<<speaker MADAMA>>\nLo accetto. Ma solo perché oggi sono generosa.\n<<speaker FIORE>>\nBrutto segno.\n<<speaker MADAMA>>\nCara creatura smarrita. Se vuoi attraversare il mio laboratorio, devi aiutarmi con una piccola mansione.\n<<speaker ROMY>>\nQuanto piccola?\n<<speaker MADAMA>>\nMinuscola. Devi solo lucidare settecento anelli, contare le perle che mentono, raddrizzare le collane malinconiche e sorridere mentre lo fai.\n<<speaker ROMY>>\nQuesta non è una piccola mansione.\n<<speaker MADAMA>>\nLo diventa se la chiami opportunità.\n<<speaker ROMY>>\nAh. Quel tipo di piccola mansione.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto ha detto una parolaccia.\n<<speaker ROMY>>\nHa fatto bene.\n<<speaker MADAMA>>\nNaturalmente verrai ricompensata.\n<<speaker ROMY>>\nCon cosa?\n<<speaker MADAMA>>\nCon gratitudine.\n<<speaker ROMY>>\nGratitudine non è una moneta.\n<<speaker MADAMA>>\nAllora con un gelato.\n<<speaker ROMY>>\nUn gelato?\n<<speaker MADAMA>>\nSe vuoi puoi andartelo a prendere tu.\n<<speaker FIORE>>\nIo sto sviluppando un’allergia.\n<<speaker ROMY>>\nNo.\n<<speaker MADAMA>>\nNo?\n<<speaker ROMY>>\nNo.\n<<speaker MADAMA>>\nTemo tu non abbia capito.\n<<speaker ROMY>>\nInvece sì. È per questo che ho detto no.\n<<speaker MADAMA>>\nChe parola ruvida.\n<<speaker FIORE>>\nMa molto ben tagliata.\n<<speaker MADAMA>>\nNessuno esce dal mio laboratorio senza lasciare qualcosa.\n<<speaker ROMY>>\nAllora lascerò una cosa.\n<<speaker MADAMA>>\nFinalmente.\n<<speaker ROMY>>\nLa voglia di restare.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto approva con una certa violenza emotiva.\n<<speaker MADAMA>>\nSe proprio devi andartene, scegli almeno un frammento dal banco. Il bosco ama chi porta via prove.\n[[Prendi la moneta tiepida che profuma di forno.|madama_choice_calore]]\n[[Prendi l’anello che vibra quando qualcuno ride lontano.|madama_choice_ritmo]]\n[[Prendi la chiave sottile che apre soltanto le porte stanche.|madama_choice_quiete]]\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "madama_choice_calore",
+    "tags": "madama score calore",
+    "body": "<<add_score calore 1>>\n<<set_ultima_scelta calore>>\n<<speaker ROMY>>\nPrendo la moneta tiepida.\n<<speaker MADAMA>>\nUna scelta molto domestica. Diffiderei. Tornerai.\n<<speaker ROMY>>\nForse. Ma non per restare.\n<<speaker FIORE>>\nSplendida frase. La ricamerò su una foglia.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nSì, gatto. Anche io ho sentito un po’ di soddisfazione.\n<<transition_black prato_margherite>>\n<<go_to_prato_k>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "madama_choice_ritmo",
+    "tags": "madama score ritmo",
+    "body": "<<add_score ritmo 1>>\n<<set_ultima_scelta ritmo>>\n<<speaker ROMY>>\nPrendo l’anello che vibra.\n<<speaker MADAMA>>\nUna scelta rumorosa. Costa più di quanto ammetta. Tornerai.\n<<speaker ROMY>>\nForse. Ma non per restare.\n<<speaker FIORE>>\nSplendida frase. La ricamerò su una foglia.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nSì, gatto. Anche io ho sentito un po’ di soddisfazione.\n<<transition_black prato_margherite>>\n<<go_to_prato_k>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "madama_choice_quiete",
+    "tags": "madama score quiete",
+    "body": "<<add_score quiete 1>>\n<<set_ultima_scelta quiete>>\n<<speaker ROMY>>\nPrendo la chiave sottile.\n<<speaker MADAMA>>\nUna scelta stanca. Le porte stanche sono le più sincere. Tornerai.\n<<speaker ROMY>>\nForse. Ma non per restare.\n<<speaker FIORE>>\nSplendida frase. La ricamerò su una foglia.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nSì, gatto. Anche io ho sentito un po’ di soddisfazione.\n<<transition_black prato_margherite>>\n<<go_to_prato_k>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "sposine_scomposte",
+    "tags": "scenario gemelle pazze matrimonio",
+    "body": "<<scenario_start sposine_scomposte>>\n<<speaker ROMY>>\nAdesso c’è un matrimonio.\n<<speaker FIORE>>\nNel bosco le cose importanti appaiono senza preavviso.\n<<speaker ROMY>>\nE le cose non importanti?\n<<speaker FIORE>>\nAnche.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice che la torta sembra instabile.\n<<show_sposine>>\n<<speaker SPOSINA UNO>>\nÈ arrivata!\n<<speaker SPOSINA DUE>>\nÈ arrivata davvero!\n<<speaker SPOSINA UNO>>\nLo sapevo!\n<<speaker SPOSINA DUE>>\nNo, tu hai detto che era un lampione!\n<<speaker SPOSINA UNO>>\nUn lampione importante!\n<<speaker ROMY>>\nCiao?\n<<speaker SPOSINA UNO>>\nSei invitata!\n<<speaker SPOSINA DUE>>\nOvviamente!\n<<speaker ROMY>>\nA cosa?\n<<speaker SPOSINE>>\nAl matrimonio!\n<<speaker ROMY>>\nDi chi?\n<<speaker SPOSINA UNO>>\nDomanda aggressiva.\n<<speaker SPOSINA DUE>>\nMolto istituzionale.\n<<speaker FIORE>>\nNel bosco non si chiede “di chi è il matrimonio”. Si chiede “perché la torta mi sta fissando”.\n<<speaker ROMY>>\nLa torta mi sta fissando.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice di fissarla per stabilire dominanza.\n<<speaker SPOSINA UNO>>\nNoi ci sposiamo.\n<<speaker SPOSINA DUE>>\nSì.\n<<speaker SPOSINA UNO>>\nTra di noi.\n<<speaker SPOSINA DUE>>\nCon noi.\n<<speaker SPOSINA UNO>>\nCon il giorno.\n<<speaker SPOSINA DUE>>\nCon la torta.\n<<speaker SPOSINA UNO>>\nCon l’idea di essere invitate ovunque.\n<<speaker ROMY>>\nQuindi non è chiarissimo.\n<<speaker SPOSINE>>\nÈ romanticissimo!\n<<speaker SPOSINA UNO>>\nTu hai perso gli anelli!\n<<speaker SPOSINA DUE>>\nTu hai sposato una sedia durante le prove!\n<<speaker SPOSINA UNO>>\nEra una sedia emotivamente disponibile!\n<<speaker SPOSINA DUE>>\nQuesto è vero.\n<<speaker SPOSINA UNO>>\nTi amo.\n<<speaker SPOSINA DUE>>\nAnch’io.\n<<speaker ROMY>>\nÈ stato un litigio o una promessa?\n<<speaker FIORE>>\nCon loro, spesso entrambe.\n<<speaker SPOSINA UNO>>\nPerò non puoi entrare al matrimonio senza un regalo.\n<<speaker ROMY>>\nMa io non sapevo di venire.\n<<speaker SPOSINA DUE>>\nIl regalo migliore è quello che non sapevi di avere.\n<<speaker ROMY>>\nQuesta frase è quasi saggia.\n<<speaker SPOSINA UNO>>\nGrazie!\n<<speaker SPOSINA DUE>>\nL’abbiamo rubata a una tovaglia.\n<<speaker SPOSINA UNO>>\nScegli cosa lasciare sul tavolo degli sposi!\n<<speaker SPOSINA DUE>>\nChe poi forse siamo noi!\n<<speaker SPOSINA UNO>>\nO forse il tavolo!\n[[Lascia una tovaglia calda con briciole, agrumi e sole.|sposine_choice_calore]]\n[[Lascia una canzone che fa ballare anche le sedie.|sposine_choice_ritmo]]\n[[Lascia un’ora lenta, da aprire quando tutti parlano troppo.|sposine_choice_quiete]]\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "sposine_choice_calore",
+    "tags": "sposine score calore",
+    "body": "<<add_score calore 1>>\n<<set_ultima_scelta calore>>\n<<speaker ROMY>>\nLascio una tovaglia calda.\n<<speaker SPOSINE>>\nUna tovaglia calda! Con le briciole! Questo matrimonio ha ufficialmente fame!\n<<speaker FIORE>>\nFinalmente una gestione matura del caos.\n<<speaker SPOSINA UNO>>\nOra sei ufficialmente invitata.\n<<speaker SPOSINA DUE>>\nAnzi no.\n<<speaker SPOSINA UNO>>\nSei ufficialmente già stata invitata da sempre.\n<<speaker ROMY>>\nQuesto cambia qualcosa?\n<<speaker SPOSINA DUE>>\nSì.\n<<speaker SPOSINA UNO>>\nOra devi lanciare qualcosa.\n<<speaker ROMY>>\nCosa?\n<<speaker GATTO>>\nMiao!\n<<speaker FIORE>>\nIl gatto dice che il matrimonio è pericoloso ma ben organizzato.\n<<speaker SPOSINA UNO>>\nVai verso il prato!\n<<speaker SPOSINA DUE>>\nDove le margherite fanno finta di essere innocenti!\n<<speaker ROMY>>\nFanno finta?\n<<speaker FIORE>>\nNon ascoltarle. O ascoltale moltissimo.\n<<transition_black prato_margherite>>\n<<go_to_prato_k>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "sposine_choice_ritmo",
+    "tags": "sposine score ritmo",
+    "body": "<<add_score ritmo 1>>\n<<set_ultima_scelta ritmo>>\n<<speaker ROMY>>\nLascio una canzone.\n<<speaker SPOSINE>>\nLa canzone! Le sedie hanno capito! Le sedie stanno ballando!\n<<speaker FIORE>>\nFinalmente una gestione matura del caos.\n<<speaker SPOSINA UNO>>\nOra sei ufficialmente invitata.\n<<speaker SPOSINA DUE>>\nAnzi no.\n<<speaker SPOSINA UNO>>\nSei ufficialmente già stata invitata da sempre.\n<<speaker ROMY>>\nQuesto cambia qualcosa?\n<<speaker SPOSINA DUE>>\nSì.\n<<speaker SPOSINA UNO>>\nOra devi lanciare qualcosa.\n<<speaker ROMY>>\nCosa?\n<<speaker GATTO>>\nMiao!\n<<speaker FIORE>>\nIl gatto dice che il matrimonio è pericoloso ma ben organizzato.\n<<speaker SPOSINA UNO>>\nVai verso il prato!\n<<speaker SPOSINA DUE>>\nDove le margherite fanno finta di essere innocenti!\n<<speaker ROMY>>\nFanno finta?\n<<speaker FIORE>>\nNon ascoltarle. O ascoltale moltissimo.\n<<transition_black prato_margherite>>\n<<go_to_prato_k>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "sposine_choice_quiete",
+    "tags": "sposine score quiete",
+    "body": "<<add_score quiete 1>>\n<<set_ultima_scelta quiete>>\n<<speaker ROMY>>\nLascio un’ora lenta.\n<<speaker SPOSINE>>\nOh. È un’ora lenta. Possiamo tenerla per dopo?\n<<speaker FIORE>>\nFinalmente una gestione matura del caos.\n<<speaker SPOSINA UNO>>\nOra sei ufficialmente invitata.\n<<speaker SPOSINA DUE>>\nAnzi no.\n<<speaker SPOSINA UNO>>\nSei ufficialmente già stata invitata da sempre.\n<<speaker ROMY>>\nQuesto cambia qualcosa?\n<<speaker SPOSINA DUE>>\nSì.\n<<speaker SPOSINA UNO>>\nOra devi lanciare qualcosa.\n<<speaker ROMY>>\nCosa?\n<<speaker GATTO>>\nMiao!\n<<speaker FIORE>>\nIl gatto dice che il matrimonio è pericoloso ma ben organizzato.\n<<speaker SPOSINA UNO>>\nVai verso il prato!\n<<speaker SPOSINA DUE>>\nDove le margherite fanno finta di essere innocenti!\n<<speaker ROMY>>\nFanno finta?\n<<speaker FIORE>>\nNon ascoltarle. O ascoltale moltissimo.\n<<transition_black prato_margherite>>\n<<go_to_prato_k>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "pittore_blu",
+    "tags": "scenario pittore del blu",
+    "body": "<<scenario_start pittore_blu>>\n<<speaker ROMY>>\nQuesto sentiero ha una chitarra.\n<<speaker FIORE>>\nAllora non siamo più in pericolo. Siamo in un monologo.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice di prepararti emotivamente.\n<<show_pittore>>\n<<speaker PITTORE>>\nIo non vivo nel bosco. Io lascio che il bosco mi attraversi.\n<<speaker ROMY>>\nQuindi vivi nel bosco.\n<<speaker PITTORE>>\nAnche. Ma con meno possesso.\n<<speaker ROMY>>\nChi sei?\n<<speaker PITTORE>>\nUn uomo libero. Un custode del passaggio. Un ladro gentile di tramonti.\n<<speaker FIORE>>\nTraduco: ha una chitarra.\n<<speaker PITTORE>>\nLa vita, se la stringi, scappa. Se la lasci andare, torna.\n<<speaker ROMY>>\nCome un cane?\n<<speaker PITTORE>>\nCome il vento.\n<<speaker FIORE>>\nI cani almeno hanno più senso.\n<<speaker PITTORE>>\nVedi, io aiuto chi passa. Non per gloria. Non per applausi. Solo perché il mondo è più bello quando qualcuno mi vede aiutarlo.\n<<speaker ROMY>>\nQuesta frase si è tradita da sola.\n<<speaker PITTORE>>\nForse. Ma con una certa eleganza.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice che la posa sul tronco era preparata.\n<<speaker PITTORE>>\nOgni postura è una scelta spirituale.\n<<speaker ROMY>>\nIo volevo solo capire dove andare.\n<<speaker PITTORE>>\nAllora ti farò una domanda. È una domanda che faccio a tutti.\n<<speaker ROMY>>\nHo paura.\n<<speaker PITTORE>>\nCome descriveresti il blu a un cieco?\n<<speaker ROMY>>\nQuesta è una domanda enorme.\n<<speaker PITTORE>>\nIl blu non entra nelle risposte piccole.\n[[Come il mare quando il sole ci cade dentro.|pittore_choice_calore]]\n[[Come una vibrazione lontana prima che inizi la notte.|pittore_choice_ritmo]]\n[[Come il silenzio quando finalmente smette di chiederti qualcosa.|pittore_choice_quiete]]\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "pittore_choice_calore",
+    "tags": "pittore score calore",
+    "body": "<<add_score calore 1>>\n<<set_ultima_scelta calore>>\n<<speaker ROMY>>\nCome il mare quando il sole ci cade dentro.\n<<speaker PITTORE>>\nSì. Un blu che scalda. Un blu con le mani piene di pane. Lo sapevo.\n<<speaker ROMY>>\nCosa?\n<<speaker PITTORE>>\nChe il blu ti aveva già parlato.\n<<speaker FIORE>>\nQuesta frase ha appena chiesto un applauso.\n<<speaker PITTORE>>\nNon serve. Ma se arriva, non lo respingo.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice che preferisce il silenzio.\n<<speaker PITTORE>>\nAnche il silenzio, a volte, è una canzone.\n<<speaker ROMY>>\nCerto. Andiamo prima che diventi un album.\n<<transition_black prato_margherite>>\n<<go_to_prato_k>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "pittore_choice_ritmo",
+    "tags": "pittore score ritmo",
+    "body": "<<add_score ritmo 1>>\n<<set_ultima_scelta ritmo>>\n<<speaker ROMY>>\nCome una vibrazione lontana prima che inizi la notte.\n<<speaker PITTORE>>\nSì. Un blu che arriva prima della musica. Un blu che sa dove mettere i piedi. Lo sapevo.\n<<speaker ROMY>>\nCosa?\n<<speaker PITTORE>>\nChe il blu ti aveva già parlato.\n<<speaker FIORE>>\nQuesta frase ha appena chiesto un applauso.\n<<speaker PITTORE>>\nNon serve. Ma se arriva, non lo respingo.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice che preferisce il silenzio.\n<<speaker PITTORE>>\nAnche il silenzio, a volte, è una canzone.\n<<speaker ROMY>>\nCerto. Andiamo prima che diventi un album.\n<<transition_black prato_margherite>>\n<<go_to_prato_k>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "pittore_choice_quiete",
+    "tags": "pittore score quiete",
+    "body": "<<add_score quiete 1>>\n<<set_ultima_scelta quiete>>\n<<speaker ROMY>>\nCome il silenzio quando finalmente smette di chiederti qualcosa.\n<<speaker PITTORE>>\nSì. Un blu che non pretende. Un blu che ti lascia respirare. Lo sapevo.\n<<speaker ROMY>>\nCosa?\n<<speaker PITTORE>>\nChe il blu ti aveva già parlato.\n<<speaker FIORE>>\nQuesta frase ha appena chiesto un applauso.\n<<speaker PITTORE>>\nNon serve. Ma se arriva, non lo respingo.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice che preferisce il silenzio.\n<<speaker PITTORE>>\nAnche il silenzio, a volte, è una canzone.\n<<speaker ROMY>>\nCerto. Andiamo prima che diventi un album.\n<<transition_black prato_margherite>>\n<<go_to_prato_k>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "prato_k",
+    "tags": "prato margherite con coniglio K",
+    "body": "<<scenario_start prato_margherite>>\n<<speaker ROMY>>\nOh. Questo posto è... ...troppo bello per essere normale.\n<<speaker FIORE>>\nInfatti non è normale.\n<<speaker ROMY>>\nÈ l’uscita?\n<<speaker FIORE>>\nQuasi.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice di non calpestare nessuno.\n<<speaker ROMY>>\nStrano consiglio da parte di uno che ha camminato su ogni cosa.\n<<speaker ROMY>>\nSono bellissime.\n<<speaker FIORE>>\nLo so. Finalmente un posto con un minimo di gusto floreale.\n<<speaker ROMY>>\nAspetta. Tu sei una margherita.\n<<speaker FIORE>>\nE quindi ho degli standard. Mettimi giù.\n<<speaker ROMY>>\nQui?\n<<speaker FIORE>>\nSì. È un buon posto per una margherita che ha camminato troppo.\n<<speaker ROMY>>\nMa non hai camminato.\n<<speaker FIORE>>\nHo supervisionato.\n<<speaker ROMY>>\nÈ diverso.\n<<speaker FIORE>>\nÈ più faticoso.\n<<drop_daisy>>\n<<speaker FIORE>>\nAh. Casa.\n<<speaker ROMY>>\nQuindi tu eri di qui?\n<<speaker FIORE>>\nPiù o meno. Alcune guide non portano fuori dal bosco. Portano fino al punto in cui devi ricordarti qualcosa.\n<<speaker ROMY>>\nRicordarmi cosa?\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nNon guardare me. Guarda là.\n<<show_k>>\n<<speaker ROMY>>\nUn coniglio? Aspetta... Io ti conosco?\n<<speaker FIORE>>\nForse no. Ma qualcosa dentro di te sì.\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice che si chiama K.\n<<speaker ROMY>>\nK?\n<<speaker FIORE>>\nSe un coniglio appare alla fine di un sogno, di solito è scortese non seguirlo.\n<<speaker ROMY>>\nQuesta regola esiste?\n<<speaker FIORE>>\nDa adesso sì.\n<<follow_k>>\n<<speaker ROMY>>\nMi gira un po’ la testa.\n<<speaker FIORE>>\nOttimo.\n<<speaker ROMY>>\nOttimo?\n<<speaker FIORE>>\nI sogni, quando finiscono, fanno sempre un po’ rumore dentro.\n<<speaker ROMY>>\nAspetta. Questo era un sogno?\n<<speaker GATTO>>\nMiao.\n<<speaker FIORE>>\nIl gatto dice: dipende.\n<<speaker ROMY>>\nDipende da cosa?\n<<speaker FIORE>>\nDa quanto ti resta addosso quando ti svegli.\n<<fade_to_white>>\n<<speaker ROMY>>\nNo, no, aspetta. Io stavo cercando l’uscita.\n<<speaker FIORE>>\nL’hai trovata.\n<<speaker ROMY>>\nDov’è?\n<<speaker FIORE>>\nDall’altra parte degli occhi.\n<<speaker ROMY>>\nNon è una risposta rassicurante.\n<<speaker FIORE>>\nNo. Ma è elegante.\n<<speaker ROMY>>\nK!\n<<calculate_finale>>\n<<go_to_white_common>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "white_common",
+    "tags": "white interlude before finale",
+    "body": "<<speaker TESTO>>\nForse era un sogno. O forse era uno di quei ricordi che si travestono da bosco per non farsi riconoscere subito. C’era una volta una caduta. C’era una volta un coniglio. C’era una volta qualcuno che aprì gli occhi e vide qualcosa di strano. Da lì, alcune strade hanno iniziato a comportarsi in modo sospetto.\n<<route_to_finale>>\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "finale_sicilia",
+    "tags": "finale sicilia",
+    "body": "<<scenario_start finale_sicilia>>\n<<speaker TESTO>>\nUna luce calda. Un odore di sale. Pietra chiara sotto il sole. Da qualche parte, una tavola aspetta come se sapesse già il tuo nome.\n<<show_final_cat>>\n<<show_checco>>\n<<speaker ROMY>>\n...mmm. No, aspetta. Dove siamo? Tu? No. Non è possibile.\n<<speaker GATTO>>\nMiao.\n<<speaker CHECCO>>\nTi sei svegliata.\n<<speaker ROMY>>\nOddio. Mi sembrava di essere in un sogno. C’era un bosco. Una margherita parlante. Un gatto nero. E un fungo enorme che mi giudicava.\n<<speaker CHECCO>>\nUn fungo giudicante?\n<<speaker ROMY>>\nMolto giudicante. E poi c’era una margherita. Parlava tantissimo.\n<<speaker CHECCO>>\nMi sembra simpatica.\n<<speaker ROMY>>\nSì. Un po’ insopportabile.\n<<speaker CHECCO>>\nAllora forse l’avrei capita.\n<<speaker ROMY>>\nMa dove siamo?\n<<speaker CHECCO>>\nNon sembra sia stato un incubo. Sembra più un bellissimo sogno. E adesso ne viviamo un altro: abbiamo tutta la Sicilia da esplorare.\n<<speaker TESTO>>\nHo nascosto un viaggio dentro un sogno, perché dirtelo normalmente mi sembrava troppo facile.\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "finale_bristol",
+    "tags": "finale bristol",
+    "body": "<<scenario_start finale_bristol>>\n<<speaker TESTO>>\nUna pioggia sottile. Mattoni scuri. Finestre accese anche quando il cielo fa finta di niente. Da qualche parte, un basso lontano fa vibrare la strada.\n<<show_final_cat>>\n<<show_checco>>\n<<speaker ROMY>>\n...mmm. No, aspetta. Dove siamo? Non dirmi che sei venuto anche qui. Perché il marciapiede sta facendo musica?\n<<speaker GATTO>>\nMiao.\n<<speaker CHECCO>>\nTi sei svegliata.\n<<speaker ROMY>>\nOddio. Mi sembrava di essere in un sogno. C’era un bosco. Una margherita parlante. Un gatto nero. E un fungo enorme che mi giudicava.\n<<speaker CHECCO>>\nUn fungo giudicante?\n<<speaker ROMY>>\nMolto giudicante. E poi c’era una margherita. Parlava tantissimo.\n<<speaker CHECCO>>\nMi sembra simpatica.\n<<speaker ROMY>>\nSì. Un po’ insopportabile.\n<<speaker CHECCO>>\nAllora forse l’avrei capita.\n<<speaker ROMY>>\nMa dove siamo?\n<<speaker CHECCO>>\nNon sembra sia stato un incubo. Forse era un bellissimo sogno. E adesso viviamo quest’altro sogno: abbiamo tutta Bristol da esplorare.\n<<speaker TESTO>>\nHo nascosto un viaggio dentro un sogno, perché dirtelo normalmente mi sembrava troppo facile.\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  },
+  {
+    "title": "finale_grecia",
+    "tags": "finale grecia",
+    "body": "<<scenario_start finale_grecia>>\n<<speaker TESTO>>\nUna luce bianca. Un vento lento. Acqua calma che non ha bisogno di spiegarsi. Da qualche parte, una casa guarda il mare senza avere fretta.\n<<show_final_cat>>\n<<show_checco>>\n<<speaker ROMY>>\n...mmm. No, aspetta. Dove siamo? Tu sembri già in vacanza. Allora perché mi sembra di aver dormito per cento anni e cinque minuti?\n<<speaker GATTO>>\nMiao.\n<<speaker CHECCO>>\nTi sei svegliata.\n<<speaker ROMY>>\nOddio. Mi sembrava di essere in un sogno. C’era un bosco. Una margherita parlante. Un gatto nero. E un fungo enorme che mi giudicava.\n<<speaker CHECCO>>\nUn fungo giudicante?\n<<speaker ROMY>>\nMolto giudicante. E poi c’era una margherita. Parlava tantissimo.\n<<speaker CHECCO>>\nMi sembra simpatica.\n<<speaker ROMY>>\nSì. Un po’ insopportabile.\n<<speaker CHECCO>>\nAllora forse l’avrei capita.\n<<speaker ROMY>>\nMa dove siamo?\n<<speaker CHECCO>>\nNon sembra sia stato un incubo. Era un bellissimo sogno. E questo è l’altro sogno: abbiamo tutta la Grecia da esplorare.\n<<speaker TESTO>>\nHo nascosto un viaggio dentro un sogno, perché dirtelo normalmente mi sembrava troppo facile.\n",
+    "position": {
+      "x": 100,
+      "y": 100
+    },
+    "colorID": 0
+  }
+]
