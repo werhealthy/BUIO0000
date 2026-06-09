@@ -21,8 +21,8 @@ export class DialogueManager {
   createUi() {
     const { width, height } = this.scene.scale;
 
-    const boxWidth = Math.round(width * 0.84);
-    const boxHeight = Math.round(height * 0.23);
+    const boxWidth = Math.round(width * 0.83);
+    const boxHeight = Math.round(height * 0.22);
     const boxBottomMargin = 18;
     const boxTop = height - boxBottomMargin - boxHeight;
     const boxCenterY = boxTop + boxHeight / 2;
@@ -37,7 +37,7 @@ export class DialogueManager {
     this.speakerText = this.scene.add
       .text(boxLeft + 20, boxTop + 14, '', {
         fontFamily: 'monospace',
-        fontSize: '16px',
+        fontSize: '15px',
         color: '#ffe680'
       })
       .setScrollFactor(0)
@@ -46,7 +46,7 @@ export class DialogueManager {
     this.bodyText = this.scene.add
       .text(boxLeft + 20, boxTop + 40, '', {
         fontFamily: 'monospace',
-        fontSize: '14px',
+        fontSize: '13px',
         color: '#ffffff',
         wordWrap: { width: boxWidth - 40 }
       })
@@ -104,6 +104,8 @@ export class DialogueManager {
       this.endDialogue();
       return;
     }
+
+    this.runAction(this.currentLine.showAction);
 
     this.speakerText.setText(this.currentLine.speaker ?? '');
     this.bodyText.setText(this.currentLine.text ?? '');
@@ -196,6 +198,11 @@ export class DialogueManager {
       return;
     }
 
+    if (Array.isArray(action)) {
+      action.forEach((singleAction) => this.runAction(singleAction));
+      return;
+    }
+
     const actions = {
       giveSpruzzino: () => {
         GameState.hasSpruzzino = true;
@@ -242,6 +249,21 @@ export class DialogueManager {
       },
       finishMainIntro: () => {
         this.scene.finishMainIntro?.();
+      },
+      setRomyPoseWake01: () => {
+        this.scene.setRomyPose?.('wake_01');
+      },
+      setRomyPoseWake02: () => {
+        this.scene.setRomyPose?.('wake_02');
+      },
+      setRomyPoseWake03: () => {
+        this.scene.setRomyPose?.('wake_03');
+      },
+      setRomyPoseWake04: () => {
+        this.scene.setRomyPose?.('wake_04');
+      },
+      setRomyPoseIdle: () => {
+        this.scene.setRomyPose?.('idle');
       }
     };
 
