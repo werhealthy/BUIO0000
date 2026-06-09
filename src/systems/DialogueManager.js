@@ -21,14 +21,21 @@ export class DialogueManager {
   createUi() {
     const { width, height } = this.scene.scale;
 
+    const boxWidth = Math.round(width * 0.84);
+    const boxHeight = Math.round(height * 0.23);
+    const boxBottomMargin = 18;
+    const boxTop = height - boxBottomMargin - boxHeight;
+    const boxCenterY = boxTop + boxHeight / 2;
+    const boxLeft = (width - boxWidth) / 2;
+
     this.box = this.scene.add
-      .rectangle(width / 2, height - 76, width - 112, 118, 0x071016, 0.72)
+      .rectangle(width / 2, boxCenterY, boxWidth, boxHeight, 0x071016, 0.72)
       .setStrokeStyle(2, 0xd8f0ff, 0.55)
       .setScrollFactor(0)
       .setDepth(1000);
 
     this.speakerText = this.scene.add
-      .text(76, height - 126, '', {
+      .text(boxLeft + 20, boxTop + 14, '', {
         fontFamily: 'monospace',
         fontSize: '16px',
         color: '#ffe680'
@@ -37,28 +44,28 @@ export class DialogueManager {
       .setDepth(1001);
 
     this.bodyText = this.scene.add
-      .text(76, height - 100, '', {
+      .text(boxLeft + 20, boxTop + 40, '', {
         fontFamily: 'monospace',
         fontSize: '14px',
         color: '#ffffff',
-        wordWrap: { width: width - 152 }
+        wordWrap: { width: boxWidth - 40 }
       })
       .setScrollFactor(0)
       .setDepth(1001);
 
     this.choicesText = this.scene.add
-      .text(88, height - 62, '', {
+      .text(boxLeft + 32, boxTop + Math.round(boxHeight * 0.58), '', {
         fontFamily: 'monospace',
         fontSize: '14px',
         color: '#d8ffd8',
         lineSpacing: 6,
-        wordWrap: { width: width - 176 }
+        wordWrap: { width: boxWidth - 64 }
       })
       .setScrollFactor(0)
       .setDepth(1001);
 
     this.hintText = this.scene.add
-      .text(width - 76, height - 28, '', {
+      .text(boxLeft + boxWidth - 18, height - boxBottomMargin - 12, '', {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#a8a8a8'

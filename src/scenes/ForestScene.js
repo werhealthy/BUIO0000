@@ -30,16 +30,18 @@ const PLAYER_SPEED = 220;
 const ROMY_FRAME_RATE = 5;
 const CAT_FRAME_RATE = 4;
 const DAISY_FRAME_RATE = 3;
-const ROAD_OFFSET_FROM_BOTTOM = 112;
-const ROMY_SCALE = 1.02;
-const CAT_SCALE = 0.56;
-const DAISY_SCALE = 0.34;
-const ONOFRIO_SCALE = 1.38;
+const ROAD_Y = (canvasHeight) => canvasHeight - 115;
+const ROMY_DISPLAY_HEIGHT = 150;
+const CAT_DISPLAY_HEIGHT = 84;
+const DAISY_DISPLAY_HEIGHT = 56;
+const ONOFRIO_DISPLAY_HEIGHT = 215;
 const SIGN_SCALE = 0.9;
-const BACKGROUND_SCALE = 1.69;
-const PLAYER_START_X = 150;
-const CAT_INTRO_TARGET_OFFSET = 150;
-const TRIGGER_NEXT_SCENE_X = 3230;
+const PLAYER_START_X = 260;
+const CAT_TARGET_X = 430;
+const DAISY_X = 760;
+const ONOFRIO_X = 1650;
+const SIGN_X = 2520;
+const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
 const HINT_TEXT = 'Premi E per interagire';
 const ROMY_FRAME_COUNT = 4;
@@ -116,12 +118,13 @@ export class ForestScene extends Phaser.Scene {
   createBackground() {
     const { width, height } = this.scale;
 
-    // Lo sfondo 2293x320 viene scalato in modo uniforme: niente stretching e meno zoom del vecchio moltiplicatore 1.28.
+    // Lo sfondo 5502x1024 parte da sinistra e viene scalato sull'altezza del canvas.
     this.background = this.add.image(0, 0, 'background-01').setOrigin(0, 0).setDepth(0);
-    this.background.setScale(BACKGROUND_SCALE);
+    this.backgroundScale = height / this.background.height;
+    this.background.setScale(this.backgroundScale);
 
     this.worldWidth = Math.max(width, this.background.displayWidth);
-    this.roadY = height - ROAD_OFFSET_FROM_BOTTOM;
+    this.roadY = ROAD_Y(height);
     this.groundY = this.roadY;
     this.physics.world.setBounds(0, 0, this.worldWidth, height);
   }
@@ -131,13 +134,13 @@ export class ForestScene extends Phaser.Scene {
     this.romy.setName('Romy');
     this.romy.setDepth(20);
     this.romy.setOrigin(0.5, 1);
-    this.romy.setScale(ROMY_SCALE);
+    this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
     this.romy.setCollideWorldBounds(true);
 
-    // Corpo fisico allineato al corpo visibile e non all'intero canvas trasparente 128x128.
-    this.romy.body.setSize(40, 80);
-    this.romy.body.setOffset(44, 36);
-    this.romyShadow = this.createContactShadow(this.romy, { width: 70, height: 18, alpha: 0.34, depth: 19 });
+    // Corpo fisico compatto: il movimento resta solo orizzontale e la base resta su ROAD_Y.
+    this.romy.body.setSize(120, 220);
+    this.romy.body.setOffset(196, 292);
+    this.romyShadow = this.createContactShadow(this.romy, { width: 64, height: 14, alpha: 0.34, depth: 19 });
 
     const romyFrames = [
       { key: 'romy-walk-01' },
@@ -172,9 +175,8 @@ export class ForestScene extends Phaser.Scene {
         id: 'onofrio',
         objectName: 'Trigger_Onofrio',
         label: 'Onofrio',
-        x: 820,
+        x: ONOFRIO_X,
         color: 0xb28cff,
-        scale: ONOFRIO_SCALE,
         width: 58,
         height: 84,
         dialogueKey: 'onofrio',
@@ -184,7 +186,7 @@ export class ForestScene extends Phaser.Scene {
         id: 'cat',
         objectName: 'Trigger_CatIntro',
         label: 'Gatto',
-        x: 1500,
+        x: CAT_TARGET_X,
         color: 0x7fd1ff,
         dialogueKey: 'cat_intro',
         isAvailable: () => false,
@@ -196,7 +198,7 @@ export class ForestScene extends Phaser.Scene {
         id: 'daisy',
         objectName: 'Trigger_DaisyIntro',
         label: 'Daisy',
-        x: 430,
+        x: DAISY_X,
         color: 0xf6f2a4,
         dialogueKey: 'daisy_picked',
         isAvailable: () => this.daisyRevealed && !GameState.hasDaisy,
@@ -208,7 +210,7 @@ export class ForestScene extends Phaser.Scene {
         id: 'sign_directions',
         objectName: 'Trigger_DirectionsSign',
         label: 'Tre direzioni',
-        x: 2860,
+        x: SIGN_X,
         color: 0xd39b58,
         width: 112,
         height: 96,
@@ -295,7 +297,8 @@ export class ForestScene extends Phaser.Scene {
 
   createOnofrio(x, y, interactable) {
     const container = this.add.container(x, y).setDepth(13);
-    const onofrio = this.add.sprite(0, 0, 'onofrio-idle-1').setOrigin(0.5, 1).setScale(interactable.scale);
+    const onofrio = this.add.sprite(0, 0, 'onofrio-idle-1').setOrigin(0.5, 1);
+    this.setSpriteDisplayHeight(onofrio, ONOFRIO_DISPLAY_HEIGHT);
 
     this.anims.create({
       key: 'onofrio-idle',
@@ -312,13 +315,14 @@ export class ForestScene extends Phaser.Scene {
     onofrio.anims.play('onofrio-idle');
     container.add([onofrio]);
     interactable.sprite = onofrio;
-    interactable.shadow = this.createContactShadow(container, { width: 92, height: 24, alpha: 0.3, depth: 12 });
+    interactable.shadow = this.createContactShadow(container, { width: 108, height: 24, alpha: 0.3, depth: 12 });
     return container;
   }
 
   createCat(x, y, interactable) {
     const container = this.add.container(x, y).setDepth(11);
-    const cat = this.add.sprite(0, 0, 'cat-walk-1').setOrigin(0.5, 1).setScale(CAT_SCALE);
+    const cat = this.add.sprite(0, 0, 'cat-walk-1').setOrigin(0.5, 1);
+    this.setSpriteDisplayHeight(cat, CAT_DISPLAY_HEIGHT);
 
     this.anims.create({
       key: 'cat-walk',
@@ -334,13 +338,14 @@ export class ForestScene extends Phaser.Scene {
 
     container.add([cat]);
     interactable.sprite = cat;
-    interactable.shadow = this.createContactShadow(container, { width: 42, height: 12, alpha: 0.3, depth: 10 });
+    interactable.shadow = this.createContactShadow(container, { width: 36, height: 9, alpha: 0.3, depth: 10 });
     return container;
   }
 
   createDaisy(x, y, interactable) {
     const container = this.add.container(x, y).setDepth(11);
-    const daisy = this.add.sprite(0, 0, 'daisy-idle-1').setOrigin(0.5, 1).setScale(DAISY_SCALE);
+    const daisy = this.add.sprite(0, 0, 'daisy-idle-1').setOrigin(0.5, 1);
+    this.setSpriteDisplayHeight(daisy, DAISY_DISPLAY_HEIGHT);
 
     this.anims.create({
       key: 'daisy-idle',
@@ -357,17 +362,17 @@ export class ForestScene extends Phaser.Scene {
     daisy.anims.play('daisy-idle');
     container.add([daisy]);
     interactable.sprite = daisy;
-    interactable.shadow = this.createContactShadow(container, { width: 24, height: 8, alpha: 0.28, depth: 10 });
+    interactable.shadow = this.createContactShadow(container, { width: 22, height: 6, alpha: 0.28, depth: 10 });
     return container;
   }
 
   createNarrativeTriggers() {
     this.narrativeTriggers = {
-      Trigger_Onofrio: 760,
+      Trigger_Onofrio: ONOFRIO_X,
       Trigger_CatIntro: 0,
-      Trigger_DaisyIntro: 430,
-      Trigger_DirectionsSign: 2860,
-      Trigger_NextScene: TRIGGER_NEXT_SCENE_X
+      Trigger_DaisyIntro: DAISY_X,
+      Trigger_DirectionsSign: SIGN_X,
+      Trigger_NextScene: Math.max(SIGN_X + 180, this.worldWidth - NEXT_SCENE_MARGIN)
     };
 
     this.BlackTransition = this.add
@@ -391,7 +396,7 @@ export class ForestScene extends Phaser.Scene {
     this.cameras.main.scrollX = 0;
     this.cameras.main.scrollY = 0;
     this.cameras.main.setZoom(1);
-    this.cameras.main.startFollow(this.romy, true, 0.12, 1, 0, 0);
+    this.cameras.main.startFollow(this.romy, true, 0.12, 0, 0, 0);
     this.cameras.main.setDeadzone(Math.round(width * 0.4), height);
   }
 
@@ -468,6 +473,17 @@ export class ForestScene extends Phaser.Scene {
 
   getRomyY() {
     return this.roadY;
+  }
+
+
+  setSpriteDisplayHeight(sprite, targetHeight) {
+    if (!sprite || !targetHeight || sprite.height === 0) {
+      return sprite;
+    }
+
+    const uniformScale = targetHeight / sprite.height;
+    sprite.setScale(uniformScale);
+    return sprite;
   }
 
   moveRomy() {
@@ -550,7 +566,7 @@ export class ForestScene extends Phaser.Scene {
       cat.sprite.anims.play('cat-walk', true);
       cat.entranceTween = this.tweens.add({
         targets: cat.container,
-        x: PLAYER_START_X + CAT_INTRO_TARGET_OFFSET,
+        x: CAT_TARGET_X,
         duration: 3600,
         ease: 'Sine.easeInOut',
         onComplete: () => {
