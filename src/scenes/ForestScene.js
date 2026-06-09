@@ -13,18 +13,31 @@ import catWalk1Url from '../assets/sprites/characters/cat/cat_walk_1.png?url';
 import catWalk2Url from '../assets/sprites/characters/cat/cat_walk_2.png?url';
 import catWalk3Url from '../assets/sprites/characters/cat/cat_walk_3.png?url';
 import catWalk4Url from '../assets/sprites/characters/cat/cat_walk_4.png?url';
+import daisySprite1Url from '../assets/sprites/characters/daisy/daisy_sprite_1.png?url';
+import daisySprite2Url from '../assets/sprites/characters/daisy/daisy_sprite_2.png?url';
+import daisySprite3Url from '../assets/sprites/characters/daisy/daisy_sprite_3.png?url';
+import daisySprite4Url from '../assets/sprites/characters/daisy/daisy_sprite_4.png?url';
 
 const PLAYER_SPEED = 220;
 const ROMY_FRAME_RATE = 8;
 const CAT_FRAME_RATE = 7;
-const ROMY_SCALE = 1.35;
-const GROUND_OFFSET_FROM_BOTTOM = 58;
-const PLAYER_START_X = 120;
-const BACKGROUND_SCALE_MULTIPLIER = 1.28;
-const CAT_PATROL_DISTANCE = 260;
+const DAISY_FRAME_RATE = 5;
+const ROMY_SCALE = 0.92;
+const CAT_SCALE = 0.43;
+const DAISY_SCALE = 0.64;
+const ONOFRIO_SCALE = 0.65;
+const SIGN_SCALE = 0.9;
+const BACKGROUND_SCALE = 1.5;
+const PATH_Y_IN_BACKGROUND = 232;
+const PLAYER_START_X = 150;
+const CAT_PATROL_DISTANCE = 220;
 const TRIGGER_NEXT_SCENE_X = 3230;
 const INTERACTION_DISTANCE = 110;
 const HINT_TEXT = 'Premi E per interagire';
+const ROMY_FRAME_COUNT = 4;
+const ROMY_FEET_PADDING = 13;
+const CAT_FEET_PADDING = 9;
+const DAISY_FEET_PADDING = 12;
 
 const AREA_SPAWN_X = {
   forest: PLAYER_START_X,
@@ -39,7 +52,7 @@ export class ForestScene extends Phaser.Scene {
   }
 
   preload() {
-    // Carichiamo lo sfondo e i quattro frame della camminata di Romy senza modificarli.
+    // Romy ha quattro frame disponibili nel progetto: li carichiamo senza crearne di fittizi.
     this.load.image('background-01', backgroundUrl);
     this.load.image('romy-walk-01', romyWalk01Url);
     this.load.image('romy-walk-02', romyWalk02Url);
@@ -49,11 +62,13 @@ export class ForestScene extends Phaser.Scene {
     this.load.image('cat-walk-2', catWalk2Url);
     this.load.image('cat-walk-3', catWalk3Url);
     this.load.image('cat-walk-4', catWalk4Url);
+    this.load.image('daisy-idle-1', daisySprite1Url);
+    this.load.image('daisy-idle-2', daisySprite2Url);
+    this.load.image('daisy-idle-3', daisySprite3Url);
+    this.load.image('daisy-idle-4', daisySprite4Url);
   }
 
   create() {
-    this.groundY = this.scale.height - GROUND_OFFSET_FROM_BOTTOM;
-    this.worldWidth = this.scale.width;
     this.isTransitioning = false;
 
     this.createBackground();
@@ -64,6 +79,7 @@ export class ForestScene extends Phaser.Scene {
     this.createUi();
     this.createDialogueManager();
     this.createInput();
+    this.updateNpcVisibility();
   }
 
   update() {
@@ -78,34 +94,37 @@ export class ForestScene extends Phaser.Scene {
   createBackground() {
     const { width, height } = this.scale;
 
-    // Lo sfondo viene ingrandito e ancorato in basso: così la camera taglia parte del cielo e rende il terreno più leggibile.
+    // Lo sfondo 2293x320 viene scalato in modo uniforme: niente stretching e meno zoom del vecchio moltiplicatore 1.28.
     this.background = this.add.image(0, height, 'background-01').setOrigin(0, 1).setDepth(0);
-    const scale = (height / this.background.height) * BACKGROUND_SCALE_MULTIPLIER;
-    this.background.setScale(scale);
+    this.background.setScale(BACKGROUND_SCALE);
 
     this.worldWidth = Math.max(width, this.background.displayWidth);
+    this.groundY = height - (this.background.height - PATH_Y_IN_BACKGROUND) * BACKGROUND_SCALE;
     this.physics.world.setBounds(0, 0, this.worldWidth, height);
   }
 
   createRomy() {
-    this.romy = this.physics.add.sprite(PLAYER_START_X, this.groundY, 'romy-walk-01');
+    this.romy = this.physics.add.sprite(PLAYER_START_X, this.getRomyY(), 'romy-walk-01');
+    this.romy.setName('Romy');
     this.romy.setDepth(20);
+    this.romy.setOrigin(0.5, 1);
     this.romy.setScale(ROMY_SCALE);
     this.romy.setCollideWorldBounds(true);
 
-    // Il corpo fisico resta proporzionato alla nuova scala, ma leggermente più piccolo del frame.
-    this.romy.body.setSize(54, 84);
-    this.romy.body.setOffset(37, 34);
+    // Corpo fisico allineato al corpo visibile e non all'intero canvas trasparente 128x128.
+    this.romy.body.setSize(40, 80);
+    this.romy.body.setOffset(44, 36);
 
-    // Animazione semplice: i 4 frame vanno in loop quando Romy cammina.
+    const romyFrames = [
+      { key: 'romy-walk-01' },
+      { key: 'romy-walk-02' },
+      { key: 'romy-walk-03' },
+      { key: 'romy-walk-04' }
+    ].slice(0, ROMY_FRAME_COUNT);
+
     this.anims.create({
       key: 'romy-walk',
-      frames: [
-        { key: 'romy-walk-01' },
-        { key: 'romy-walk-02' },
-        { key: 'romy-walk-03' },
-        { key: 'romy-walk-04' }
-      ],
+      frames: romyFrames,
       frameRate: ROMY_FRAME_RATE,
       repeat: -1
     });
@@ -117,9 +136,11 @@ export class ForestScene extends Phaser.Scene {
         id: 'onofrio',
         objectName: 'Trigger_Onofrio',
         label: 'Onofrio',
-        x: 920,
+        x: 900,
         color: 0xb28cff,
-        scale: 0.82,
+        scale: ONOFRIO_SCALE,
+        width: 58,
+        height: 84,
         dialogueKey: 'onofrio',
         isAvailable: () => !GameState.onofrioCompleted
       },
@@ -127,7 +148,7 @@ export class ForestScene extends Phaser.Scene {
         id: 'cat',
         objectName: 'Trigger_CatIntro',
         label: 'Gatto',
-        x: 1510,
+        x: 1500,
         color: 0x7fd1ff,
         dialogueKey: 'cat_intro',
         isAvailable: () => GameState.onofrioCompleted && !GameState.catIntroSeen,
@@ -139,7 +160,7 @@ export class ForestScene extends Phaser.Scene {
         id: 'daisy',
         objectName: 'Trigger_DaisyIntro',
         label: 'Daisy',
-        x: 2050,
+        x: 2075,
         color: 0xf6f2a4,
         dialogueKey: 'daisy_picked',
         isAvailable: () => GameState.catIntroSeen && !GameState.hasDaisy,
@@ -149,12 +170,13 @@ export class ForestScene extends Phaser.Scene {
       },
       {
         id: 'sign_directions',
-        objectName: 'Sign_Directions',
+        objectName: 'Trigger_DirectionsSign',
         label: 'Tre direzioni',
         x: 2860,
         color: 0xd39b58,
         width: 112,
         height: 96,
+        scale: SIGN_SCALE,
         dialogueKey: 'crossroad_cappellaio',
         isAvailable: () => GameState.hasDaisy && GameState.onofrioCompleted && !GameState.crossroadStarted,
         onInteract: () => {
@@ -197,9 +219,17 @@ export class ForestScene extends Phaser.Scene {
     ];
 
     this.interactables.forEach((interactable) => {
-      interactable.container = interactable.id === 'cat'
-        ? this.createCat(interactable.x, this.groundY, interactable)
-        : this.createPlaceholder(interactable.x, this.groundY, interactable);
+      if (interactable.id === 'cat') {
+        interactable.container = this.createCat(interactable.x, this.groundY, interactable);
+        return;
+      }
+
+      if (interactable.id === 'daisy') {
+        interactable.container = this.createDaisy(interactable.x, this.groundY, interactable);
+        return;
+      }
+
+      interactable.container = this.createPlaceholder(interactable.x, this.groundY, interactable);
     });
   }
 
@@ -224,10 +254,10 @@ export class ForestScene extends Phaser.Scene {
   }
 
   createCat(x, y, interactable) {
-    const container = this.add.container(x, y).setDepth(11);
-    const cat = this.add.sprite(0, -34, 'cat-walk-1').setScale(0.72);
+    const container = this.add.container(x, y + CAT_FEET_PADDING * CAT_SCALE).setDepth(11);
+    const cat = this.add.sprite(0, 0, 'cat-walk-1').setOrigin(0.5, 1).setScale(CAT_SCALE);
     const name = this.add
-      .text(0, -98, interactable.label, {
+      .text(0, -68, interactable.label, {
         fontFamily: 'monospace',
         fontSize: '14px',
         color: '#ffffff',
@@ -253,11 +283,43 @@ export class ForestScene extends Phaser.Scene {
     return container;
   }
 
+  createDaisy(x, y, interactable) {
+    const container = this.add.container(x, y + DAISY_FEET_PADDING * DAISY_SCALE).setDepth(11);
+    const daisy = this.add.sprite(0, 0, 'daisy-idle-1').setOrigin(0.5, 1).setScale(DAISY_SCALE);
+    const name = this.add
+      .text(0, -88, interactable.label, {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#ffffff',
+        backgroundColor: '#000000',
+        padding: { x: 6, y: 3 }
+      })
+      .setOrigin(0.5);
+
+    this.anims.create({
+      key: 'daisy-idle',
+      frames: [
+        { key: 'daisy-idle-1' },
+        { key: 'daisy-idle-2' },
+        { key: 'daisy-idle-3' },
+        { key: 'daisy-idle-4' }
+      ],
+      frameRate: DAISY_FRAME_RATE,
+      repeat: -1
+    });
+
+    daisy.anims.play('daisy-idle');
+    container.add([daisy, name]);
+    interactable.sprite = daisy;
+    return container;
+  }
+
   createNarrativeTriggers() {
     this.narrativeTriggers = {
       Trigger_Onofrio: 720,
       Trigger_CatIntro: 1320,
       Trigger_DaisyIntro: 1880,
+      Trigger_DirectionsSign: 2860,
       Trigger_NextScene: TRIGGER_NEXT_SCENE_X
     };
 
@@ -275,8 +337,9 @@ export class ForestScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, this.worldWidth, height);
     this.cameras.main.scrollX = 0;
     this.cameras.main.scrollY = 0;
+    this.cameras.main.setZoom(1);
     this.cameras.main.startFollow(this.romy, true, 0.12, 0, 0, 0);
-    this.cameras.main.setDeadzone(Math.round(width * 0.35), height);
+    this.cameras.main.setDeadzone(Math.round(width * 0.4), height);
   }
 
   createUi() {
@@ -305,7 +368,8 @@ export class ForestScene extends Phaser.Scene {
     this.keys = this.input.keyboard.addKeys({
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
-      interact: Phaser.Input.Keyboard.KeyCodes.E
+      interact: Phaser.Input.Keyboard.KeyCodes.E,
+      fullscreen: Phaser.Input.Keyboard.KeyCodes.F
     });
 
     this.input.keyboard.on('keydown-SPACE', () => {
@@ -338,6 +402,19 @@ export class ForestScene extends Phaser.Scene {
         this.interactWithNearest();
       }
     });
+
+    this.input.keyboard.on('keydown-F', () => {
+      if (this.scale.isFullscreen) {
+        this.scale.stopFullscreen();
+        return;
+      }
+
+      this.scale.startFullscreen();
+    });
+  }
+
+  getRomyY() {
+    return this.groundY + ROMY_FEET_PADDING * ROMY_SCALE;
   }
 
   moveRomy() {
@@ -350,7 +427,7 @@ export class ForestScene extends Phaser.Scene {
     const right = this.cursors.right.isDown || this.keys.right.isDown;
     const velocityX = (Number(right) - Number(left)) * PLAYER_SPEED;
 
-    this.romy.y = this.groundY;
+    this.romy.y = this.getRomyY();
     this.romy.setVelocity(velocityX, 0);
 
     if (velocityX !== 0) {
@@ -367,7 +444,7 @@ export class ForestScene extends Phaser.Scene {
       return;
     }
 
-    this.romy.y = this.groundY;
+    this.romy.y = this.getRomyY();
     this.romy.setVelocity(0, 0);
     this.romy.anims.stop();
     this.romy.setTexture('romy-walk-01');
@@ -486,7 +563,7 @@ export class ForestScene extends Phaser.Scene {
       duration: 360,
       ease: 'Sine.easeInOut',
       onComplete: () => {
-        this.romy.setPosition(targetX, this.groundY);
+        this.romy.setPosition(targetX, this.getRomyY());
         this.cameras.main.scrollY = 0;
         this.cameras.main.centerOnX(targetX);
         this.updateNpcVisibility();
