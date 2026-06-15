@@ -67,6 +67,13 @@ const sposeAssets = import.meta.glob('../assets/sprites/characters/sposine/{spos
 const sposeUrl = (fileName) => sposeAssets[`../assets/sprites/characters/sposine/${fileName}`];
 
 
+const ceccoAssets = import.meta.glob('../assets/sprites/characters/{Cecco,cecco}/*.{png,PNG}', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+const ceccoUrl = (fileName) => ceccoAssets[`../assets/sprites/characters/Cecco/${fileName}`] ?? ceccoAssets[`../assets/sprites/characters/cecco/${fileName}`];
+
 const rabbitAssets = import.meta.glob('../assets/sprites/characters/coniglio/{coniglio_walk_01.png,coniglio_walk_02.png,coniglio_walk_03.png,coniglio_walk_04.png}', {
   eager: true,
   query: '?url',
@@ -194,6 +201,13 @@ const CAVALLO_IDLE_FRAMES = [
   frame('cavallo-idle-03', cavalloUrl('cavallo_idle_03.png'))
 ].filter(({ url }) => Boolean(url));
 
+const CECCO_IDLE_FRAMES = [
+  frame('cecco-idle-01', ceccoUrl('Cecco Idol 01.png') ?? ceccoUrl('cecco_idol_01.png')),
+  frame('cecco-idle-02', ceccoUrl('Cecco Idol 02.png') ?? ceccoUrl('cecco_idol_02.png')),
+  frame('cecco-idle-03', ceccoUrl('Cecco Idol 03.png') ?? ceccoUrl('cecco_idol_03.png')),
+  frame('cecco-idle-04', ceccoUrl('Cecco Idol 04.png') ?? ceccoUrl('cecco_idol_04.png'))
+].filter(({ url }) => Boolean(url));
+
 const RABBIT_WALK_FRAMES = [
   frame('rabbit-walk-01', rabbitUrl('coniglio_walk_01.png')),
   frame('rabbit-walk-02', rabbitUrl('coniglio_walk_02.png')),
@@ -220,6 +234,7 @@ const MADAMA_FRAME_RATE = 3;
 const SPOSE_FRAME_RATE = 4;
 const CAVALLO_FRAME_RATE = 3;
 const RABBIT_FRAME_RATE = 4;
+const CECCO_FRAME_RATE = 3;
 const CAPPELLAIO_IDLE_FRAME_RATE = 3;
 const CAPPELLAIO_WALK_FRAME_RATE = 7;
 const CAPPELLAIO_DISPLAY_HEIGHT = 210;
@@ -245,8 +260,8 @@ const FINAL_DAISY_X = 1900;
 const FINAL_DIALOGUE_TRIGGER_X = 1820;
 const FINAL_RABBIT_START_OFFSET = -360;
 const FINAL_RABBIT_EXIT_MARGIN = 320;
-const FINAL_RABBIT_MIN_DURATION = 12500;
-const FINAL_RABBIT_MAX_DURATION = 16500;
+const FINAL_RABBIT_MIN_DURATION = 15000;
+const FINAL_RABBIT_MAX_DURATION = 19000;
 const FINAL_SLEEP_FRAME_DELAY = 1180;
 const FINAL_SLEEP_DURATION = 5200;
 const FINAL_FADE_DURATION = 4300;
@@ -311,6 +326,7 @@ export class ForestScene extends Phaser.Scene {
     loadFrames(this, CAPPELLAIO_IDLE_COLOUR_FRAMES);
     loadFrames(this, CAVALLO_IDLE_FRAMES);
     loadFrames(this, RABBIT_WALK_FRAMES);
+    loadFrames(this, CECCO_IDLE_FRAMES);
 
     if (signpostCrossroadUrl) {
       // REAL SIGNPOST ASSET: src/assets/objects/signpost/signpost_crossroad.png
@@ -344,6 +360,7 @@ export class ForestScene extends Phaser.Scene {
     this.createCappellaioAnimations();
     this.createCavalloAnimations();
     this.createRabbitAnimations();
+    this.createCeccoAnimations();
     this.createCappellaio();
     this.createRabbitPlaceholder();
     this.createFinalMeadow();
@@ -630,6 +647,17 @@ export class ForestScene extends Phaser.Scene {
         key: 'cavallo_idle',
         frames: phaserFrames(CAVALLO_IDLE_FRAMES),
         frameRate: CAVALLO_FRAME_RATE,
+        repeat: -1
+      });
+    }
+  }
+
+  createCeccoAnimations() {
+    if (CECCO_IDLE_FRAMES.length > 1 && !this.anims.exists('cecco-idle')) {
+      this.anims.create({
+        key: 'cecco-idle',
+        frames: phaserFrames(CECCO_IDLE_FRAMES),
+        frameRate: CECCO_FRAME_RATE,
         repeat: -1
       });
     }
@@ -1187,6 +1215,10 @@ export class ForestScene extends Phaser.Scene {
   }
 
   isNpcVisible(interactable) {
+    if (this.finalCitySceneActive) {
+      return false;
+    }
+
     if (interactable.id === 'onofrio') {
       return GameState.currentArea === 'forest';
     }
@@ -1604,9 +1636,8 @@ export class ForestScene extends Phaser.Scene {
     this.dialogueManager?.endDialogue?.();
     this.interactHint?.setVisible(false);
 
-    this.time.delayedCall(1300, () => this.showRomyExclamation());
-    this.time.delayedCall(2700, () => this.panCameraForRabbitEntrance());
-    this.time.delayedCall(5000, () => this.playFinalRabbitEntrance());
+    this.time.delayedCall(700, () => this.showRomyExclamation());
+    this.time.delayedCall(1650, () => this.playFinalRabbitEntrance());
   }
 
   showRomyExclamation() {
@@ -1629,20 +1660,9 @@ export class ForestScene extends Phaser.Scene {
     });
   }
 
-  panCameraForRabbitEntrance() {
-    this.cameras.main.stopFollow();
-    const targetScrollX = Phaser.Math.Clamp(this.romy.x - this.scale.width * 0.72, 0, Math.max(0, this.worldWidth - this.scale.width));
-    this.tweens.add({
-      targets: this.cameras.main,
-      scrollX: targetScrollX,
-      duration: 3800,
-      ease: 'Sine.easeInOut'
-    });
-  }
-
   playFinalRabbitEntrance() {
     const startX = this.cameras.main.scrollX + FINAL_RABBIT_START_OFFSET;
-    const endX = Math.max(this.worldWidth + FINAL_RABBIT_EXIT_MARGIN, this.cameras.main.scrollX + this.scale.width + FINAL_RABBIT_EXIT_MARGIN);
+    const endX = this.worldWidth + FINAL_RABBIT_EXIT_MARGIN;
     const travelDistance = Math.abs(endX - startX);
     const duration = Phaser.Math.Clamp(travelDistance * 8.2, FINAL_RABBIT_MIN_DURATION, FINAL_RABBIT_MAX_DURATION);
 
@@ -1651,7 +1671,8 @@ export class ForestScene extends Phaser.Scene {
     this.rabbitSprite?.setFlipX(false);
     this.rabbitSprite?.anims?.play('rabbit_walk', true);
     this.rabbitShadow?.setVisible(true);
-    this.cameras.main.startFollow(this.rabbitContainer, true, 0.006, 0, 0, 0);
+    this.cameras.main.stopFollow();
+    this.cameras.main.startFollow(this.rabbitContainer, true, 1, 0, 0, 0);
 
     this.tweens.add({
       targets: this.rabbitContainer,
@@ -1660,7 +1681,7 @@ export class ForestScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.rabbitContainer?.setVisible(false);
-        this.cameras.main.startFollow(this.romy, true, 0.01, 0, 0, 0);
+        this.cameras.main.stopFollow();
         this.finalRabbitSequenceRunning = false;
         this.dialogueManager?.startDialogue('final_rabbit_reaction');
       }
@@ -1677,7 +1698,7 @@ export class ForestScene extends Phaser.Scene {
     const sleepFrames = ['romy-wake-04', 'romy-wake-03', 'romy-wake-02', 'romy-wake-01'];
     this.romy.anims.stop();
     sleepFrames.forEach((texture, index) => {
-      this.time.delayedCall(index * FINAL_SLEEP_FRAME_DELAY + 420, () => {
+      this.time.delayedCall(index * 360 + 120, () => {
         this.romy.setTexture(texture);
         this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
       });
@@ -1686,7 +1707,7 @@ export class ForestScene extends Phaser.Scene {
       targets: this.romy,
       angle: -8,
       alpha: 0.72,
-      duration: FINAL_SLEEP_DURATION,
+      duration: 1700,
       ease: 'Sine.easeInOut'
     });
   }
@@ -1695,7 +1716,7 @@ export class ForestScene extends Phaser.Scene {
     this.stopRomy();
     this.dialogueManager?.endDialogue?.();
     this.playRomySleepSequence();
-    this.time.delayedCall(FINAL_SLEEP_DURATION + 450, () => {
+    this.time.delayedCall(2100, () => {
       this.BlackTransition?.setVisible(true).setAlpha(0);
       this.tweens.add({
         targets: this.BlackTransition,
@@ -1750,6 +1771,7 @@ export class ForestScene extends Phaser.Scene {
 
     this.finalMeadowContainer?.setVisible(false);
     this.rabbitContainer?.setVisible(false);
+    this.interactables?.forEach((interactable) => interactable.container?.setVisible(false));
     this.finalCitySceneActive = true;
     this.showFinalBackgroundPlaceholder(!this.textures.exists(textureKey));
     this.romy.setVisible(true).setAlpha(1).setAngle(0).setPosition(Math.round(this.scale.width * 0.44), this.getRomyY());
@@ -1766,7 +1788,7 @@ export class ForestScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.BlackTransition?.setVisible(false);
-        this.dialogueManager?.startDialogue('final_checco', { cityName: this.getFinalCityName() });
+        this.dialogueManager?.startDialogue('final_cecco', { cityName: this.getFinalCityName() });
       }
     });
   }
@@ -1786,9 +1808,22 @@ export class ForestScene extends Phaser.Scene {
     }
 
     this.checcoContainer = this.add.container(Math.round(this.scale.width * 0.56), this.getRomyY()).setDepth(19).setVisible(false);
+
+    if (CECCO_IDLE_FRAMES.length) {
+      const cecco = this.add.sprite(0, 0, CECCO_IDLE_FRAMES[0].key).setOrigin(0.5, 1);
+      this.setSpriteDisplayHeight(cecco, ROMY_DISPLAY_HEIGHT + 10);
+      if (this.anims.exists('cecco-idle')) {
+        cecco.anims.play('cecco-idle');
+      }
+      this.checcoContainer.add(cecco);
+      this.checcoSprite = cecco;
+      this.checcoShadow = this.createContactShadow(this.checcoContainer, { width: 66, height: 14, alpha: 0.3, depth: 18 });
+      return;
+    }
+
     const body = this.add.ellipse(0, -74, 54, 126, 0x25364a, 0.94).setStrokeStyle(2, 0xf3df9b, 0.34);
     const head = this.add.circle(0, -152, 25, 0xf1c7a5, 0.96).setStrokeStyle(2, 0x5b3a2e, 0.34);
-    const label = this.add.text(0, -198, 'Checco', {
+    const label = this.add.text(0, -198, 'Cecco', {
       fontFamily: 'Georgia, Times New Roman, serif',
       fontSize: '14px',
       color: '#fff1c4',
@@ -1797,6 +1832,50 @@ export class ForestScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.checcoContainer.add([body, head, label]);
   }
+
+  showFinalCredits() {
+    this.dialogueManager?.endDialogue?.();
+    this.BlackTransition?.setVisible(true).setAlpha(0);
+    this.tweens.add({
+      targets: this.BlackTransition,
+      alpha: 1,
+      duration: 1600,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.romy?.setVisible(false);
+        this.checcoContainer?.setVisible(false);
+        this.showFinalBackgroundPlaceholder(false);
+        this.showCreditsText();
+      }
+    });
+  }
+
+  showCreditsText() {
+    const { width, height } = this.scale;
+    this.creditsText?.destroy();
+    this.creditsText = this.add.text(width / 2, height / 2, 'Giù per il BuKo\n\nIdea, direzione creativa e personaggi: Checco e Romy\nSviluppo: prototype team\nRealizzato con Phaser', {
+      fontFamily: 'Georgia, Times New Roman, serif',
+      fontSize: '24px',
+      color: '#fff4d6',
+      align: 'center',
+      lineSpacing: 12,
+      wordWrap: { width: Math.round(width * 0.78) }
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(980).setAlpha(0);
+
+    this.tweens.add({ targets: this.creditsText, alpha: 1, duration: 1200, ease: 'Sine.easeInOut' });
+    this.time.delayedCall(6200, () => this.returnToMainMenu());
+  }
+
+  returnToMainMenu() {
+    this.tweens.add({
+      targets: this.creditsText,
+      alpha: 0,
+      duration: 900,
+      ease: 'Sine.easeInOut',
+      onComplete: () => this.scene.start('MenuScene')
+    });
+  }
+
 
   showFinalWallpaper() {
     this.dialogueManager?.endDialogue?.();

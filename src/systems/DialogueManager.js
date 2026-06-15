@@ -22,7 +22,8 @@ const PORTRAITS = {
   cappellaio: { texture: 'cappellaio_idle_01', colourTexture: 'cappellaio_idle_colour_01', flipX: false, offsetY: 0 },
   madama: { texture: 'madama-idle-01', flipX: false, offsetY: 0 },
   spose: { texture: 'spose-idle-01', fallbackTextures: ['spose-idle-02', 'spose-idle-03', 'spose-idle-04'], flipX: false, offsetY: 0 },
-  cavallo: { texture: 'cavallo-idle-01', fallbackTextures: ['cavallo-idle-02', 'cavallo-idle-03'], flipX: false, offsetY: 0 }
+  cavallo: { texture: 'cavallo-idle-01', fallbackTextures: ['cavallo-idle-02', 'cavallo-idle-03'], flipX: false, offsetY: 0 },
+  cecco: { texture: 'cecco-idle-01', fallbackTextures: ['cecco-idle-02', 'cecco-idle-03', 'cecco-idle-04'], flipX: false, offsetY: 0 }
 };
 
 const SPEAKER_ALIASES = {
@@ -44,7 +45,8 @@ const SPEAKER_ALIASES = {
   'sposina uno': 'spose',
   'sposina due': 'spose',
   cavallo: 'cavallo',
-  checco: null,
+  checco: 'cecco',
+  cecco: 'cecco',
   sistema: null
 };
 
@@ -431,11 +433,17 @@ export class DialogueManager {
     this.choiceIndex = 0;
 
     const { width, height } = this.layout;
-    const panelWidth = Math.round(width * 0.72);
+    const questionText = this.interpolateText(this.currentLine.text ?? '');
+    const questionLength = questionText.length;
+    const maxPanelWidth = Math.round(width * 0.68);
+    const minPanelWidth = Math.round(width * 0.36);
+    const estimatedTextWidth = questionLength * 8.4 + 118;
+    const panelWidth = Phaser.Math.Clamp(Math.round(estimatedTextWidth), minPanelWidth, maxPanelWidth);
     const panelX = Math.round((width - panelWidth) / 2);
     const panelY = Math.round(height * 0.08);
-    const questionLength = (this.currentLine.text ?? '').length;
-    const panelHeight = Phaser.Math.Clamp(150 + Math.ceil(questionLength / 38) * 24, 178, 270);
+    const wrapWidth = panelWidth - 74;
+    const estimatedLines = Math.max(1, Math.ceil(questionLength * 8.4 / wrapWidth));
+    const panelHeight = Phaser.Math.Clamp(96 + estimatedLines * 25, 128, 230);
     const speakerLabel = normalizeSpeaker(speaker) === 'sistema' ? 'CARTELLO' : speaker;
 
     this.choicePromptGraphics.setVisible(true);
@@ -456,9 +464,9 @@ export class DialogueManager {
 
     this.choicePromptSpeakerText.setPosition(width / 2, panelY + 22).setText(speakerLabel ?? '');
     this.choicePromptText.setFontSize(questionLength > 120 ? '14px' : '15px');
-    this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 72 : 58));
-    this.choicePromptText.setWordWrapWidth(panelWidth - 86);
-    this.choicePromptText.setText(this.interpolateText(this.currentLine.text ?? ''));
+    this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 66 : 54));
+    this.choicePromptText.setWordWrapWidth(wrapWidth);
+    this.choicePromptText.setText(questionText);
 
     this.renderChoices();
     const rowHeight = 46;
@@ -828,6 +836,9 @@ export class DialogueManager {
       },
       showFinalWallpaper: () => {
         this.scene.showFinalWallpaper?.();
+      },
+      showFinalCredits: () => {
+        this.scene.showFinalCredits?.();
       },
       revealForestIntro: () => {
         this.scene.revealForestIntro?.();
