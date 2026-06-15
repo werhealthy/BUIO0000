@@ -579,10 +579,10 @@ export const dialogues = {
   ],
 
   final_rabbit_reaction: [
-    { speaker: "ROMY", text: "Oddio…", action: "playRomySleepSequence", autoAdvance: true, autoAdvanceDelay: 2200 },
-    { speaker: "ROMY", text: "Mi si chiudono gli occhi…", autoAdvance: true, autoAdvanceDelay: 2600 },
-    { speaker: "ROMY", text: "Cosa sta succedendo?", autoAdvance: true, autoAdvanceDelay: 2600 },
-    { speaker: "SISTEMA", text: "Il prato si fa silenzioso. Romy scivola lentamente nel sonno.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 2400 }
+    { speaker: "ROMY", text: "Oddio…", autoAdvance: true, autoAdvanceDelay: 1800 },
+    { speaker: "ROMY", text: "Mi sento poco bene…", autoAdvance: true, autoAdvanceDelay: 2100 },
+    { speaker: "ROMY", text: "Mi si chiudono gli occhi…", autoAdvance: true, autoAdvanceDelay: 2100 },
+    { speaker: "ROMY", text: "Cosa sta succedendo?", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 1900 }
   ],
 
   final_cecco: [
@@ -596,6 +596,6 @@ export const dialogues = {
     { speaker: "ROMY", text: "Che bello…" },
     { speaker: "ROMY", text: "Però è strano…" },
     { speaker: "ROMY", text: "Mi sembra di aver appena sognato." },
-    { speaker: "ROMY", text: "Mi sembrava di cadere giù per un buco.", action: "showFinalCredits" }
+    { speaker: "ROMY", text: "Mi sembrava di cadere giù per un buco.", action: "showFinalWallpaper" }
   ]
 };

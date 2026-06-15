@@ -67,12 +67,12 @@ const sposeAssets = import.meta.glob('../assets/sprites/characters/sposine/{spos
 const sposeUrl = (fileName) => sposeAssets[`../assets/sprites/characters/sposine/${fileName}`];
 
 
-const ceccoAssets = import.meta.glob('../assets/sprites/characters/{Cecco,cecco}/*.{png,PNG}', {
+const ceccoAssets = import.meta.glob('../assets/sprites/characters/{checco,Checco,cecco,Cecco}/*.{png,PNG}', {
   eager: true,
   query: '?url',
   import: 'default'
 });
-const ceccoUrl = (fileName) => ceccoAssets[`../assets/sprites/characters/Cecco/${fileName}`] ?? ceccoAssets[`../assets/sprites/characters/cecco/${fileName}`];
+const ceccoUrl = (fileName) => ceccoAssets[`../assets/sprites/characters/checco/${fileName}`] ?? ceccoAssets[`../assets/sprites/characters/Checco/${fileName}`] ?? ceccoAssets[`../assets/sprites/characters/cecco/${fileName}`] ?? ceccoAssets[`../assets/sprites/characters/Cecco/${fileName}`];
 
 const rabbitAssets = import.meta.glob('../assets/sprites/characters/coniglio/{coniglio_walk_01.png,coniglio_walk_02.png,coniglio_walk_03.png,coniglio_walk_04.png}', {
   eager: true,
@@ -202,10 +202,10 @@ const CAVALLO_IDLE_FRAMES = [
 ].filter(({ url }) => Boolean(url));
 
 const CECCO_IDLE_FRAMES = [
-  frame('cecco-idle-01', ceccoUrl('Cecco Idol 01.png') ?? ceccoUrl('cecco_idol_01.png')),
-  frame('cecco-idle-02', ceccoUrl('Cecco Idol 02.png') ?? ceccoUrl('cecco_idol_02.png')),
-  frame('cecco-idle-03', ceccoUrl('Cecco Idol 03.png') ?? ceccoUrl('cecco_idol_03.png')),
-  frame('cecco-idle-04', ceccoUrl('Cecco Idol 04.png') ?? ceccoUrl('cecco_idol_04.png'))
+  frame('cecco-idle-01', ceccoUrl('checco_idle_01.png')),
+  frame('cecco-idle-02', ceccoUrl('checco_idle_02.png')),
+  frame('cecco-idle-03', ceccoUrl('checco_idle_03.png')),
+  frame('cecco-idle-04', ceccoUrl('checco_idle_04.png'))
 ].filter(({ url }) => Boolean(url));
 
 const RABBIT_WALK_FRAMES = [
@@ -258,13 +258,14 @@ const RABBIT_X = 2440;
 const FINAL_MEADOW_X = 1460;
 const FINAL_DAISY_X = 1900;
 const FINAL_DIALOGUE_TRIGGER_X = 1820;
-const FINAL_RABBIT_START_OFFSET = -360;
-const FINAL_RABBIT_EXIT_MARGIN = 320;
-const FINAL_RABBIT_MIN_DURATION = 15000;
-const FINAL_RABBIT_MAX_DURATION = 19000;
-const FINAL_SLEEP_FRAME_DELAY = 1180;
-const FINAL_SLEEP_DURATION = 5200;
-const FINAL_FADE_DURATION = 4300;
+const FINAL_RABBIT_START_MARGIN = 170;
+const FINAL_RABBIT_EXIT_MARGIN = 260;
+const FINAL_RABBIT_MIN_DURATION = 2200;
+const FINAL_RABBIT_MAX_DURATION = 3200;
+const FINAL_SLEEP_FRAME_DELAY = 260;
+const FINAL_SLEEP_DURATION = 1160;
+const FINAL_SLEEP_TO_FADE_DELAY = 280;
+const FINAL_FADE_DURATION = 1700;
 const FINAL_CITY_FADE_IN_DURATION = 2600;
 const FINAL_WALLPAPER_FADE_DURATION = 3200;
 const NEXT_SCENE_MARGIN = 180;
@@ -347,6 +348,8 @@ export class ForestScene extends Phaser.Scene {
     this.finalRabbitSequenceRunning = false;
     this.finalCitySceneActive = false;
     this.finalSleepSequenceStarted = false;
+    this.finalRabbitExited = false;
+    this.finalWallpaperButton = null;
 
     this.createBackground();
     this.createRomy();
@@ -1208,7 +1211,7 @@ export class ForestScene extends Phaser.Scene {
     });
     this.cappellaioContainer?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
     this.cappellaioShadow?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
-    this.rabbitContainer?.setVisible(GameState.currentArea === 'finale' && GameState.finalRabbitSeen);
+    this.rabbitContainer?.setVisible(GameState.currentArea === 'finale' && this.finalRabbitSequenceRunning && !this.finalRabbitExited);
     if (!this.isCappellaioEntering) {
       this.updateCappellaioAnimation();
     }
@@ -1636,8 +1639,10 @@ export class ForestScene extends Phaser.Scene {
     this.dialogueManager?.endDialogue?.();
     this.interactHint?.setVisible(false);
 
-    this.time.delayedCall(700, () => this.showRomyExclamation());
-    this.time.delayedCall(1650, () => this.playFinalRabbitEntrance());
+    const cat = this.interactables?.find((interactable) => interactable.id === 'cat');
+    this.setCatIdle(cat);
+    this.time.delayedCall(220, () => this.showRomyExclamation());
+    this.time.delayedCall(820, () => this.panCameraLeftForRabbit());
   }
 
   showRomyExclamation() {
@@ -1660,11 +1665,24 @@ export class ForestScene extends Phaser.Scene {
     });
   }
 
+  panCameraLeftForRabbit() {
+    const targetScrollX = Phaser.Math.Clamp(this.cameras.main.scrollX - Math.round(this.scale.width * 0.36), 0, Math.max(0, this.worldWidth - this.scale.width));
+    this.cameras.main.stopFollow();
+    this.tweens.add({
+      targets: this.cameras.main,
+      scrollX: targetScrollX,
+      duration: 1050,
+      ease: 'Sine.easeInOut',
+      onComplete: () => this.playFinalRabbitEntrance()
+    });
+  }
+
   playFinalRabbitEntrance() {
-    const startX = this.cameras.main.scrollX + FINAL_RABBIT_START_OFFSET;
-    const endX = this.worldWidth + FINAL_RABBIT_EXIT_MARGIN;
+    const camera = this.cameras.main;
+    const startX = camera.scrollX - FINAL_RABBIT_START_MARGIN;
+    const endX = Math.min(this.worldWidth + FINAL_RABBIT_EXIT_MARGIN, camera.scrollX + this.scale.width + Math.round(this.scale.width * 1.15));
     const travelDistance = Math.abs(endX - startX);
-    const duration = Phaser.Math.Clamp(travelDistance * 8.2, FINAL_RABBIT_MIN_DURATION, FINAL_RABBIT_MAX_DURATION);
+    const duration = Phaser.Math.Clamp(travelDistance * 2.2, FINAL_RABBIT_MIN_DURATION, FINAL_RABBIT_MAX_DURATION);
 
     this.rabbitContainer.setPosition(startX, this.getRomyY());
     this.rabbitContainer.setVisible(true);
@@ -1681,9 +1699,20 @@ export class ForestScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.rabbitContainer?.setVisible(false);
+        this.rabbitShadow?.setVisible(false);
+        this.finalRabbitExited = true;
         this.cameras.main.stopFollow();
-        this.finalRabbitSequenceRunning = false;
-        this.dialogueManager?.startDialogue('final_rabbit_reaction');
+        this.tweens.add({
+          targets: this.cameras.main,
+          scrollX: Phaser.Math.Clamp(this.romy.x - this.scale.width * 0.45, 0, Math.max(0, this.worldWidth - this.scale.width)),
+          duration: 1250,
+          ease: 'Sine.easeInOut',
+          onComplete: () => {
+            this.finalRabbitSequenceRunning = false;
+            this.stopRomy();
+            this.dialogueManager?.startDialogue('final_rabbit_reaction');
+          }
+        });
       }
     });
   }
@@ -1698,7 +1727,7 @@ export class ForestScene extends Phaser.Scene {
     const sleepFrames = ['romy-wake-04', 'romy-wake-03', 'romy-wake-02', 'romy-wake-01'];
     this.romy.anims.stop();
     sleepFrames.forEach((texture, index) => {
-      this.time.delayedCall(index * 360 + 120, () => {
+      this.time.delayedCall(index * FINAL_SLEEP_FRAME_DELAY + 80, () => {
         this.romy.setTexture(texture);
         this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
       });
@@ -1707,7 +1736,7 @@ export class ForestScene extends Phaser.Scene {
       targets: this.romy,
       angle: -8,
       alpha: 0.72,
-      duration: 1700,
+      duration: FINAL_SLEEP_DURATION,
       ease: 'Sine.easeInOut'
     });
   }
@@ -1716,7 +1745,7 @@ export class ForestScene extends Phaser.Scene {
     this.stopRomy();
     this.dialogueManager?.endDialogue?.();
     this.playRomySleepSequence();
-    this.time.delayedCall(2100, () => {
+    this.time.delayedCall(FINAL_SLEEP_DURATION + FINAL_SLEEP_TO_FADE_DELAY, () => {
       this.BlackTransition?.setVisible(true).setAlpha(0);
       this.tweens.add({
         targets: this.BlackTransition,
@@ -1833,50 +1862,6 @@ export class ForestScene extends Phaser.Scene {
     this.checcoContainer.add([body, head, label]);
   }
 
-  showFinalCredits() {
-    this.dialogueManager?.endDialogue?.();
-    this.BlackTransition?.setVisible(true).setAlpha(0);
-    this.tweens.add({
-      targets: this.BlackTransition,
-      alpha: 1,
-      duration: 1600,
-      ease: 'Sine.easeInOut',
-      onComplete: () => {
-        this.romy?.setVisible(false);
-        this.checcoContainer?.setVisible(false);
-        this.showFinalBackgroundPlaceholder(false);
-        this.showCreditsText();
-      }
-    });
-  }
-
-  showCreditsText() {
-    const { width, height } = this.scale;
-    this.creditsText?.destroy();
-    this.creditsText = this.add.text(width / 2, height / 2, 'Giù per il BuKo\n\nIdea, direzione creativa e personaggi: Checco e Romy\nSviluppo: prototype team\nRealizzato con Phaser', {
-      fontFamily: 'Georgia, Times New Roman, serif',
-      fontSize: '24px',
-      color: '#fff4d6',
-      align: 'center',
-      lineSpacing: 12,
-      wordWrap: { width: Math.round(width * 0.78) }
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(980).setAlpha(0);
-
-    this.tweens.add({ targets: this.creditsText, alpha: 1, duration: 1200, ease: 'Sine.easeInOut' });
-    this.time.delayedCall(6200, () => this.returnToMainMenu());
-  }
-
-  returnToMainMenu() {
-    this.tweens.add({
-      targets: this.creditsText,
-      alpha: 0,
-      duration: 900,
-      ease: 'Sine.easeInOut',
-      onComplete: () => this.scene.start('MenuScene')
-    });
-  }
-
-
   showFinalWallpaper() {
     this.dialogueManager?.endDialogue?.();
     this.BlackTransition?.setVisible(true).setAlpha(0);
@@ -1889,14 +1874,12 @@ export class ForestScene extends Phaser.Scene {
         this.romy?.setVisible(false);
         this.checcoContainer?.setVisible(false);
         this.showFinalBackgroundPlaceholder(false);
-        if (this.textures.exists('background-menu-final')) {
-          this.background.setTexture('background-menu-final');
-        } else {
-          this.background.setTexture('background-01');
-        }
-        this.backgroundScale = this.scale.height / this.background.height;
-        this.background.setScale(this.backgroundScale);
-        this.worldWidth = Math.max(this.scale.width, this.background.displayWidth);
+        const wallpaperKey = this.textures.exists('background-menu-final') ? 'background-menu-final' : 'background-01';
+        this.background.setTexture(wallpaperKey);
+        const scale = Math.max(this.scale.width / this.background.width, this.scale.height / this.background.height);
+        this.background.setScale(scale);
+        this.background.setOrigin(0.5, 0.5).setPosition(this.scale.width / 2, this.scale.height / 2).setScrollFactor(0).setDepth(0);
+        this.worldWidth = this.scale.width;
         this.cameras.main.stopFollow();
         this.cameras.main.scrollX = 0;
         this.cameras.main.setBounds(0, 0, this.worldWidth, this.scale.height);
@@ -1905,10 +1888,46 @@ export class ForestScene extends Phaser.Scene {
           alpha: 0,
           duration: FINAL_WALLPAPER_FADE_DURATION,
           ease: 'Sine.easeInOut',
-          onComplete: () => this.BlackTransition?.setVisible(false)
+          onComplete: () => {
+            this.BlackTransition?.setVisible(false);
+            this.showNewGameButton();
+          }
         });
       }
     });
+  }
+
+  showNewGameButton() {
+    const { width, height } = this.scale;
+    this.finalWallpaperButton?.destroy();
+    const container = this.add.container(width / 2, height * 0.78).setScrollFactor(0).setDepth(980).setAlpha(0);
+    const box = this.add
+      .rectangle(0, 0, 360, 62, 0x4b2f24, 0.82)
+      .setStrokeStyle(2, 0xffe0a3, 0.9)
+      .setInteractive({ useHandCursor: true });
+    const text = this.add.text(0, 0, 'Inizia una nuova partita', {
+      fontFamily: 'Georgia, Times New Roman, serif',
+      fontSize: '24px',
+      color: '#fff5cf',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    const goToMenu = () => this.scene.start('MenuScene');
+    box.on('pointerover', () => {
+      box.setFillStyle(0x203d3c, 0.94);
+      text.setColor('#ffffff');
+    });
+    box.on('pointerout', () => {
+      box.setFillStyle(0x4b2f24, 0.82);
+      text.setColor('#fff5cf');
+    });
+    box.on('pointerdown', goToMenu);
+    container.add([box, text]);
+    this.finalWallpaperButton = container;
+    this.tweens.add({ targets: container, alpha: 1, duration: 2400, ease: 'Sine.easeInOut' });
+    this.input.keyboard.once('keydown-SPACE', goToMenu);
+    this.input.keyboard.once('keydown-E', goToMenu);
+    this.input.keyboard.once('keydown-ENTER', goToMenu);
   }
 
   showFinalBackgroundPlaceholder(visible) {
