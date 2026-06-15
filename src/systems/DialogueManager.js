@@ -19,7 +19,7 @@ const PORTRAITS = {
   cat: { texture: 'cat-idle-01', flipX: true, offsetY: 0 },
   daisy: { texture: 'daisy-idle-01', flipX: false, offsetY: 0 },
   onofrio: { texture: 'onofrio-idle-01', fallbackTextures: ['onofrio-idle-02', 'onofrio-idle-03'], flipX: false, offsetY: 0 },
-  cappellaio: { texture: 'cappellaio-idle-01', colourTexture: 'cappellaio-idle-colour-01', flipX: false, offsetY: 0 },
+  cappellaio: { texture: 'cappellaio_idle_01', colourTexture: 'cappellaio_idle_colour_01', flipX: false, offsetY: 0 },
   madama: { texture: 'madama-idle-01', flipX: false, offsetY: 0 },
   spose: { texture: 'spose-idle-01', fallbackTextures: ['spose-idle-02', 'spose-idle-03', 'spose-idle-04'], flipX: false, offsetY: 0 },
   cavallo: { texture: 'cavallo-idle-01', fallbackTextures: ['cavallo-idle-02', 'cavallo-idle-03'], flipX: false, offsetY: 0 }
@@ -341,7 +341,7 @@ export class DialogueManager {
     this.hideSystemUi();
     this.hideChoicePromptUi();
     this.showStandardUi();
-    const hasPortrait = this.updatePortrait(speaker);
+    const hasPortrait = this.updatePortraitForSpeaker(speaker);
     const textLeft = this.getTextLeft(hasPortrait);
     const wrapWidth = this.layout.boxRight - textLeft - this.layout.textRightPadding;
 
@@ -361,7 +361,7 @@ export class DialogueManager {
     }
 
     this.clearChoices();
-    this.hintText.setText(this.currentLine.autoAdvance ? 'SPACE/E salta' : 'SPACE continua');
+    this.hintText.setText(this.currentLine.autoAdvance ? 'SPACE/E/TAB salta' : 'SPACE continua · TAB salta');
     this.scheduleAutoAdvance();
   }
 
@@ -402,7 +402,7 @@ export class DialogueManager {
 
     this.clearChoices();
     this.systemHintText.setPosition(width / 2, y + panelHeight - 16);
-    this.systemHintText.setText(this.currentLine.autoAdvance ? 'SPACE/E salta' : 'SPACE continua');
+    this.systemHintText.setText(this.currentLine.autoAdvance ? 'SPACE/E/TAB salta' : 'SPACE continua · TAB salta');
     this.scheduleAutoAdvance();
   }
 
@@ -425,7 +425,8 @@ export class DialogueManager {
     const panelWidth = Math.round(width * 0.7);
     const panelX = Math.round((width - panelWidth) / 2);
     const panelY = Math.round(height * 0.12);
-    const panelHeight = Math.max(138, Math.round(this.layout.height * 0.19));
+    const questionLength = (this.currentLine.text ?? '').length;
+    const panelHeight = Math.max(questionLength > 120 ? 170 : 150, Math.round(this.layout.height * 0.22));
     const speakerLabel = normalizeSpeaker(speaker) === 'sistema' ? 'CARTELLO' : speaker;
 
     this.choicePromptGraphics.setVisible(true);
@@ -437,16 +438,17 @@ export class DialogueManager {
     this.choicePromptGraphics.clear();
     this.choicePromptGraphics.fillStyle(0x000000, 0.28);
     this.choicePromptGraphics.fillRoundedRect(panelX + 6, panelY + 6, panelWidth, panelHeight, 16);
-    this.choicePromptGraphics.fillStyle(0x061620, 0.86);
+    this.choicePromptGraphics.fillStyle(0x041018, 0.9);
     this.choicePromptGraphics.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 16);
-    this.choicePromptGraphics.lineStyle(2, 0xf3df9b, 0.7);
+    this.choicePromptGraphics.lineStyle(2, 0xffedb0, 0.82);
     this.choicePromptGraphics.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 16);
     this.choicePromptGraphics.lineStyle(1, 0x9fd7c6, 0.32);
     this.choicePromptGraphics.strokeRoundedRect(panelX + 5, panelY + 5, panelWidth - 10, panelHeight - 10, 12);
 
     this.choicePromptSpeakerText.setPosition(width / 2, panelY + 22).setText(speakerLabel ?? '');
-    this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 72 : 62));
-    this.choicePromptText.setWordWrapWidth(panelWidth - 80);
+    this.choicePromptText.setFontSize(questionLength > 135 ? '15px' : '16px');
+    this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 76 : 64));
+    this.choicePromptText.setWordWrapWidth(panelWidth - 120);
     this.choicePromptText.setText(this.currentLine.text ?? '');
 
     this.renderChoices();
@@ -463,33 +465,59 @@ export class DialogueManager {
     return hasPortrait ? this.layout.textLeftWithPortrait : this.layout.textLeftNoPortrait;
   }
 
-  updatePortrait(speaker) {
-    const portrait = getPortraitConfigForSpeaker(speaker);
-    let texture = getPortraitKeyForSpeaker(speaker);
+  updatePortraitForSpeaker(speaker) {
+    const originalSpeaker = speaker;
+    const normalizedSpeaker = String(speaker || '').trim().toLowerCase();
+    const portrait = getPortraitConfigForSpeaker(normalizedSpeaker);
+    let portraitKey = getPortraitKeyForSpeaker(normalizedSpeaker);
 
-    if (portrait && (!texture || !this.scene.textures.exists(texture))) {
-      texture = portrait.fallbackTextures?.find((fallbackTexture) => this.scene.textures.exists(fallbackTexture));
+    if (portrait && (!portraitKey || !this.scene.textures.exists(portraitKey))) {
+      portraitKey = portrait.fallbackTextures?.find((fallbackTexture) => this.scene.textures.exists(fallbackTexture)) ?? portraitKey;
     }
 
-    if (!portrait || !texture || !this.scene.textures.exists(texture)) {
+    const textureExists = Boolean(portraitKey && this.scene.textures.exists(portraitKey));
+
+    if (!portrait || !textureExists) {
       this.portraitContainer.setVisible(false);
+      this.portraitFrame.setVisible(false);
+      this.portraitSprite.setVisible(false);
       if (DEBUG_PORTRAITS) {
-        console.debug('[Portrait] hidden', { speaker, texture });
+        console.debug('[Portrait] hidden', {
+          speaker: originalSpeaker,
+          normalizedSpeaker,
+          portraitKey,
+          textureExists,
+          containerVisible: this.portraitContainer.visible,
+          imageVisible: this.portraitSprite.visible
+        });
       }
       return false;
     }
 
-    this.portraitSprite.setTexture(texture);
+    this.portraitContainer.setVisible(true).setDepth(1003);
+    this.portraitFrame.setVisible(true);
+    this.portraitSprite.setVisible(true);
+    this.portraitSprite.setTexture(portraitKey);
     this.portraitSprite.setFlipX(portrait.flipX);
-    this.setPortraitSize();
+    this.resizePortraitInsideCircle();
     this.portraitSprite.setPosition(portrait.offsetX ?? 0, portrait.offsetY ?? 0);
     this.drawFixedPortraitFrame();
 
-    this.portraitContainer.setVisible(true);
     if (DEBUG_PORTRAITS) {
-      console.debug('[Portrait] shown', { speaker, texture });
+      console.debug('[Portrait] shown', {
+        speaker: originalSpeaker,
+        normalizedSpeaker,
+        portraitKey,
+        textureExists,
+        containerVisible: this.portraitContainer.visible,
+        imageVisible: this.portraitSprite.visible
+      });
     }
     return true;
+  }
+
+  resizePortraitInsideCircle() {
+    return this.setPortraitSize();
   }
 
   setPortraitSize() {
@@ -520,6 +548,14 @@ export class DialogueManager {
   clearAutoAdvance() {
     this.autoAdvanceEvent?.remove(false);
     this.autoAdvanceEvent = null;
+  }
+
+  skipOrNextLine() {
+    if (this.choosing) {
+      return;
+    }
+
+    this.nextLine();
   }
 
   nextLine() {
@@ -624,15 +660,15 @@ export class DialogueManager {
       const selected = index === this.choiceIndex;
       const y = startY + index * (rowHeight + gap);
 
-      this.choiceGraphics.fillStyle(selected ? 0xf3df9b : 0x07131d, selected ? 0.38 : 0.72);
+      this.choiceGraphics.fillStyle(selected ? 0xf3df9b : 0x02070d, selected ? 0.5 : 0.84);
       this.choiceGraphics.fillRoundedRect(left, y, rowWidth, rowHeight, 9);
-      this.choiceGraphics.lineStyle(selected ? 2 : 1, selected ? 0xfff1b8 : 0x9fd7c6, selected ? 1 : 0.58);
+      this.choiceGraphics.lineStyle(selected ? 3 : 1, selected ? 0xfff4c8 : 0xc8f4e8, selected ? 1 : 0.74);
       this.choiceGraphics.strokeRoundedRect(left, y, rowWidth, rowHeight, 9);
 
       const arrow = this.scene.add
         .text(left + 14, y + rowHeight / 2, selected ? '➤' : '', {
           fontFamily: 'Arial, sans-serif',
-          fontSize: selected ? '14px' : '11px',
+          fontSize: selected ? '16px' : '11px',
           color: selected ? '#ffe9a8' : '#9fd7c6'
         })
         .setOrigin(0, 0.5)

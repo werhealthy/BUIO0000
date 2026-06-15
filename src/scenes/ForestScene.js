@@ -6,6 +6,7 @@ import { GameState } from '../systems/GameState.js';
 // Gli asset restano in src/assets: Vite li trasforma in URL sicuri.
 import backgroundUrl from '../assets/backgrounds/background_01.png?url';
 import backgroundGioielliUrl from '../assets/backgrounds/background_gioielli.png?url';
+import backgroundSposineUrl from '../assets/backgrounds/background_sposine.png?url';
 import romyIdle01Url from '../assets/sprites/characters/romy/romy_idle_01.png?url';
 import romyIdle02Url from '../assets/sprites/characters/romy/romy_idle_02.png?url';
 import romyIdle03Url from '../assets/sprites/characters/romy/romy_idle_03.png?url';
@@ -134,24 +135,24 @@ const ONOFRIO_IDLE_FRAMES = [
 
 
 const CAPPELLAIO_IDLE_FRAMES = [
-  frame('cappellaio-idle-01', cappellaioUrl('cappellaio_idle_01.png')),
-  frame('cappellaio-idle-02', cappellaioUrl('cappellaio_idle_02.png')),
-  frame('cappellaio-idle-03', cappellaioUrl('cappellaio_idle_03.png')),
-  frame('cappellaio-idle-04', cappellaioUrl('cappellaio_idle_04.png'))
+  frame('cappellaio_idle_01', cappellaioUrl('cappellaio_idle_01.png')),
+  frame('cappellaio_idle_02', cappellaioUrl('cappellaio_idle_02.png')),
+  frame('cappellaio_idle_03', cappellaioUrl('cappellaio_idle_03.png')),
+  frame('cappellaio_idle_04', cappellaioUrl('cappellaio_idle_04.png'))
 ].filter(({ url }) => Boolean(url));
 
 const CAPPELLAIO_WALK_FRAMES = [
-  frame('cappellaio-walk-01', cappellaioUrl('cappellaio_walk_01.png')),
-  frame('cappellaio-walk-02', cappellaioUrl('cappellaio_walk_02.png')),
-  frame('cappellaio-walk-03', cappellaioUrl('cappellaio_walk_03.png')),
-  frame('cappellaio-walk-04', cappellaioUrl('cappellaio_walk_04.png'))
+  frame('cappellaio_walk_01', cappellaioUrl('cappellaio_walk_01.png')),
+  frame('cappellaio_walk_02', cappellaioUrl('cappellaio_walk_02.png')),
+  frame('cappellaio_walk_03', cappellaioUrl('cappellaio_walk_03.png')),
+  frame('cappellaio_walk_04', cappellaioUrl('cappellaio_walk_04.png'))
 ].filter(({ url }) => Boolean(url));
 
 const CAPPELLAIO_IDLE_COLOUR_FRAMES = [
-  frame('cappellaio-idle-colour-01', cappellaioUrl('cappellaio_idle_colour_01.png')),
-  frame('cappellaio-idle-colour-02', cappellaioUrl('cappellaio_idle_colour_02.png')),
-  frame('cappellaio-idle-colour-03', cappellaioUrl('cappellaio_idle_colour_03.png')),
-  frame('cappellaio-idle-colour-04', cappellaioUrl('cappellaio_idle_colour_04.png'))
+  frame('cappellaio_idle_colour_01', cappellaioUrl('cappellaio_idle_colour_01.png')),
+  frame('cappellaio_idle_colour_02', cappellaioUrl('cappellaio_idle_colour_02.png')),
+  frame('cappellaio_idle_colour_03', cappellaioUrl('cappellaio_idle_colour_03.png')),
+  frame('cappellaio_idle_colour_04', cappellaioUrl('cappellaio_idle_colour_04.png'))
 ].filter(({ url }) => Boolean(url));
 
 const MADAMA_IDLE_FRAMES = [
@@ -240,6 +241,7 @@ export class ForestScene extends Phaser.Scene {
     // Carica solo gli asset reali elencati per personaggio.
     this.load.image('background-01', backgroundUrl);
     this.load.image('background-gioielli', backgroundGioielliUrl);
+    this.load.image('background-sposine', backgroundSposineUrl);
     loadFrames(this, ROMY_IDLE_FRAMES);
     loadFrames(this, ROMY_WALK_FRAMES);
     loadFrames(this, ROMY_WAKE_FRAMES);
@@ -525,27 +527,27 @@ export class ForestScene extends Phaser.Scene {
 
   createCappellaioAnimations() {
     // Optional Cappellaio assets are connected only when real files exist in src/assets/sprites/characters/cappellaio/.
-    if (CAPPELLAIO_IDLE_FRAMES.length > 1 && !this.anims.exists('cappellaio-idle')) {
+    if (CAPPELLAIO_IDLE_FRAMES.length > 1 && !this.anims.exists('cappellaio_idle')) {
       this.anims.create({
-        key: 'cappellaio-idle',
+        key: 'cappellaio_idle',
         frames: phaserFrames(CAPPELLAIO_IDLE_FRAMES),
         frameRate: CAPPELLAIO_IDLE_FRAME_RATE,
         repeat: -1
       });
     }
 
-    if (CAPPELLAIO_WALK_FRAMES.length > 1 && !this.anims.exists('cappellaio-walk')) {
+    if (CAPPELLAIO_WALK_FRAMES.length > 1 && !this.anims.exists('cappellaio_walk')) {
       this.anims.create({
-        key: 'cappellaio-walk',
+        key: 'cappellaio_walk',
         frames: phaserFrames(CAPPELLAIO_WALK_FRAMES),
         frameRate: CAPPELLAIO_WALK_FRAME_RATE,
         repeat: -1
       });
     }
 
-    if (CAPPELLAIO_IDLE_COLOUR_FRAMES.length > 1 && !this.anims.exists('cappellaio-idle-colour')) {
+    if (CAPPELLAIO_IDLE_COLOUR_FRAMES.length > 1 && !this.anims.exists('cappellaio_idle_colour')) {
       this.anims.create({
-        key: 'cappellaio-idle-colour',
+        key: 'cappellaio_idle_colour',
         frames: phaserFrames(CAPPELLAIO_IDLE_COLOUR_FRAMES),
         frameRate: CAPPELLAIO_IDLE_FRAME_RATE,
         repeat: -1
@@ -630,10 +632,10 @@ export class ForestScene extends Phaser.Scene {
       return;
     }
 
-    const animationKey = GameState.hatterColored && this.anims.exists('cappellaio-idle-colour')
-      ? 'cappellaio-idle-colour'
-      : this.anims.exists('cappellaio-idle')
-        ? 'cappellaio-idle'
+    const animationKey = GameState.hatterColored && this.anims.exists('cappellaio_idle_colour')
+      ? 'cappellaio_idle_colour'
+      : this.anims.exists('cappellaio_idle')
+        ? 'cappellaio_idle'
         : null;
 
     if (animationKey) {
@@ -947,16 +949,24 @@ export class ForestScene extends Phaser.Scene {
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
       interact: Phaser.Input.Keyboard.KeyCodes.E,
-      fullscreen: Phaser.Input.Keyboard.KeyCodes.F
+      fullscreen: Phaser.Input.Keyboard.KeyCodes.F,
+      skip: Phaser.Input.Keyboard.KeyCodes.TAB
     });
 
-    this.input.keyboard.on('keydown-SPACE', () => {
+    const skipDialogue = () => {
       if (this.blackIntroActive) {
         this.advanceBlackIntro();
         return;
       }
 
-      this.dialogueManager.nextLine();
+      this.dialogueManager.skipOrNextLine();
+    };
+
+    this.input.keyboard.on('keydown-SPACE', skipDialogue);
+
+    this.input.keyboard.on('keydown-TAB', (event) => {
+      event?.preventDefault?.();
+      skipDialogue();
     });
 
     this.input.keyboard.on('keydown-UP', () => {
@@ -1079,7 +1089,9 @@ export class ForestScene extends Phaser.Scene {
     this.cappellaioContainer?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
     this.cappellaioShadow?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
     this.rabbitContainer?.setVisible(GameState.currentArea === 'madama' && GameState.finalRabbitSeen);
-    this.updateCappellaioAnimation();
+    if (!this.isCappellaioEntering) {
+      this.updateCappellaioAnimation();
+    }
   }
 
   isNpcVisible(interactable) {
@@ -1326,14 +1338,14 @@ export class ForestScene extends Phaser.Scene {
     this.cappellaioContainer.setVisible(true);
     this.cappellaio?.setFlipX(true);
 
-    if (this.anims.exists('cappellaio-walk')) {
-      this.cappellaio.anims.play('cappellaio-walk', true);
+    if (this.anims.exists('cappellaio_walk')) {
+      this.cappellaio.anims.play('cappellaio_walk', true);
     }
 
     this.tweens.add({
       targets: this.cappellaioContainer,
       x: CAPPELLAIO_X,
-      duration: 1450,
+      duration: 2100,
       ease: 'Sine.easeOut',
       onComplete: () => {
         GameState.cappellaioEntered = true;
@@ -1511,7 +1523,11 @@ export class ForestScene extends Phaser.Scene {
   }
 
   updateAreaBackground(area) {
-    const textureKey = area === 'madama' ? 'background-gioielli' : 'background-01';
+    const textureKey = area === 'madama'
+      ? 'background-gioielli'
+      : area === 'sposine'
+        ? 'background-sposine'
+        : 'background-01';
 
     if (this.currentBackgroundKey === textureKey || !this.textures.exists(textureKey)) {
       return;
