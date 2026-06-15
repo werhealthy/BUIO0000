@@ -74,15 +74,16 @@ const rabbitAssets = import.meta.glob('../assets/sprites/characters/coniglio/{co
 });
 const rabbitUrl = (fileName) => rabbitAssets[`../assets/sprites/characters/coniglio/${fileName}`];
 
-const backgroundAssets = import.meta.glob('../assets/backgrounds/*.png', {
+const backgroundAssets = import.meta.glob('../assets/backgrounds/*.{png,jpeg}', {
   eager: true,
   query: '?url',
   import: 'default'
 });
 const backgroundMargheriteUrl = backgroundAssets['../assets/backgrounds/background_margherite.png'];
-const backgroundGreciaUrl = backgroundAssets['../assets/backgrounds/background_grecia.png'];
-const backgroundSiciliaUrl = backgroundAssets['../assets/backgrounds/background_sicilia.png'];
-const backgroundBristolUrl = backgroundAssets['../assets/backgrounds/background_bristol.png'];
+const backgroundGreciaUrl = backgroundAssets['../assets/backgrounds/background_grecia.jpeg'];
+const backgroundSiciliaUrl = backgroundAssets['../assets/backgrounds/background_sicilia.jpeg'];
+const backgroundBristolUrl = backgroundAssets['../assets/backgrounds/background_bristol.jpeg'];
+const backgroundMenuFinalUrl = backgroundAssets['../assets/backgrounds/background_menu_final.png'];
 
 const signpostAssets = import.meta.glob('../assets/objects/signpost/signpost_crossroad.png', {
   eager: true,
@@ -239,16 +240,18 @@ const SIGN_X = 2520;
 const CAPPELLAIO_X = SIGN_X - 170;
 const CAPPELLAIO_ENTRANCE_OFFSET = 140;
 const RABBIT_X = 2440;
-const FINAL_MEADOW_X = 1180;
-const FINAL_DAISY_X = 1420;
-const FINAL_DIALOGUE_TRIGGER_X = 1260;
-const FINAL_RABBIT_START_OFFSET = -180;
-const FINAL_RABBIT_END_X = 1780;
-const FINAL_RABBIT_MIN_DURATION = 3500;
-const FINAL_RABBIT_MAX_DURATION = 5000;
-const FINAL_SLEEP_FRAME_DELAY = 820;
-const FINAL_SLEEP_DURATION = 3400;
-const FINAL_FADE_DURATION = 3900;
+const FINAL_MEADOW_X = 1460;
+const FINAL_DAISY_X = 1720;
+const FINAL_DIALOGUE_TRIGGER_X = 1540;
+const FINAL_RABBIT_START_OFFSET = -240;
+const FINAL_RABBIT_EXIT_MARGIN = 180;
+const FINAL_RABBIT_MIN_DURATION = 7600;
+const FINAL_RABBIT_MAX_DURATION = 10800;
+const FINAL_SLEEP_FRAME_DELAY = 980;
+const FINAL_SLEEP_DURATION = 4200;
+const FINAL_FADE_DURATION = 4300;
+const FINAL_CITY_FADE_IN_DURATION = 2600;
+const FINAL_WALLPAPER_FADE_DURATION = 3200;
 const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
 const CAT_FOLLOW_DISTANCE = 92;
@@ -289,6 +292,9 @@ export class ForestScene extends Phaser.Scene {
     if (backgroundBristolUrl) {
       this.load.image('background-bristol', backgroundBristolUrl);
     }
+    if (backgroundMenuFinalUrl) {
+      this.load.image('background-menu-final', backgroundMenuFinalUrl);
+    }
     loadFrames(this, ROMY_IDLE_FRAMES);
     loadFrames(this, ROMY_WALK_FRAMES);
     loadFrames(this, ROMY_WAKE_FRAMES);
@@ -323,6 +329,7 @@ export class ForestScene extends Phaser.Scene {
     this.blackIntroIndex = 0;
     this.contactShadows = [];
     this.finalRabbitSequenceRunning = false;
+    this.finalCitySceneActive = false;
 
     this.createBackground();
     this.createRomy();
@@ -1114,7 +1121,7 @@ export class ForestScene extends Phaser.Scene {
   }
 
   moveRomy() {
-    if (this.isWakingUp || this.dialogueManager?.isActive() || this.isTransitioning) {
+    if (this.isWakingUp || this.dialogueManager?.isActive() || this.isTransitioning || this.finalRabbitSequenceRunning || this.finalCitySceneActive) {
       this.romy.y = this.getRomyY();
       this.romy.setVelocity(0, 0);
       return;
@@ -1247,7 +1254,7 @@ export class ForestScene extends Phaser.Scene {
       return;
     }
 
-    if (this.dialogueManager?.isActive() || this.blackIntroActive || this.isTransitioning || this.isWakingUp) {
+    if (this.dialogueManager?.isActive() || this.blackIntroActive || this.isTransitioning || this.isWakingUp || this.finalRabbitSequenceRunning || this.finalCitySceneActive) {
       this.setCatIdle(cat);
       return;
     }
@@ -1298,7 +1305,7 @@ export class ForestScene extends Phaser.Scene {
   }
 
   getNearestAvailableInteractable() {
-    if (this.dialogueManager?.isActive() || this.isTransitioning) {
+    if (this.dialogueManager?.isActive() || this.isTransitioning || this.finalRabbitSequenceRunning || this.finalCitySceneActive) {
       return null;
     }
 
@@ -1337,7 +1344,7 @@ export class ForestScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.BlackTransition,
       alpha: 0,
-      duration: 900,
+      duration: 1150,
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.BlackTransition?.setVisible(false);
@@ -1596,9 +1603,9 @@ export class ForestScene extends Phaser.Scene {
     this.dialogueManager?.endDialogue?.();
     this.interactHint?.setVisible(false);
 
-    this.time.delayedCall(450, () => this.showRomyExclamation());
-    this.time.delayedCall(1350, () => this.panCameraForRabbitEntrance());
-    this.time.delayedCall(2600, () => this.playFinalRabbitEntrance());
+    this.time.delayedCall(900, () => this.showRomyExclamation());
+    this.time.delayedCall(1900, () => this.panCameraForRabbitEntrance());
+    this.time.delayedCall(3600, () => this.playFinalRabbitEntrance());
   }
 
   showRomyExclamation() {
@@ -1627,23 +1634,23 @@ export class ForestScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.cameras.main,
       scrollX: targetScrollX,
-      duration: 1450,
+      duration: 2600,
       ease: 'Sine.easeInOut'
     });
   }
 
   playFinalRabbitEntrance() {
-    const startX = Math.max(0, this.cameras.main.scrollX + FINAL_RABBIT_START_OFFSET);
-    const endX = Math.min(FINAL_RABBIT_END_X, this.worldWidth + 120);
+    const startX = this.cameras.main.scrollX + FINAL_RABBIT_START_OFFSET;
+    const endX = Math.max(this.worldWidth + FINAL_RABBIT_EXIT_MARGIN, this.cameras.main.scrollX + this.scale.width + FINAL_RABBIT_EXIT_MARGIN);
     const travelDistance = Math.abs(endX - startX);
-    const duration = Phaser.Math.Clamp(travelDistance * 3.1, FINAL_RABBIT_MIN_DURATION, FINAL_RABBIT_MAX_DURATION);
+    const duration = Phaser.Math.Clamp(travelDistance * 5.2, FINAL_RABBIT_MIN_DURATION, FINAL_RABBIT_MAX_DURATION);
 
     this.rabbitContainer.setPosition(startX, this.getRomyY());
     this.rabbitContainer.setVisible(true);
     this.rabbitSprite?.setFlipX(false);
     this.rabbitSprite?.anims?.play('rabbit_walk', true);
     this.rabbitShadow?.setVisible(true);
-    this.cameras.main.startFollow(this.rabbitContainer, true, 0.025, 0, 0, 0);
+    this.cameras.main.startFollow(this.rabbitContainer, true, 0.012, 0, 0, 0);
 
     this.tweens.add({
       targets: this.rabbitContainer,
@@ -1652,7 +1659,7 @@ export class ForestScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.rabbitContainer?.setVisible(false);
-        this.cameras.main.startFollow(this.romy, true, 0.035, 0, 0, 0);
+        this.cameras.main.startFollow(this.romy, true, 0.018, 0, 0, 0);
         this.finalRabbitSequenceRunning = false;
         this.dialogueManager?.startDialogue('final_rabbit_reaction');
       }
@@ -1736,20 +1743,84 @@ export class ForestScene extends Phaser.Scene {
 
     this.finalMeadowContainer?.setVisible(false);
     this.rabbitContainer?.setVisible(false);
+    this.finalCitySceneActive = true;
     this.showFinalBackgroundPlaceholder(!this.textures.exists(textureKey));
-    this.romy.setVisible(true).setAlpha(1).setAngle(0).setPosition(Math.round(this.scale.width * 0.42), this.getRomyY());
+    this.romy.setVisible(true).setAlpha(1).setAngle(0).setPosition(Math.round(this.scale.width * 0.44), this.getRomyY());
     this.playRomyIdleAnimation();
+    this.createCheccoPlaceholder();
+    this.checcoContainer?.setPosition(Math.round(this.scale.width * 0.57), this.getRomyY()).setVisible(true);
     this.cameras.main.stopFollow();
     this.cameras.main.scrollX = 0;
     this.BlackTransition?.setVisible(true).setAlpha(1);
     this.tweens.add({
       targets: this.BlackTransition,
       alpha: 0,
-      duration: 1800,
+      duration: FINAL_CITY_FADE_IN_DURATION,
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.BlackTransition?.setVisible(false);
-        this.dialogueManager?.startDialogue('final_checco');
+        this.dialogueManager?.startDialogue('final_checco', { cityName: this.getFinalCityName() });
+      }
+    });
+  }
+
+  getFinalCityName() {
+    const backgroundKey = this.getFinalEndingBackgroundKey();
+    return {
+      'background-grecia': 'Grecia',
+      'background-sicilia': 'Sicilia',
+      'background-bristol': 'Bristol'
+    }[backgroundKey] ?? 'Grecia';
+  }
+
+  createCheccoPlaceholder() {
+    if (this.checcoContainer) {
+      return;
+    }
+
+    this.checcoContainer = this.add.container(Math.round(this.scale.width * 0.56), this.getRomyY()).setDepth(19).setVisible(false);
+    const body = this.add.ellipse(0, -74, 54, 126, 0x25364a, 0.94).setStrokeStyle(2, 0xf3df9b, 0.34);
+    const head = this.add.circle(0, -152, 25, 0xf1c7a5, 0.96).setStrokeStyle(2, 0x5b3a2e, 0.34);
+    const label = this.add.text(0, -198, 'Checco', {
+      fontFamily: 'Georgia, Times New Roman, serif',
+      fontSize: '14px',
+      color: '#fff1c4',
+      stroke: '#111827',
+      strokeThickness: 3
+    }).setOrigin(0.5);
+    this.checcoContainer.add([body, head, label]);
+  }
+
+  showFinalWallpaper() {
+    this.dialogueManager?.endDialogue?.();
+    this.BlackTransition?.setVisible(true).setAlpha(0);
+    this.tweens.add({
+      targets: this.BlackTransition,
+      alpha: 1,
+      duration: FINAL_WALLPAPER_FADE_DURATION,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.romy?.setVisible(false);
+        this.checcoContainer?.setVisible(false);
+        this.showFinalBackgroundPlaceholder(false);
+        if (this.textures.exists('background-menu-final')) {
+          this.background.setTexture('background-menu-final');
+        } else {
+          this.background.setTexture('background-01');
+        }
+        this.backgroundScale = this.scale.height / this.background.height;
+        this.background.setScale(this.backgroundScale);
+        this.worldWidth = Math.max(this.scale.width, this.background.displayWidth);
+        this.cameras.main.stopFollow();
+        this.cameras.main.scrollX = 0;
+        this.cameras.main.setBounds(0, 0, this.worldWidth, this.scale.height);
+        this.tweens.add({
+          targets: this.BlackTransition,
+          alpha: 0,
+          duration: FINAL_WALLPAPER_FADE_DURATION,
+          ease: 'Sine.easeInOut',
+          onComplete: () => this.BlackTransition?.setVisible(false)
+        });
       }
     });
   }
