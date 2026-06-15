@@ -98,7 +98,7 @@ export const dialogues = {
     { speaker: "FIORE", text: "Il gatto dice che dobbiamo andare." },
     { speaker: "ROMY", text: "Il gatto ha solo detto “miao”." },
     { speaker: "FIORE", text: "Eppure continua ad avere ragione." },
-    { speaker: "SISTEMA", text: "Avvicinati al fiore e premi E per raccoglierlo.", action: "finishMainIntro" }
+    { speaker: "SISTEMA", text: "Muoviti con ← → / A D e premi E per interagire con gli oggetti.", action: "finishMainIntro" }
   ],
 
   daisy_picked: [
@@ -188,7 +188,7 @@ export const dialogues = {
     { speaker: "ROMY", text: "Tre direzioni. Una fragola, una stella e una zampa." },
     { speaker: "CAPPELLAIO", text: "Fermi tutti! Chi ha spostato il martedì nel taschino del giovedì?" },
     { speaker: "FIORE", text: "Nessuno. Credo. Ma non lo direi sotto giuramento botanico." },
-    { speaker: "CAPPELLAIO", text: "Mi hanno rubato i colori! Il rosso è scappato con una fragola, il giallo si è nascosto in una stella e il nero fa le impronte senza permesso." },
+    { speaker: "CAPPELLAIO", action: "startCappellaioEntrance", text: "Mi hanno rubato i colori! Il rosso è scappato con una fragola, il giallo si è nascosto in una stella e il nero fa le impronte senza permesso." },
     { speaker: "ROMY", text: "Posso provare ad aiutarti. Lo Spruzzino di Onofrio fa ricordare i colori alle cose." },
     { speaker: "SISTEMA", text: "Lo Spruzzino di Onofrio fa brillare il cartello e il Cappellaio riprende colore.", action: "useSpruzzinoOnHatter" },
     { speaker: "CAPPELLAIO", text: "Oh! Mi sento di nuovo pronunciabile! Fragola, stella e zampa hanno ritrovato il loro posto nella frase." },

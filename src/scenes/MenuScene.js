@@ -51,10 +51,9 @@ export class MenuScene extends Phaser.Scene {
       });
     });
 
-    this.createButton(width / 2, height * 0.68, 'Continua', false);
 
     this.add
-      .text(width / 2, height - 30, 'SPACE / E su Inizia oppure clic del mouse', {
+      .text(width / 2, height - 30, 'SPACE / E oppure clic su Inizia', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '13px',
         color: '#b8cbc4'
