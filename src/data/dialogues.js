@@ -564,25 +564,39 @@ export const dialogues = {
   ],
 
   final_meadow_intro: [
-    { speaker: "ROMY", text: "Oh... guarda quante margherite." },
-    { speaker: "FIORE", text: "Finalmente un posto con un certo senso dell'accoglienza botanica." },
-    { speaker: "ROMY", text: "Sembra morbido. Come se il prato stesse respirando piano." },
-    { speaker: "FIORE", text: "Romy?" },
-    { speaker: "ROMY", text: "Sì?" },
-    { speaker: "FIORE", text: "Mi poseresti qui? Credo che questo sia un buon posto per restare un momento." },
-    { speaker: "ROMY", text: "Certo. Piano piano." },
+    { speaker: "ROMY", text: "Guarda quante margherite…" },
+    { speaker: "FIORE", text: "Finalmente un posto con un po’ di presenza scenica." },
+    { speaker: "ROMY", text: "Ti piace?" },
+    { speaker: "FIORE", text: "Romy… mi poseresti qui?" },
+    { speaker: "ROMY", text: "Sì. Questo sembra proprio il posto giusto." },
     { speaker: "SISTEMA", text: "Premi E per posare la Margherita." }
   ],
 
   final_daisy_placed: [
     { speaker: "SISTEMA", text: "Romy posa la Margherita nel prato. I petali si muovono come se sorridessero." },
     { speaker: "ROMY", text: "Eccoti. Stai benissimo qui." },
-    { speaker: "FIORE", text: "Lo so, ma detto da te è più carino." },
-    { speaker: "SISTEMA", text: "Un fruscio leggero corre tra i fiori.", action: "startFinalRabbit" },
-    { speaker: "ROMY", text: "Oddio... che bello quel coniglio..." },
-    { speaker: "ROMY", text: "Mi si stanno chiudendo gli occhi..." },
-    { speaker: "ROMY", text: "Forse non mi sento bene... ma non ho paura." },
-    { speaker: "ROMY", text: "Non so cosa sta succedendo..." },
+    { speaker: "FIORE", text: "Lo so, ma detto da te è più carino.", action: "startFinalRabbit" }
+  ],
+
+  final_rabbit_reaction: [
+    { speaker: "ROMY", text: "Oddio…" },
+    { speaker: "ROMY", text: "Che bello quel coniglio…" },
+    { speaker: "ROMY", text: "Mi si stanno chiudendo gli occhi…" },
+    { speaker: "ROMY", text: "Forse non mi sento bene." },
+    { speaker: "ROMY", text: "Non so cosa sta succedendo…" },
     { speaker: "SISTEMA", text: "Il prato si fa silenzioso. Romy scivola lentamente nel sonno.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 2200 }
+  ],
+
+  final_checco: [
+    { speaker: "CHECCO", text: "Tutto bene, amore?" },
+    { speaker: "CHECCO", text: "Per un attimo mi è sembrato che ti fossi persa in un altro mondo." },
+    { speaker: "ROMY", text: "Io…" },
+    { speaker: "ROMY", text: "Credo di essere caduta giù per un BUKO." },
+    { speaker: "CHECCO", text: "Un buco?" },
+    { speaker: "ROMY", text: "No. Un BUKO. Con la K." },
+    { speaker: "CHECCO", text: "Allora dev’essere stato serio." },
+    { speaker: "ROMY", text: "C’erano funghi, cartelli, margherite, un coniglio…" },
+    { speaker: "ROMY", text: "E credo di aver lasciato un pezzetto di me in un prato." },
+    { speaker: "CHECCO", text: "Magari era il posto giusto." }
   ]
 };

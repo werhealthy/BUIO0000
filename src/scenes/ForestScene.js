@@ -80,6 +80,9 @@ const backgroundAssets = import.meta.glob('../assets/backgrounds/*.png', {
   import: 'default'
 });
 const backgroundMargheriteUrl = backgroundAssets['../assets/backgrounds/background_margherite.png'];
+const backgroundGreciaUrl = backgroundAssets['../assets/backgrounds/background_grecia.png'];
+const backgroundSiciliaUrl = backgroundAssets['../assets/backgrounds/background_sicilia.png'];
+const backgroundBristolUrl = backgroundAssets['../assets/backgrounds/background_bristol.png'];
 
 const signpostAssets = import.meta.glob('../assets/objects/signpost/signpost_crossroad.png', {
   eager: true,
@@ -215,7 +218,7 @@ const ONOFRIO_FRAME_RATE = 2;
 const MADAMA_FRAME_RATE = 3;
 const SPOSE_FRAME_RATE = 4;
 const CAVALLO_FRAME_RATE = 3;
-const RABBIT_FRAME_RATE = 10;
+const RABBIT_FRAME_RATE = 6;
 const CAPPELLAIO_IDLE_FRAME_RATE = 3;
 const CAPPELLAIO_WALK_FRAME_RATE = 7;
 const CAPPELLAIO_DISPLAY_HEIGHT = 210;
@@ -236,11 +239,16 @@ const SIGN_X = 2520;
 const CAPPELLAIO_X = SIGN_X - 170;
 const CAPPELLAIO_ENTRANCE_OFFSET = 140;
 const RABBIT_X = 2440;
-const FINAL_MEADOW_X = 940;
-const FINAL_DAISY_X = 980;
-const FINAL_DIALOGUE_TRIGGER_X = 760;
-const FINAL_RABBIT_START_OFFSET = -140;
-const FINAL_RABBIT_END_X = 1650;
+const FINAL_MEADOW_X = 1180;
+const FINAL_DAISY_X = 1420;
+const FINAL_DIALOGUE_TRIGGER_X = 1260;
+const FINAL_RABBIT_START_OFFSET = -180;
+const FINAL_RABBIT_END_X = 1780;
+const FINAL_RABBIT_MIN_DURATION = 3500;
+const FINAL_RABBIT_MAX_DURATION = 5000;
+const FINAL_SLEEP_FRAME_DELAY = 820;
+const FINAL_SLEEP_DURATION = 3400;
+const FINAL_FADE_DURATION = 3900;
 const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
 const CAT_FOLLOW_DISTANCE = 92;
@@ -271,6 +279,15 @@ export class ForestScene extends Phaser.Scene {
     this.load.image('background-cavallo', backgroundCavalloUrl);
     if (backgroundMargheriteUrl) {
       this.load.image('background-margherite', backgroundMargheriteUrl);
+    }
+    if (backgroundGreciaUrl) {
+      this.load.image('background-grecia', backgroundGreciaUrl);
+    }
+    if (backgroundSiciliaUrl) {
+      this.load.image('background-sicilia', backgroundSiciliaUrl);
+    }
+    if (backgroundBristolUrl) {
+      this.load.image('background-bristol', backgroundBristolUrl);
     }
     loadFrames(this, ROMY_IDLE_FRAMES);
     loadFrames(this, ROMY_WALK_FRAMES);
@@ -305,6 +322,7 @@ export class ForestScene extends Phaser.Scene {
     this.blackIntroActive = false;
     this.blackIntroIndex = 0;
     this.contactShadows = [];
+    this.finalRabbitSequenceRunning = false;
 
     this.createBackground();
     this.createRomy();
@@ -1568,19 +1586,22 @@ export class ForestScene extends Phaser.Scene {
   }
 
   startFinalRabbit() {
-    if (!this.rabbitContainer || GameState.finalRabbitSeen) {
+    if (!this.rabbitContainer || GameState.finalRabbitSeen || this.finalRabbitSequenceRunning) {
       return;
     }
 
+    this.finalRabbitSequenceRunning = true;
     GameState.finalRabbitSeen = true;
-    const startX = Math.max(0, this.cameras.main.scrollX + FINAL_RABBIT_START_OFFSET);
-    this.rabbitContainer.setPosition(startX, this.getRomyY());
-    this.rabbitContainer.setVisible(true);
-    this.rabbitSprite?.setFlipX(false);
-    this.rabbitSprite?.anims?.play('rabbit_walk', true);
-    this.cameras.main.startFollow(this.rabbitContainer, true, 0.08, 0, 0, 0);
-    this.rabbitShadow?.setVisible(true);
+    this.stopRomy();
+    this.dialogueManager?.endDialogue?.();
+    this.interactHint?.setVisible(false);
 
+    this.time.delayedCall(450, () => this.showRomyExclamation());
+    this.time.delayedCall(1350, () => this.panCameraForRabbitEntrance());
+    this.time.delayedCall(2600, () => this.playFinalRabbitEntrance());
+  }
+
+  showRomyExclamation() {
     const exclamation = this.add.text(this.romy.x, this.romy.y - ROMY_DISPLAY_HEIGHT - 28, '!', {
       fontFamily: 'Georgia, Times New Roman, serif',
       fontSize: '40px',
@@ -1590,15 +1611,50 @@ export class ForestScene extends Phaser.Scene {
       strokeThickness: 4
     }).setOrigin(0.5).setDepth(40);
 
-    this.tweens.add({ targets: exclamation, y: exclamation.y - 18, alpha: 0, duration: 1200, ease: 'Sine.easeOut', onComplete: () => exclamation.destroy() });
+    this.tweens.add({
+      targets: exclamation,
+      y: exclamation.y - 12,
+      alpha: 0,
+      duration: 900,
+      ease: 'Sine.easeInOut',
+      onComplete: () => exclamation.destroy()
+    });
+  }
+
+  panCameraForRabbitEntrance() {
+    this.cameras.main.stopFollow();
+    const targetScrollX = Phaser.Math.Clamp(this.romy.x - this.scale.width * 0.72, 0, Math.max(0, this.worldWidth - this.scale.width));
+    this.tweens.add({
+      targets: this.cameras.main,
+      scrollX: targetScrollX,
+      duration: 1450,
+      ease: 'Sine.easeInOut'
+    });
+  }
+
+  playFinalRabbitEntrance() {
+    const startX = Math.max(0, this.cameras.main.scrollX + FINAL_RABBIT_START_OFFSET);
+    const endX = Math.min(FINAL_RABBIT_END_X, this.worldWidth + 120);
+    const travelDistance = Math.abs(endX - startX);
+    const duration = Phaser.Math.Clamp(travelDistance * 3.1, FINAL_RABBIT_MIN_DURATION, FINAL_RABBIT_MAX_DURATION);
+
+    this.rabbitContainer.setPosition(startX, this.getRomyY());
+    this.rabbitContainer.setVisible(true);
+    this.rabbitSprite?.setFlipX(false);
+    this.rabbitSprite?.anims?.play('rabbit_walk', true);
+    this.rabbitShadow?.setVisible(true);
+    this.cameras.main.startFollow(this.rabbitContainer, true, 0.025, 0, 0, 0);
+
     this.tweens.add({
       targets: this.rabbitContainer,
-      x: Math.min(FINAL_RABBIT_END_X, this.worldWidth + 120),
-      duration: 3000,
+      x: endX,
+      duration,
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.rabbitContainer?.setVisible(false);
-        this.cameras.main.startFollow(this.romy, true, 0.12, 0, 0, 0);
+        this.cameras.main.startFollow(this.romy, true, 0.035, 0, 0, 0);
+        this.finalRabbitSequenceRunning = false;
+        this.dialogueManager?.startDialogue('final_rabbit_reaction');
       }
     });
   }
@@ -1607,7 +1663,7 @@ export class ForestScene extends Phaser.Scene {
     const sleepFrames = ['romy-wake-04', 'romy-wake-03', 'romy-wake-02', 'romy-wake-01'];
     this.romy.anims.stop();
     sleepFrames.forEach((texture, index) => {
-      this.time.delayedCall(index * 520, () => {
+      this.time.delayedCall(index * FINAL_SLEEP_FRAME_DELAY, () => {
         this.romy.setTexture(texture);
         this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
       });
@@ -1615,46 +1671,87 @@ export class ForestScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.romy,
       angle: -8,
-      alpha: 0.55,
-      duration: 2300,
+      alpha: 0.72,
+      duration: FINAL_SLEEP_DURATION,
       ease: 'Sine.easeInOut'
     });
   }
 
   finishFinalFade() {
     this.stopRomy();
+    this.dialogueManager?.endDialogue?.();
     this.playRomySleepSequence();
-    this.BlackTransition?.setVisible(true).setAlpha(0);
-    this.tweens.add({
-      targets: this.BlackTransition,
-      alpha: 1,
-      duration: 3200,
-      ease: 'Sine.easeInOut',
-      onComplete: () => this.showFinalEndingPlaceholder()
+    this.time.delayedCall(FINAL_SLEEP_DURATION, () => {
+      this.BlackTransition?.setVisible(true).setAlpha(0);
+      this.tweens.add({
+        targets: this.BlackTransition,
+        alpha: 1,
+        duration: FINAL_FADE_DURATION,
+        ease: 'Sine.easeInOut',
+        onComplete: () => this.showFinalEndingScene()
+      });
     });
   }
 
 
-  showFinalEndingPlaceholder() {
+  getFinalEndingBackgroundKey() {
+    // Mappatura finale provvisoria coerente con currentPath: Madama/Fragola porta al calore della Sicilia,
+    // Sposine/Stella al ritmo dinamico di Bristol, Cavallo/Zampa di gatto alla quiete contemplativa della Grecia.
+    const pathMap = {
+      madama: 'background-sicilia',
+      sposine: 'background-bristol',
+      cavallo: 'background-grecia'
+    };
+    const scoreMap = {
+      calore: 'background-sicilia',
+      ritmo: 'background-bristol',
+      quiete: 'background-grecia'
+    };
+    const dominantScore = ['calore', 'ritmo', 'quiete'].sort((a, b) => (GameState[b] ?? 0) - (GameState[a] ?? 0))[0];
+    const preferredKey = pathMap[GameState.currentPath] ?? scoreMap[dominantScore] ?? 'background-grecia';
+
+    if (this.textures.exists(preferredKey)) {
+      return preferredKey;
+    }
+
+    return ['background-grecia', 'background-sicilia', 'background-bristol'].find((key) => this.textures.exists(key)) ?? 'background-margherite';
+  }
+
+  showFinalEndingScene() {
     if (GameState.finalEndingShown) {
       return;
     }
 
     GameState.finalEndingShown = true;
-    const endingLabels = {
-      madama: 'Città finale · Madama',
-      sposine: 'Città finale · Sposine',
-      cavallo: 'Città finale · Cavallo'
-    };
-    const label = endingLabels[GameState.currentPath] ?? 'Città finale';
-    this.add.text(this.scale.width / 2, this.scale.height / 2, label, {
-      fontFamily: 'Georgia, Times New Roman, serif',
-      fontSize: '28px',
-      color: '#fff4c4',
-      align: 'center',
-      backgroundColor: '#000000',
-      padding: { x: 24, y: 14 }
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(1300);
+    const textureKey = this.getFinalEndingBackgroundKey();
+    if (this.textures.exists(textureKey)) {
+      this.background.setTexture(textureKey);
+      this.backgroundScale = this.scale.height / this.background.height;
+      this.background.setScale(this.backgroundScale);
+      this.currentBackgroundKey = textureKey;
+      this.worldWidth = Math.max(this.scale.width, this.background.displayWidth);
+      this.physics.world.setBounds(0, 0, this.worldWidth, this.scale.height);
+      this.cameras.main.setBounds(0, 0, this.worldWidth, this.scale.height);
+    }
+
+    this.finalMeadowContainer?.setVisible(false);
+    this.rabbitContainer?.setVisible(false);
+    this.showFinalBackgroundPlaceholder(!this.textures.exists(textureKey));
+    this.romy.setVisible(true).setAlpha(1).setAngle(0).setPosition(Math.round(this.scale.width * 0.42), this.getRomyY());
+    this.playRomyIdleAnimation();
+    this.cameras.main.stopFollow();
+    this.cameras.main.scrollX = 0;
+    this.BlackTransition?.setVisible(true).setAlpha(1);
+    this.tweens.add({
+      targets: this.BlackTransition,
+      alpha: 0,
+      duration: 1800,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.BlackTransition?.setVisible(false);
+        this.dialogueManager?.startDialogue('final_checco');
+      }
+    });
   }
 
   showFinalBackgroundPlaceholder(visible) {
