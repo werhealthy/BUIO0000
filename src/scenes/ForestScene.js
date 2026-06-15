@@ -50,6 +50,13 @@ const cappellaioAssets = import.meta.glob('../assets/sprites/characters/cappella
 });
 const cappellaioUrl = (fileName) => cappellaioAssets[`../assets/sprites/characters/cappellaio/${fileName}`];
 
+const cavalloAssets = import.meta.glob('../assets/sprites/characters/cavallo/*.png', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+const cavalloUrl = (fileName) => cavalloAssets[`../assets/sprites/characters/cavallo/${fileName}`];
+
 const sposeAssets = import.meta.glob('../assets/sprites/characters/{spose,sposine}/*.png', {
   eager: true,
   query: '?url',
@@ -161,6 +168,12 @@ const SPOSE_IDLE_FRAMES = [
   frame('spose-idle-04', sposeUrl('spose_idle_04.png'))
 ].filter(({ url }) => Boolean(url));
 
+const CAVALLO_IDLE_FRAMES = [
+  frame('cavallo-idle-01', cavalloUrl('cavallo_idle_01.png')),
+  frame('cavallo-idle-02', cavalloUrl('cavallo_idle_02.png')),
+  frame('cavallo-idle-03', cavalloUrl('cavallo_idle_03.png'))
+].filter(({ url }) => Boolean(url));
+
 const loadFrames = (scene, frames) => {
   frames.forEach(({ key, url }) => {
     scene.load.image(key, url);
@@ -178,6 +191,7 @@ const DAISY_FRAME_RATE = 3;
 const ONOFRIO_FRAME_RATE = 2;
 const MADAMA_FRAME_RATE = 3;
 const SPOSE_FRAME_RATE = 4;
+const CAVALLO_FRAME_RATE = 3;
 const CAPPELLAIO_IDLE_FRAME_RATE = 3;
 const CAPPELLAIO_WALK_FRAME_RATE = 7;
 const CAPPELLAIO_DISPLAY_HEIGHT = 210;
@@ -188,6 +202,7 @@ const DAISY_DISPLAY_HEIGHT = 56;
 const ONOFRIO_DISPLAY_HEIGHT = 312;
 const MADAMA_DISPLAY_HEIGHT = 230;
 const SPOSE_DISPLAY_HEIGHT = 190;
+const CAVALLO_DISPLAY_HEIGHT = 190;
 const SIGN_SCALE = 0.58;
 const PLAYER_START_X = 260;
 const CAT_TARGET_X = 430;
@@ -235,6 +250,7 @@ export class ForestScene extends Phaser.Scene {
     loadFrames(this, CAPPELLAIO_IDLE_FRAMES);
     loadFrames(this, CAPPELLAIO_WALK_FRAMES);
     loadFrames(this, CAPPELLAIO_IDLE_COLOUR_FRAMES);
+    loadFrames(this, CAVALLO_IDLE_FRAMES);
 
     if (signpostCrossroadUrl) {
       // REAL SIGNPOST ASSET: src/assets/objects/signpost/signpost_crossroad.png
@@ -263,6 +279,7 @@ export class ForestScene extends Phaser.Scene {
     this.createDialogueManager();
     this.createInput();
     this.createCappellaioAnimations();
+    this.createCavalloAnimations();
     this.createCappellaio();
     this.createRabbitPlaceholder();
     this.updateNpcVisibility();
@@ -473,6 +490,11 @@ export class ForestScene extends Phaser.Scene {
         return;
       }
 
+      if (interactable.id === 'cavallo') {
+        interactable.container = this.createCavallo(interactable.x, this.groundY, interactable);
+        return;
+      }
+
       interactable.container = this.createPlaceholder(interactable.x, this.groundY, interactable);
     });
   }
@@ -506,6 +528,36 @@ export class ForestScene extends Phaser.Scene {
         repeat: -1
       });
     }
+  }
+
+  createCavalloAnimations() {
+    if (CAVALLO_IDLE_FRAMES.length > 1 && !this.anims.exists('cavallo-idle')) {
+      this.anims.create({
+        key: 'cavallo-idle',
+        frames: phaserFrames(CAVALLO_IDLE_FRAMES),
+        frameRate: CAVALLO_FRAME_RATE,
+        repeat: -1
+      });
+    }
+  }
+
+  createCavallo(x, y, interactable) {
+    if (!CAVALLO_IDLE_FRAMES.length) {
+      return this.createPlaceholder(x, y, interactable);
+    }
+
+    const container = this.add.container(x, y).setDepth(12);
+    const cavallo = this.add.sprite(0, 0, CAVALLO_IDLE_FRAMES[0].key).setOrigin(0.5, 1);
+    this.setSpriteDisplayHeight(cavallo, CAVALLO_DISPLAY_HEIGHT);
+
+    if (this.anims.exists('cavallo-idle')) {
+      cavallo.anims.play('cavallo-idle');
+    }
+
+    container.add([cavallo]);
+    interactable.sprite = cavallo;
+    interactable.shadow = this.createContactShadow(container, { width: 120, height: 22, alpha: 0.3, depth: 11 });
+    return container;
   }
 
   createSposine(x, y, interactable) {
@@ -1001,7 +1053,8 @@ export class ForestScene extends Phaser.Scene {
     this.interactables.forEach((interactable) => {
       interactable.container.setVisible(this.isNpcVisible(interactable));
     });
-    this.cappellaioContainer?.setVisible(GameState.currentArea === 'forest' && GameState.cappellaioEntered);
+    this.cappellaioContainer?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
+    this.cappellaioShadow?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
     this.rabbitContainer?.setVisible(GameState.currentArea === 'madama' && GameState.madamaCompleted);
     this.updateCappellaioAnimation();
   }
@@ -1023,7 +1076,7 @@ export class ForestScene extends Phaser.Scene {
       return GameState.currentArea === 'forest' && GameState.hasSpruzzino;
     }
 
-    if (['madama', 'sposine', 'pittore'].includes(interactable.id)) {
+    if (['madama', 'sposine', 'pittore', 'cavallo'].includes(interactable.id)) {
       return GameState.currentArea === interactable.id;
     }
 
@@ -1239,6 +1292,8 @@ export class ForestScene extends Phaser.Scene {
     }
 
     this.cappellaioEntranceStarted = true;
+    this.isCappellaioEntering = true;
+    this.stopRomy();
     const startX = Math.min(this.worldWidth - 40, this.cameras.main.scrollX + this.scale.width + CAPPELLAIO_ENTRANCE_OFFSET);
     this.cappellaioContainer.setPosition(startX, this.getRomyY());
     this.cappellaioContainer.setVisible(true);
@@ -1255,6 +1310,8 @@ export class ForestScene extends Phaser.Scene {
       ease: 'Sine.easeOut',
       onComplete: () => {
         GameState.cappellaioEntered = true;
+        this.cappellaioEntranceStarted = false;
+        this.isCappellaioEntering = false;
         this.cappellaio?.setFlipX(false);
         this.updateCappellaioAnimation();
         this.updateNpcVisibility();

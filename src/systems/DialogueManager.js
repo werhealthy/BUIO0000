@@ -5,11 +5,12 @@ import { GameState } from './GameState.js';
 const SCORE_KEYS = ['calore', 'ritmo', 'quiete'];
 
 const DEBUG_UI = false;
+const DEBUG_PORTRAITS = false;
 // PORTRAIT FIXED FRAME: these constants keep the circle identical for every speaker.
 const PORTRAIT_FRAME_RADIUS = 48;
 const PORTRAIT_CENTER_X = 64;
 const PORTRAIT_CENTER_Y = 56;
-const PORTRAIT_INNER_PADDING = 16;
+const PORTRAIT_INNER_PADDING = 10;
 const PORTRAIT_CONTENT_MAX_WIDTH = PORTRAIT_FRAME_RADIUS * 2 - PORTRAIT_INNER_PADDING * 2;
 const PORTRAIT_CONTENT_MAX_HEIGHT = PORTRAIT_FRAME_RADIUS * 2 - PORTRAIT_INNER_PADDING * 2;
 
@@ -20,22 +21,30 @@ const PORTRAITS = {
   onofrio: { texture: 'onofrio-idle-01', fallbackTextures: ['onofrio-idle-02', 'onofrio-idle-03'], flipX: false, offsetY: 0 },
   cappellaio: { texture: 'cappellaio-idle-01', colourTexture: 'cappellaio-idle-colour-01', flipX: false, offsetY: 0 },
   madama: { texture: 'madama-idle-01', flipX: false, offsetY: 0 },
-  spose: { texture: 'spose-idle-01', fallbackTextures: ['spose-idle-02', 'spose-idle-03', 'spose-idle-04'], flipX: false, offsetY: 0 }
+  spose: { texture: 'spose-idle-01', fallbackTextures: ['spose-idle-02', 'spose-idle-03', 'spose-idle-04'], flipX: false, offsetY: 0 },
+  cavallo: { texture: 'cavallo-idle-01', fallbackTextures: ['cavallo-idle-02', 'cavallo-idle-03'], flipX: false, offsetY: 0 }
 };
 
 const SPEAKER_ALIASES = {
-  ROMY: 'romy',
-  GATTO: 'cat',
-  CAT: 'cat',
-  MICIO: 'cat',
-  FIORE: 'daisy',
-  DAISY: 'daisy',
-  MARGHERITA: 'daisy',
-  ONOFRIO: 'onofrio',
-  CAPPELLAIO: 'cappellaio',
-  MADAMA: 'madama',
-  SPOSE: 'spose',
-  SPOSINE: 'spose'
+  romy: 'romy',
+  protagonista: 'romy',
+  gatto: 'cat',
+  cat: 'cat',
+  micio: 'cat',
+  fiore: 'daisy',
+  daisy: 'daisy',
+  margherita: 'daisy',
+  onofrio: 'onofrio',
+  cappellaio: 'cappellaio',
+  'cappellaio croccante': 'cappellaio',
+  madama: 'madama',
+  'madama caratura': 'madama',
+  spose: 'spose',
+  sposine: 'spose',
+  'sposina uno': 'spose',
+  'sposina due': 'spose',
+  cavallo: 'cavallo',
+  sistema: null
 };
 
 const getAutoAdvanceDelay = (line = {}) => {
@@ -51,8 +60,20 @@ const getAutoAdvanceDelay = (line = {}) => {
   return Phaser.Math.Clamp(textLength < 95 ? 1600 : 2400, 1200, 2800);
 };
 
-const normalizeSpeaker = (speaker = '') => speaker.trim().toUpperCase();
-const getPortraitKey = (speaker = '') => SPEAKER_ALIASES[normalizeSpeaker(speaker)] ?? null;
+const normalizeSpeaker = (speaker = '') => String(speaker).trim().toLowerCase();
+
+const getPortraitKeyForSpeaker = (speaker = '') => {
+  const normalizedSpeaker = normalizeSpeaker(speaker);
+  const portraitKey = Object.prototype.hasOwnProperty.call(SPEAKER_ALIASES, normalizedSpeaker)
+    ? SPEAKER_ALIASES[normalizedSpeaker]
+    : null;
+
+  if (DEBUG_PORTRAITS) {
+    console.debug('[Portrait]', { speaker, normalizedSpeaker, portraitKey });
+  }
+
+  return portraitKey;
+};
 
 export class DialogueManager {
   constructor(scene) {
@@ -285,7 +306,7 @@ export class DialogueManager {
     this.runAction(this.currentLine.showAction);
 
     const speaker = this.currentLine.speaker ?? '';
-    this.systemMode = normalizeSpeaker(speaker) === 'SISTEMA';
+    this.systemMode = normalizeSpeaker(speaker) === 'sistema';
     this.choiceQuestionMode = this.hasChoices(this.currentLine);
 
     if (this.choiceQuestionMode) {
@@ -386,7 +407,7 @@ export class DialogueManager {
     const panelX = Math.round((width - panelWidth) / 2);
     const panelY = Math.round(height * 0.12);
     const panelHeight = 128;
-    const speakerLabel = normalizeSpeaker(speaker) === 'SISTEMA' ? 'CARTELLO' : speaker;
+    const speakerLabel = normalizeSpeaker(speaker) === 'sistema' ? 'CARTELLO' : speaker;
 
     this.choicePromptGraphics.setVisible(true);
     this.choicePromptSpeakerText.setVisible(Boolean(speakerLabel));
@@ -424,7 +445,7 @@ export class DialogueManager {
   }
 
   updatePortrait(speaker) {
-    const portraitKey = getPortraitKey(speaker);
+    const portraitKey = getPortraitKeyForSpeaker(speaker);
     const portrait = PORTRAITS[portraitKey];
     let texture = portrait?.texture;
 
@@ -486,7 +507,7 @@ export class DialogueManager {
   }
 
   nextLine() {
-    if (!this.active || this.choosing) {
+    if (!this.active || this.choosing || this.scene.isCappellaioEntering) {
       return;
     }
 
@@ -642,6 +663,10 @@ export class DialogueManager {
       giveSpruzzino: () => {
         GameState.hasSpruzzino = true;
         GameState.onofrioCompleted = true;
+      },
+      giveSpruzzinoToCappellaio: () => {
+        GameState.hatterColored = true;
+        this.scene.updateCappellaioAnimation?.();
       },
       useSpruzzinoOnHatter: () => {
         GameState.hatterColored = true;
