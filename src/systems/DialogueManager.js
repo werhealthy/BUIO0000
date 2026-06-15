@@ -374,20 +374,21 @@ export class DialogueManager {
     this.systemHintText.setVisible(true);
 
     const { width, height } = this.layout;
-    const panelWidth = Math.round(width * 0.62);
-    const panelHeight = this.currentLine.choices ? 94 : 70;
+    const panelWidth = Math.round(width * 0.58);
+    const panelHeight = this.currentLine.choices ? 112 : 84;
     const x = Math.round((width - panelWidth) / 2);
     const y = Math.round(height * 0.1);
 
     this.systemGraphics.clear();
-    this.systemGraphics.fillStyle(0x061620, 0.76);
+    this.systemGraphics.fillStyle(0x061620, 0.88);
     this.systemGraphics.fillRoundedRect(x, y, panelWidth, panelHeight, 16);
     this.systemGraphics.lineStyle(1, 0x9fd7c6, 0.58);
     this.systemGraphics.strokeRoundedRect(x, y, panelWidth, panelHeight, 16);
     this.systemGraphics.lineStyle(1, 0xf3df9b, 0.24);
     this.systemGraphics.strokeRoundedRect(x + 5, y + 5, panelWidth - 10, panelHeight - 10, 12);
 
-    this.systemText.setPosition(width / 2, y + 30);
+    this.systemText.setWordWrapWidth(panelWidth - 58);
+    this.systemText.setPosition(width / 2, y + (this.currentLine.choices ? 34 : 36));
     this.systemText.setText(this.currentLine.text ?? '');
     this.choosing = Array.isArray(this.currentLine.choices) && this.currentLine.choices.length > 0;
     this.choiceIndex = 0;
@@ -422,11 +423,11 @@ export class DialogueManager {
     this.choiceIndex = 0;
 
     const { width, height } = this.layout;
-    const panelWidth = Math.round(width * 0.7);
+    const panelWidth = Math.round(width * 0.62);
     const panelX = Math.round((width - panelWidth) / 2);
-    const panelY = Math.round(height * 0.12);
+    const panelY = Math.round(height * 0.08);
     const questionLength = (this.currentLine.text ?? '').length;
-    const panelHeight = Math.max(questionLength > 120 ? 170 : 150, Math.round(this.layout.height * 0.22));
+    const panelHeight = Phaser.Math.Clamp(126 + Math.ceil(questionLength / 54) * 18, 150, 210);
     const speakerLabel = normalizeSpeaker(speaker) === 'sistema' ? 'CARTELLO' : speaker;
 
     this.choicePromptGraphics.setVisible(true);
@@ -436,7 +437,7 @@ export class DialogueManager {
     this.choiceGraphics.setVisible(true);
 
     this.choicePromptGraphics.clear();
-    this.choicePromptGraphics.fillStyle(0x000000, 0.28);
+    this.choicePromptGraphics.fillStyle(0x000000, 0.44);
     this.choicePromptGraphics.fillRoundedRect(panelX + 6, panelY + 6, panelWidth, panelHeight, 16);
     this.choicePromptGraphics.fillStyle(0x041018, 0.9);
     this.choicePromptGraphics.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 16);
@@ -447,8 +448,8 @@ export class DialogueManager {
 
     this.choicePromptSpeakerText.setPosition(width / 2, panelY + 22).setText(speakerLabel ?? '');
     this.choicePromptText.setFontSize(questionLength > 135 ? '15px' : '16px');
-    this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 76 : 64));
-    this.choicePromptText.setWordWrapWidth(panelWidth - 120);
+    this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 72 : 58));
+    this.choicePromptText.setWordWrapWidth(panelWidth - 150);
     this.choicePromptText.setText(this.currentLine.text ?? '');
 
     this.renderChoices();
@@ -659,7 +660,7 @@ export class DialogueManager {
   }
 
   getChoiceStartY() {
-    return Math.round(this.layout.height * 0.42);
+    return Math.round(this.layout.height * 0.45);
   }
 
   renderChoices() {
@@ -669,16 +670,16 @@ export class DialogueManager {
     const promptMode = this.choiceQuestionMode;
     const hasPortrait = this.portraitContainer.visible;
     const left = promptMode
-      ? Math.round(this.layout.width * 0.18)
+      ? Math.round(this.layout.width * 0.2)
       : this.systemMode
         ? Math.round(this.layout.width * 0.17)
         : this.getTextLeft(hasPortrait);
     const rowWidth = promptMode
-      ? Math.round(this.layout.width * 0.64)
+      ? Math.round(this.layout.width * 0.6)
       : this.systemMode
         ? Math.round(this.layout.width * 0.66)
         : this.layout.boxRight - left - this.layout.textRightPadding;
-    const rowHeight = promptMode ? 54 : this.systemMode ? 40 : 30;
+    const rowHeight = promptMode ? 58 : this.systemMode ? 44 : 32;
     const gap = promptMode || this.systemMode ? 8 : 6;
     const totalHeight = choices.length * rowHeight + Math.max(0, choices.length - 1) * gap;
     const startY = promptMode
@@ -694,7 +695,7 @@ export class DialogueManager {
       const selected = index === this.choiceIndex;
       const y = startY + index * (rowHeight + gap);
 
-      this.choiceGraphics.fillStyle(selected ? 0xf3df9b : 0x02070d, selected ? 0.5 : 0.84);
+      this.choiceGraphics.fillStyle(selected ? 0x6b4f14 : 0x02070d, selected ? 0.92 : 0.9);
       this.choiceGraphics.fillRoundedRect(left, y, rowWidth, rowHeight, 9);
       this.choiceGraphics.lineStyle(selected ? 3 : 1, selected ? 0xfff4c8 : 0xc8f4e8, selected ? 1 : 0.74);
       this.choiceGraphics.strokeRoundedRect(left, y, rowWidth, rowHeight, 9);
@@ -712,7 +713,7 @@ export class DialogueManager {
       const label = this.scene.add
         .text(left + 40, y + rowHeight / 2, choice.text, {
           fontFamily: 'Georgia, Times New Roman, serif',
-          fontSize: promptMode ? '14px' : '13px',
+          fontSize: promptMode ? '13px' : '13px',
           color: selected ? '#fff7d6' : '#e7f2ee',
           wordWrap: { width: rowWidth - 54 }
         })
