@@ -212,6 +212,10 @@ const SIGN_X = 2520;
 const CAPPELLAIO_X = SIGN_X - 170;
 const CAPPELLAIO_ENTRANCE_OFFSET = 140;
 const RABBIT_X = 2440;
+const FINAL_MEADOW_X = 3950;
+const FINAL_DAISY_X = 4300;
+const FINAL_RABBIT_START_OFFSET = -140;
+const FINAL_RABBIT_END_X = 4850;
 const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
 const CAT_FOLLOW_DISTANCE = 92;
@@ -282,6 +286,7 @@ export class ForestScene extends Phaser.Scene {
     this.createCavalloAnimations();
     this.createCappellaio();
     this.createRabbitPlaceholder();
+    this.createFinalMeadow();
     this.updateNpcVisibility();
     this.startInitialIntro();
   }
@@ -292,7 +297,7 @@ export class ForestScene extends Phaser.Scene {
     this.updateCatIntro();
     this.updateCatFollower();
     this.updateNextSceneTrigger();
-    this.updateAutoWalkToRabbit();
+    this.updateFinalMeadowTrigger();
     this.updateContactShadows();
     this.updateInteractionHint();
     this.cameras.main.scrollY = 0;
@@ -447,6 +452,19 @@ export class ForestScene extends Phaser.Scene {
         }
       },
       {
+        id: 'final_daisy',
+        label: 'Prato di margherite',
+        x: FINAL_DAISY_X,
+        color: 0xf6f2a4,
+        width: 112,
+        height: 80,
+        dialogueKey: 'final_daisy_placed',
+        isAvailable: () => GameState.currentArea === 'madama' && GameState.finalMeadowStarted && !GameState.finalDaisyPlaced,
+        onInteract: () => {
+          this.placeFinalDaisy();
+        }
+      },
+      {
         id: 'pittore',
         label: 'Pittore',
         x: AREA_SPAWN_X.pittore + 180,
@@ -482,6 +500,11 @@ export class ForestScene extends Phaser.Scene {
 
       if (interactable.id === 'madama') {
         interactable.container = this.createMadama(interactable.x, this.groundY, interactable);
+        return;
+      }
+
+      if (interactable.id === 'final_daisy') {
+        interactable.container = this.createFinalDaisySpot(interactable.x, this.groundY, interactable);
         return;
       }
 
@@ -1055,7 +1078,7 @@ export class ForestScene extends Phaser.Scene {
     });
     this.cappellaioContainer?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
     this.cappellaioShadow?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
-    this.rabbitContainer?.setVisible(GameState.currentArea === 'madama' && GameState.madamaCompleted);
+    this.rabbitContainer?.setVisible(GameState.currentArea === 'madama' && GameState.finalRabbitSeen);
     this.updateCappellaioAnimation();
   }
 
@@ -1065,7 +1088,7 @@ export class ForestScene extends Phaser.Scene {
     }
 
     if (interactable.id === 'cat') {
-      return GameState.currentArea === 'forest' && this.catIntroStarted;
+      return this.catIntroStarted;
     }
 
     if (interactable.id === 'daisy') {
@@ -1074,6 +1097,10 @@ export class ForestScene extends Phaser.Scene {
 
     if (interactable.id === 'sign_directions') {
       return GameState.currentArea === 'forest' && GameState.hasSpruzzino;
+    }
+
+    if (interactable.id === 'final_daisy') {
+      return GameState.currentArea === 'madama' && GameState.finalMeadowStarted;
     }
 
     if (['madama', 'sposine', 'pittore', 'cavallo'].includes(interactable.id)) {
@@ -1384,6 +1411,105 @@ export class ForestScene extends Phaser.Scene {
     this.isTransitioning = false;
   }
 
+  createFinalMeadow() {
+    this.finalMeadowContainer = this.add.container(FINAL_MEADOW_X, this.groundY).setDepth(3);
+    const glow = this.add.ellipse(360, -44, 980, 170, 0xf7f0c8, 0.16);
+    const grass = this.add.rectangle(360, -16, 1040, 76, 0xd8e8bd, 0.18).setOrigin(0.5, 0.5);
+    const flowers = [];
+
+    for (let i = 0; i < 34; i += 1) {
+      const x = 20 + i * 28;
+      const y = -30 - (i % 5) * 5;
+      flowers.push(this.add.circle(x, y, 5, 0xfffbdf, 0.9));
+      flowers.push(this.add.circle(x, y - 1, 2, 0xf3d86a, 0.95));
+    }
+
+    this.finalMeadowContainer.add([glow, grass, ...flowers]);
+    this.finalMeadowContainer.setVisible(false);
+  }
+
+  createFinalDaisySpot(x, y, interactable) {
+    const container = this.add.container(x, y).setDepth(11);
+    const marker = this.add.ellipse(0, -18, 120, 36, 0xf7f0c8, 0.12).setStrokeStyle(1, 0xf3df9b, 0.22);
+    const daisy = this.add.sprite(0, 0, 'daisy-idle-01').setOrigin(0.5, 1);
+    this.setSpriteDisplayHeight(daisy, DAISY_DISPLAY_HEIGHT);
+    daisy.setVisible(false);
+    container.add([marker, daisy]);
+    interactable.sprite = daisy;
+    interactable.shadow = this.createContactShadow(container, { width: 34, height: 8, alpha: 0.22, depth: 10 });
+    return container;
+  }
+
+  updateFinalMeadowTrigger() {
+    if (GameState.currentArea !== 'madama' || !GameState.madamaCompleted || GameState.finalMeadowStarted || this.isTransitioning || this.dialogueManager?.isActive()) {
+      return;
+    }
+
+    if (this.romy.x >= FINAL_MEADOW_X - 90) {
+      GameState.finalMeadowStarted = true;
+      this.finalMeadowContainer?.setVisible(true);
+      this.stopRomy();
+      this.dialogueManager.startDialogue('final_meadow_intro');
+    }
+  }
+
+  completeMadamaArea() {
+    GameState.madamaCompleted = true;
+    this.finalMeadowContainer?.setVisible(true);
+    this.updateNpcVisibility();
+  }
+
+  placeFinalDaisy() {
+    GameState.finalDaisyPlaced = true;
+    GameState.hasDaisy = false;
+    this.playRomyIdleAnimation();
+    const finalDaisy = this.interactables?.find((interactable) => interactable.id === 'final_daisy');
+    finalDaisy?.sprite?.setVisible(true);
+    this.updateNpcVisibility();
+  }
+
+  startFinalRabbit() {
+    if (!this.rabbitContainer || GameState.finalRabbitSeen) {
+      return;
+    }
+
+    GameState.finalRabbitSeen = true;
+    const startX = Math.max(0, this.cameras.main.scrollX + FINAL_RABBIT_START_OFFSET);
+    this.rabbitContainer.setPosition(startX, this.getRomyY());
+    this.rabbitContainer.setVisible(true);
+    this.rabbitShadow?.setVisible(true);
+
+    const exclamation = this.add.text(this.romy.x, this.romy.y - ROMY_DISPLAY_HEIGHT - 28, '!', {
+      fontFamily: 'Georgia, Times New Roman, serif',
+      fontSize: '40px',
+      color: '#fff1a8',
+      fontStyle: 'bold',
+      stroke: '#1b1020',
+      strokeThickness: 4
+    }).setOrigin(0.5).setDepth(40);
+
+    this.tweens.add({ targets: exclamation, y: exclamation.y - 18, alpha: 0, duration: 1200, ease: 'Sine.easeOut', onComplete: () => exclamation.destroy() });
+    this.tweens.add({ targets: this.rabbitContainer, x: Math.min(FINAL_RABBIT_END_X, this.worldWidth + 120), duration: 2400, ease: 'Sine.easeIn', onComplete: () => this.rabbitContainer?.setVisible(false) });
+  }
+
+  finishFinalFade() {
+    this.stopRomy();
+    this.tweens.add({
+      targets: this.romy,
+      angle: -8,
+      alpha: 0.45,
+      duration: 1800,
+      ease: 'Sine.easeInOut'
+    });
+    this.BlackTransition?.setVisible(true).setAlpha(0);
+    this.tweens.add({
+      targets: this.BlackTransition,
+      alpha: 1,
+      duration: 3200,
+      ease: 'Sine.easeInOut'
+    });
+  }
+
   updateAreaBackground(area) {
     const textureKey = area === 'madama' ? 'background-gioielli' : 'background-01';
 
@@ -1422,6 +1548,11 @@ export class ForestScene extends Phaser.Scene {
       onComplete: () => {
         this.updateAreaBackground(area);
         this.romy.setPosition(targetX, this.getRomyY());
+        const cat = this.interactables?.find((interactable) => interactable.id === 'cat');
+        if (cat?.container && this.catIntroStarted) {
+          cat.container.setPosition(Math.max(0, targetX - CAT_FOLLOW_DISTANCE), this.getRomyY());
+          cat.entranceComplete = true;
+        }
         this.cameras.main.scrollY = 0;
         this.cameras.main.scrollX = area === 'madama' ? 0 : Phaser.Math.Clamp(targetX - this.scale.width / 2, 0, Math.max(0, this.worldWidth - this.scale.width));
         this.updateNpcVisibility();

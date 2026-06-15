@@ -17,7 +17,10 @@ const initialState = {
   hatterColored: false,
   madamaCompleted: false,
   tutorialMovementShown: false,
-  cappellaioEntered: false
+  cappellaioEntered: false,
+  finalMeadowStarted: false,
+  finalDaisyPlaced: false,
+  finalRabbitSeen: false
 };
 
 export const GameState = {

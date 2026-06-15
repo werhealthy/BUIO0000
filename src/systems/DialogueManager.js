@@ -67,12 +67,31 @@ const getPortraitKeyForSpeaker = (speaker = '') => {
   const portraitKey = Object.prototype.hasOwnProperty.call(SPEAKER_ALIASES, normalizedSpeaker)
     ? SPEAKER_ALIASES[normalizedSpeaker]
     : null;
+  const portrait = PORTRAITS[portraitKey];
+  let textureKey = portrait?.texture ?? null;
 
-  if (DEBUG_PORTRAITS) {
-    console.debug('[Portrait]', { speaker, normalizedSpeaker, portraitKey });
+  if (portraitKey === 'romy' && GameState.hasDaisy) {
+    textureKey = portrait.daisyTexture ?? textureKey;
   }
 
-  return portraitKey;
+  if (portraitKey === 'cappellaio' && GameState.hatterColored) {
+    textureKey = portrait.colourTexture ?? textureKey;
+  }
+
+  if (DEBUG_PORTRAITS) {
+    console.debug('[Portrait] lookup', { speaker, normalizedSpeaker, portraitKey, textureKey });
+  }
+
+  return textureKey;
+};
+
+const getPortraitConfigForSpeaker = (speaker = '') => {
+  const normalizedSpeaker = normalizeSpeaker(speaker);
+  const portraitKey = Object.prototype.hasOwnProperty.call(SPEAKER_ALIASES, normalizedSpeaker)
+    ? SPEAKER_ALIASES[normalizedSpeaker]
+    : null;
+
+  return PORTRAITS[portraitKey] ?? null;
 };
 
 export class DialogueManager {
@@ -406,7 +425,7 @@ export class DialogueManager {
     const panelWidth = Math.round(width * 0.7);
     const panelX = Math.round((width - panelWidth) / 2);
     const panelY = Math.round(height * 0.12);
-    const panelHeight = 128;
+    const panelHeight = Math.max(138, Math.round(this.layout.height * 0.19));
     const speakerLabel = normalizeSpeaker(speaker) === 'sistema' ? 'CARTELLO' : speaker;
 
     this.choicePromptGraphics.setVisible(true);
@@ -427,7 +446,7 @@ export class DialogueManager {
 
     this.choicePromptSpeakerText.setPosition(width / 2, panelY + 22).setText(speakerLabel ?? '');
     this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 72 : 62));
-    this.choicePromptText.setWordWrapWidth(panelWidth - 64);
+    this.choicePromptText.setWordWrapWidth(panelWidth - 80);
     this.choicePromptText.setText(this.currentLine.text ?? '');
 
     this.renderChoices();
@@ -445,24 +464,18 @@ export class DialogueManager {
   }
 
   updatePortrait(speaker) {
-    const portraitKey = getPortraitKeyForSpeaker(speaker);
-    const portrait = PORTRAITS[portraitKey];
-    let texture = portrait?.texture;
+    const portrait = getPortraitConfigForSpeaker(speaker);
+    let texture = getPortraitKeyForSpeaker(speaker);
 
-    if (portraitKey === 'romy' && GameState.hasDaisy && this.scene.textures.exists(portrait?.daisyTexture)) {
-      texture = portrait.daisyTexture;
-    }
-
-    if (portraitKey === 'cappellaio' && GameState.hatterColored && this.scene.textures.exists(portrait?.colourTexture)) {
-      texture = portrait.colourTexture;
-    }
-
-    if (portrait && !this.scene.textures.exists(texture)) {
+    if (portrait && (!texture || !this.scene.textures.exists(texture))) {
       texture = portrait.fallbackTextures?.find((fallbackTexture) => this.scene.textures.exists(fallbackTexture));
     }
 
     if (!portrait || !texture || !this.scene.textures.exists(texture)) {
       this.portraitContainer.setVisible(false);
+      if (DEBUG_PORTRAITS) {
+        console.debug('[Portrait] hidden', { speaker, texture });
+      }
       return false;
     }
 
@@ -473,6 +486,9 @@ export class DialogueManager {
     this.drawFixedPortraitFrame();
 
     this.portraitContainer.setVisible(true);
+    if (DEBUG_PORTRAITS) {
+      console.debug('[Portrait] shown', { speaker, texture });
+    }
     return true;
   }
 
@@ -592,7 +608,7 @@ export class DialogueManager {
       : this.systemMode
         ? Math.round(this.layout.width * 0.66)
         : this.layout.boxRight - left - this.layout.textRightPadding;
-    const rowHeight = promptMode ? 46 : this.systemMode ? 34 : 26;
+    const rowHeight = promptMode ? 54 : this.systemMode ? 40 : 30;
     const gap = promptMode || this.systemMode ? 8 : 6;
     const totalHeight = choices.length * rowHeight + Math.max(0, choices.length - 1) * gap;
     const startY = promptMode
@@ -608,9 +624,9 @@ export class DialogueManager {
       const selected = index === this.choiceIndex;
       const y = startY + index * (rowHeight + gap);
 
-      this.choiceGraphics.fillStyle(selected ? 0xf3df9b : 0x152530, selected ? 0.28 : 0.58);
+      this.choiceGraphics.fillStyle(selected ? 0xf3df9b : 0x07131d, selected ? 0.38 : 0.72);
       this.choiceGraphics.fillRoundedRect(left, y, rowWidth, rowHeight, 9);
-      this.choiceGraphics.lineStyle(1, selected ? 0xf3df9b : 0x6fae9d, selected ? 0.92 : 0.36);
+      this.choiceGraphics.lineStyle(selected ? 2 : 1, selected ? 0xfff1b8 : 0x9fd7c6, selected ? 1 : 0.58);
       this.choiceGraphics.strokeRoundedRect(left, y, rowWidth, rowHeight, 9);
 
       const arrow = this.scene.add
@@ -626,7 +642,7 @@ export class DialogueManager {
       const label = this.scene.add
         .text(left + 40, y + rowHeight / 2, choice.text, {
           fontFamily: 'Georgia, Times New Roman, serif',
-          fontSize: promptMode ? '15px' : '14px',
+          fontSize: promptMode ? '14px' : '13px',
           color: selected ? '#fff7d6' : '#e7f2ee',
           wordWrap: { width: rowWidth - 54 }
         })
@@ -699,8 +715,14 @@ export class DialogueManager {
       transitionToAreaPittore: () => {
         this.scene.transitionToArea?.('pittore');
       },
-      continueToRabbit: () => {
-        this.scene.startRabbitFinalWalk?.();
+      completeMadamaArea: () => {
+        this.scene.completeMadamaArea?.();
+      },
+      startFinalRabbit: () => {
+        this.scene.startFinalRabbit?.();
+      },
+      finishFinalFade: () => {
+        this.scene.finishFinalFade?.();
       },
       revealForestIntro: () => {
         this.scene.revealForestIntro?.();
