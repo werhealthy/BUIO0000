@@ -9,18 +9,33 @@ const DEBUG_UI = false;
 const PORTRAIT_FRAME_RADIUS = 48;
 const PORTRAIT_CENTER_X = 64;
 const PORTRAIT_CENTER_Y = 56;
-const PORTRAIT_INNER_PADDING = 12;
-const PORTRAIT_CONTENT_MAX_SIZE = PORTRAIT_FRAME_RADIUS * 2 - PORTRAIT_INNER_PADDING * 2;
+const PORTRAIT_INNER_PADDING = 16;
+const PORTRAIT_CONTENT_MAX_WIDTH = PORTRAIT_FRAME_RADIUS * 2 - PORTRAIT_INNER_PADDING * 2;
+const PORTRAIT_CONTENT_MAX_HEIGHT = PORTRAIT_FRAME_RADIUS * 2 - PORTRAIT_INNER_PADDING * 2;
 
 const PORTRAITS = {
-  ROMY: { texture: 'romy-idle-01', daisyTexture: 'romy-daisy-idle-01', height: 146, maxWidth: 118, flipX: false },
-  GATTO: { texture: 'cat-idle-01', height: 118, maxWidth: 118, flipX: true },
-  DAISY: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
-  FIORE: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
-  MARGHERITA: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
-  ONOFRIO: { texture: 'onofrio-idle-01', flipX: false },
-  CAPPELLAIO: { texture: 'cappellaio-idle-01', colourTexture: 'cappellaio-idle-colour-01', flipX: false },
-  MADAMA: { texture: 'madama-idle-01', flipX: false }
+  romy: { texture: 'romy-idle-01', daisyTexture: 'romy-daisy-idle-01', flipX: false, offsetY: 0 },
+  cat: { texture: 'cat-idle-01', flipX: true, offsetY: 0 },
+  daisy: { texture: 'daisy-idle-01', flipX: false, offsetY: 0 },
+  onofrio: { texture: 'onofrio-idle-01', fallbackTextures: ['onofrio-idle-02', 'onofrio-idle-03'], flipX: false, offsetY: 0 },
+  cappellaio: { texture: 'cappellaio-idle-01', colourTexture: 'cappellaio-idle-colour-01', flipX: false, offsetY: 0 },
+  madama: { texture: 'madama-idle-01', flipX: false, offsetY: 0 },
+  spose: { texture: 'spose-idle-01', fallbackTextures: ['spose-idle-02', 'spose-idle-03', 'spose-idle-04'], flipX: false, offsetY: 0 }
+};
+
+const SPEAKER_ALIASES = {
+  ROMY: 'romy',
+  GATTO: 'cat',
+  CAT: 'cat',
+  MICIO: 'cat',
+  FIORE: 'daisy',
+  DAISY: 'daisy',
+  MARGHERITA: 'daisy',
+  ONOFRIO: 'onofrio',
+  CAPPELLAIO: 'cappellaio',
+  MADAMA: 'madama',
+  SPOSE: 'spose',
+  SPOSINE: 'spose'
 };
 
 const getAutoAdvanceDelay = (line = {}) => {
@@ -37,6 +52,7 @@ const getAutoAdvanceDelay = (line = {}) => {
 };
 
 const normalizeSpeaker = (speaker = '') => speaker.trim().toUpperCase();
+const getPortraitKey = (speaker = '') => SPEAKER_ALIASES[normalizeSpeaker(speaker)] ?? null;
 
 export class DialogueManager {
   constructor(scene) {
@@ -408,19 +424,23 @@ export class DialogueManager {
   }
 
   updatePortrait(speaker) {
-    const normalizedSpeaker = normalizeSpeaker(speaker);
-    const portrait = PORTRAITS[normalizedSpeaker];
+    const portraitKey = getPortraitKey(speaker);
+    const portrait = PORTRAITS[portraitKey];
     let texture = portrait?.texture;
 
-    if (normalizedSpeaker === 'ROMY' && GameState.hasDaisy && this.scene.textures.exists(portrait?.daisyTexture)) {
+    if (portraitKey === 'romy' && GameState.hasDaisy && this.scene.textures.exists(portrait?.daisyTexture)) {
       texture = portrait.daisyTexture;
     }
 
-    if (normalizedSpeaker === 'CAPPELLAIO' && GameState.hatterColored && this.scene.textures.exists(portrait?.colourTexture)) {
+    if (portraitKey === 'cappellaio' && GameState.hatterColored && this.scene.textures.exists(portrait?.colourTexture)) {
       texture = portrait.colourTexture;
     }
 
-    if (!portrait || !this.scene.textures.exists(texture)) {
+    if (portrait && !this.scene.textures.exists(texture)) {
+      texture = portrait.fallbackTextures?.find((fallbackTexture) => this.scene.textures.exists(fallbackTexture));
+    }
+
+    if (!portrait || !texture || !this.scene.textures.exists(texture)) {
       this.portraitContainer.setVisible(false);
       return false;
     }
@@ -428,7 +448,7 @@ export class DialogueManager {
     this.portraitSprite.setTexture(texture);
     this.portraitSprite.setFlipX(portrait.flipX);
     this.setPortraitSize();
-    this.portraitSprite.setPosition(0, 0);
+    this.portraitSprite.setPosition(portrait.offsetX ?? 0, portrait.offsetY ?? 0);
     this.drawFixedPortraitFrame();
 
     this.portraitContainer.setVisible(true);
@@ -440,8 +460,10 @@ export class DialogueManager {
       return;
     }
 
-    const maxSize = PORTRAIT_CONTENT_MAX_SIZE;
-    const scale = Math.min(maxSize / this.portraitSprite.height, maxSize / this.portraitSprite.width);
+    const scale = Math.min(
+      PORTRAIT_CONTENT_MAX_HEIGHT / this.portraitSprite.height,
+      PORTRAIT_CONTENT_MAX_WIDTH / this.portraitSprite.width
+    );
     this.portraitSprite.setScale(scale);
   }
 
@@ -681,6 +703,9 @@ export class DialogueManager {
       },
       setRomyPoseIdle: () => {
         this.scene.setRomyPose?.('idle');
+      },
+      startCappellaioEntrance: () => {
+        this.scene.startCappellaioEntrance?.();
       }
     };
 

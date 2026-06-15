@@ -50,6 +50,14 @@ const cappellaioAssets = import.meta.glob('../assets/sprites/characters/cappella
 });
 const cappellaioUrl = (fileName) => cappellaioAssets[`../assets/sprites/characters/cappellaio/${fileName}`];
 
+const sposeAssets = import.meta.glob('../assets/sprites/characters/{spose,sposine}/*.png', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+const sposeUrl = (fileName) => sposeAssets[`../assets/sprites/characters/spose/${fileName}`]
+  ?? sposeAssets[`../assets/sprites/characters/sposine/${fileName}`];
+
 const signpostAssets = import.meta.glob('../assets/objects/signpost/signpost_crossroad.png', {
   eager: true,
   query: '?url',
@@ -146,6 +154,13 @@ const MADAMA_IDLE_FRAMES = [
   frame('madama-idle-04', madamaIdle04Url)
 ];
 
+const SPOSE_IDLE_FRAMES = [
+  frame('spose-idle-01', sposeUrl('spose_idle_01.png')),
+  frame('spose-idle-02', sposeUrl('spose_idle_02.png')),
+  frame('spose-idle-03', sposeUrl('spose_idle_03.png')),
+  frame('spose-idle-04', sposeUrl('spose_idle_04.png'))
+].filter(({ url }) => Boolean(url));
+
 const loadFrames = (scene, frames) => {
   frames.forEach(({ key, url }) => {
     scene.load.image(key, url);
@@ -162,6 +177,7 @@ const CAT_IDLE_FRAME_RATE = 3;
 const DAISY_FRAME_RATE = 3;
 const ONOFRIO_FRAME_RATE = 2;
 const MADAMA_FRAME_RATE = 3;
+const SPOSE_FRAME_RATE = 4;
 const CAPPELLAIO_IDLE_FRAME_RATE = 3;
 const CAPPELLAIO_WALK_FRAME_RATE = 7;
 const CAPPELLAIO_DISPLAY_HEIGHT = 210;
@@ -171,6 +187,7 @@ const CAT_DISPLAY_HEIGHT = 82;
 const DAISY_DISPLAY_HEIGHT = 56;
 const ONOFRIO_DISPLAY_HEIGHT = 312;
 const MADAMA_DISPLAY_HEIGHT = 230;
+const SPOSE_DISPLAY_HEIGHT = 190;
 const SIGN_SCALE = 0.58;
 const PLAYER_START_X = 260;
 const CAT_TARGET_X = 430;
@@ -178,6 +195,7 @@ const DAISY_X = 720;
 const ONOFRIO_X = 920;
 const SIGN_X = 2520;
 const CAPPELLAIO_X = SIGN_X - 170;
+const CAPPELLAIO_ENTRANCE_OFFSET = 140;
 const RABBIT_X = 2440;
 const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
@@ -189,7 +207,7 @@ const ATMOSPHERE_ALPHA = 0.08;
 
 const AREA_SPAWN_X = {
   forest: PLAYER_START_X,
-  madama: 1680,
+  madama: 160,
   sposine: 2180,
   pittore: 2680
 };
@@ -213,6 +231,7 @@ export class ForestScene extends Phaser.Scene {
     loadFrames(this, DAISY_IDLE_FRAMES);
     loadFrames(this, ONOFRIO_IDLE_FRAMES);
     loadFrames(this, MADAMA_IDLE_FRAMES);
+    loadFrames(this, SPOSE_IDLE_FRAMES);
     loadFrames(this, CAPPELLAIO_IDLE_FRAMES);
     loadFrames(this, CAPPELLAIO_WALK_FRAMES);
     loadFrames(this, CAPPELLAIO_IDLE_COLOUR_FRAMES);
@@ -391,7 +410,7 @@ export class ForestScene extends Phaser.Scene {
         id: 'madama',
         label: 'Madama',
         objectName: 'Trigger_Madama',
-        x: AREA_SPAWN_X.madama + 180,
+        x: 1180,
         color: 0xf38bd5,
         dialogueKey: 'madama_intro',
         isAvailable: () => GameState.currentArea === 'madama' && !GameState.madamaStarted,
@@ -449,6 +468,11 @@ export class ForestScene extends Phaser.Scene {
         return;
       }
 
+      if (interactable.id === 'sposine') {
+        interactable.container = this.createSposine(interactable.x, this.groundY, interactable);
+        return;
+      }
+
       interactable.container = this.createPlaceholder(interactable.x, this.groundY, interactable);
     });
   }
@@ -484,6 +508,31 @@ export class ForestScene extends Phaser.Scene {
     }
   }
 
+  createSposine(x, y, interactable) {
+    if (!SPOSE_IDLE_FRAMES.length) {
+      return this.createPlaceholder(x, y, interactable);
+    }
+
+    const container = this.add.container(x, y).setDepth(12);
+    const spose = this.add.sprite(0, 0, SPOSE_IDLE_FRAMES[0].key).setOrigin(0.5, 1);
+    this.setSpriteDisplayHeight(spose, SPOSE_DISPLAY_HEIGHT);
+
+    if (SPOSE_IDLE_FRAMES.length > 1 && !this.anims.exists('spose-idle')) {
+      this.anims.create({
+        key: 'spose-idle',
+        frames: phaserFrames(SPOSE_IDLE_FRAMES),
+        frameRate: SPOSE_FRAME_RATE,
+        repeat: -1
+      });
+      spose.anims.play('spose-idle');
+    }
+
+    container.add([spose]);
+    interactable.sprite = spose;
+    interactable.shadow = this.createContactShadow(container, { width: 110, height: 20, alpha: 0.3, depth: 11 });
+    return container;
+  }
+
   createCappellaio() {
     const firstFrame = CAPPELLAIO_IDLE_FRAMES[0]?.key ?? CAPPELLAIO_WALK_FRAMES[0]?.key;
 
@@ -491,11 +540,13 @@ export class ForestScene extends Phaser.Scene {
       return;
     }
 
-    this.cappellaioContainer = this.add.container(CAPPELLAIO_X, this.groundY).setDepth(12);
+    this.cappellaioContainer = this.add.container(this.worldWidth + CAPPELLAIO_ENTRANCE_OFFSET, this.groundY).setDepth(12);
     this.cappellaio = this.add.sprite(0, 0, firstFrame).setOrigin(0.5, 1);
     this.setSpriteDisplayHeight(this.cappellaio, CAPPELLAIO_DISPLAY_HEIGHT);
     this.cappellaioContainer.add(this.cappellaio);
     this.cappellaioShadow = this.createContactShadow(this.cappellaioContainer, { width: 92, height: 18, alpha: 0.3, depth: 11 });
+    this.cappellaioContainer.setVisible(false);
+    this.cappellaioShadow.setVisible(false);
     this.updateCappellaioAnimation();
   }
 
@@ -950,7 +1001,7 @@ export class ForestScene extends Phaser.Scene {
     this.interactables.forEach((interactable) => {
       interactable.container.setVisible(this.isNpcVisible(interactable));
     });
-    this.cappellaioContainer?.setVisible(GameState.currentArea === 'forest' && GameState.hasSpruzzino);
+    this.cappellaioContainer?.setVisible(GameState.currentArea === 'forest' && GameState.cappellaioEntered);
     this.rabbitContainer?.setVisible(GameState.currentArea === 'madama' && GameState.madamaCompleted);
     this.updateCappellaioAnimation();
   }
@@ -1182,12 +1233,45 @@ export class ForestScene extends Phaser.Scene {
     this.updateNpcVisibility();
   }
 
+  startCappellaioEntrance() {
+    if (!this.cappellaioContainer || GameState.cappellaioEntered || this.cappellaioEntranceStarted) {
+      return;
+    }
+
+    this.cappellaioEntranceStarted = true;
+    const startX = Math.min(this.worldWidth - 40, this.cameras.main.scrollX + this.scale.width + CAPPELLAIO_ENTRANCE_OFFSET);
+    this.cappellaioContainer.setPosition(startX, this.getRomyY());
+    this.cappellaioContainer.setVisible(true);
+    this.cappellaio?.setFlipX(true);
+
+    if (this.anims.exists('cappellaio-walk')) {
+      this.cappellaio.anims.play('cappellaio-walk', true);
+    }
+
+    this.tweens.add({
+      targets: this.cappellaioContainer,
+      x: CAPPELLAIO_X,
+      duration: 1450,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        GameState.cappellaioEntered = true;
+        this.cappellaio?.setFlipX(false);
+        this.updateCappellaioAnimation();
+        this.updateNpcVisibility();
+      }
+    });
+  }
+
   revealDaisy() {
     this.daisyRevealed = true;
     this.updateNpcVisibility();
   }
 
   finishMainIntro() {
+    if (!GameState.tutorialMovementShown) {
+      GameState.tutorialMovementShown = true;
+    }
+
     GameState.catIntroSeen = true;
     this.revealDaisy();
   }
@@ -1254,6 +1338,9 @@ export class ForestScene extends Phaser.Scene {
     this.backgroundScale = this.scale.height / this.background.height;
     this.background.setScale(this.backgroundScale);
     this.currentBackgroundKey = textureKey;
+    this.worldWidth = Math.max(this.scale.width, this.background.displayWidth);
+    this.physics.world.setBounds(0, 0, this.worldWidth, this.scale.height);
+    this.cameras.main.setBounds(0, 0, this.worldWidth, this.scale.height);
   }
 
   transitionToArea(area) {
@@ -1279,7 +1366,7 @@ export class ForestScene extends Phaser.Scene {
         this.updateAreaBackground(area);
         this.romy.setPosition(targetX, this.getRomyY());
         this.cameras.main.scrollY = 0;
-        this.cameras.main.centerOnX(targetX);
+        this.cameras.main.scrollX = area === 'madama' ? 0 : Phaser.Math.Clamp(targetX - this.scale.width / 2, 0, Math.max(0, this.worldWidth - this.scale.width));
         this.updateNpcVisibility();
 
         this.tweens.add({

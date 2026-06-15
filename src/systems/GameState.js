@@ -15,7 +15,9 @@ const initialState = {
   quiete: 0,
   lastChoice: null,
   hatterColored: false,
-  madamaCompleted: false
+  madamaCompleted: false,
+  tutorialMovementShown: false,
+  cappellaioEntered: false
 };
 
 export const GameState = {
