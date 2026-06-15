@@ -6,11 +6,11 @@ const SCORE_KEYS = ['calore', 'ritmo', 'quiete'];
 
 const DEBUG_UI = false;
 // PORTRAIT FIXED FRAME: these constants keep the circle identical for every speaker.
-const PORTRAIT_FRAME_X = 70;
-const PORTRAIT_CENTER_Y_OFFSET = 70;
-const PORTRAIT_FRAME_SIZE = 118;
-const PORTRAIT_INNER_PADDING = 14;
-const PORTRAIT_CONTENT_MAX_HEIGHT = PORTRAIT_FRAME_SIZE - PORTRAIT_INNER_PADDING * 2;
+const PORTRAIT_FRAME_RADIUS = 48;
+const PORTRAIT_CENTER_X = 64;
+const PORTRAIT_CENTER_Y = 56;
+const PORTRAIT_INNER_PADDING = 12;
+const PORTRAIT_CONTENT_MAX_SIZE = PORTRAIT_FRAME_RADIUS * 2 - PORTRAIT_INNER_PADDING * 2;
 
 const PORTRAITS = {
   ROMY: { texture: 'romy-idle-01', daisyTexture: 'romy-daisy-idle-01', height: 146, maxWidth: 118, flipX: false },
@@ -86,12 +86,12 @@ export class DialogueManager {
 
     this.drawDialogueFrame();
 
-    this.portraitContainer = this.scene.add.container(boxLeft + PORTRAIT_FRAME_X, boxTop + PORTRAIT_CENTER_Y_OFFSET).setScrollFactor(0).setDepth(1003);
+    this.portraitContainer = this.scene.add.container(boxLeft + PORTRAIT_CENTER_X, boxTop + PORTRAIT_CENTER_Y).setScrollFactor(0).setDepth(1003);
     this.portraitFrame = this.scene.add.graphics();
     this.portraitSprite = this.scene.add.sprite(0, 0, 'romy-idle-01').setOrigin(0.5, 0.5);
     this.portraitMaskShape = this.scene.add.graphics().setVisible(false);
     this.portraitMaskShape.fillStyle(0xffffff, 1);
-    this.portraitMaskShape.fillCircle(boxLeft + PORTRAIT_FRAME_X, boxTop + PORTRAIT_CENTER_Y_OFFSET, PORTRAIT_FRAME_SIZE / 2 - PORTRAIT_INNER_PADDING / 2);
+    this.portraitMaskShape.fillCircle(boxLeft + PORTRAIT_CENTER_X, boxTop + PORTRAIT_CENTER_Y, PORTRAIT_FRAME_RADIUS - PORTRAIT_INNER_PADDING / 2);
     this.portraitMask = this.portraitMaskShape.createGeometryMask();
     this.portraitSprite.setMask(this.portraitMask);
     this.portraitContainer.add([this.portraitFrame, this.portraitSprite]);
@@ -214,7 +214,7 @@ export class DialogueManager {
 
   drawFixedPortraitFrame() {
     // PORTRAIT FIXED FRAME: the frame is drawn once at fixed size; sprites scale inside it.
-    const radius = PORTRAIT_FRAME_SIZE / 2;
+    const radius = PORTRAIT_FRAME_RADIUS;
     this.portraitFrame.clear();
     this.portraitFrame.fillStyle(0xf5df9a, 0.14);
     this.portraitFrame.fillCircle(0, 0, radius);
@@ -440,7 +440,7 @@ export class DialogueManager {
       return;
     }
 
-    const maxSize = PORTRAIT_CONTENT_MAX_HEIGHT;
+    const maxSize = PORTRAIT_CONTENT_MAX_SIZE;
     const scale = Math.min(maxSize / this.portraitSprite.height, maxSize / this.portraitSprite.width);
     this.portraitSprite.setScale(scale);
   }
@@ -623,6 +623,7 @@ export class DialogueManager {
       },
       useSpruzzinoOnHatter: () => {
         GameState.hatterColored = true;
+        this.scene.updateCappellaioAnimation?.();
       },
       setPathMadama: () => {
         GameState.currentPath = 'madama';
@@ -650,6 +651,9 @@ export class DialogueManager {
       },
       transitionToAreaPittore: () => {
         this.scene.transitionToArea?.('pittore');
+      },
+      continueToRabbit: () => {
+        this.scene.startRabbitFinalWalk?.();
       },
       revealForestIntro: () => {
         this.scene.revealForestIntro?.();

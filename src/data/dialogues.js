@@ -186,10 +186,14 @@ export const dialogues = {
 
   crossroad_cappellaio: [
     { speaker: "ROMY", text: "Tre direzioni. Una fragola, una stella e una zampa." },
-    { speaker: "CAPPELLAIO", text: "Mi hanno rubato i colori!" },
-    { speaker: "ROMY", text: "Lo Spruzzino di Onofrio fa brillare i simboli." },
-    { speaker: "SISTEMA", text: "Il cartello si accende appena.", action: "useSpruzzinoOnHatter" },
-    { speaker: "CAPPELLAIO", text: "Oh! Fragola, stella e zampa hanno ritrovato il colore!" },
+    { speaker: "CAPPELLAIO", text: "Fermi tutti! Chi ha spostato il martedì nel taschino del giovedì?" },
+    { speaker: "FIORE", text: "Nessuno. Credo. Ma non lo direi sotto giuramento botanico." },
+    { speaker: "CAPPELLAIO", text: "Mi hanno rubato i colori! Il rosso è scappato con una fragola, il giallo si è nascosto in una stella e il nero fa le impronte senza permesso." },
+    { speaker: "ROMY", text: "Posso provare ad aiutarti. Lo Spruzzino di Onofrio fa ricordare i colori alle cose." },
+    { speaker: "SISTEMA", text: "Lo Spruzzino di Onofrio fa brillare il cartello e il Cappellaio riprende colore.", action: "useSpruzzinoOnHatter" },
+    { speaker: "CAPPELLAIO", text: "Oh! Mi sento di nuovo pronunciabile! Fragola, stella e zampa hanno ritrovato il loro posto nella frase." },
+    { speaker: "ROMY", text: "Sono felice. Anche se non sono sicura di aver capito la frase." },
+    { speaker: "CAPPELLAIO", text: "Capire è una tazza troppo piccola. Bevi meraviglia, cara Romy!" },
     {
       speaker: "CAPPELLAIO",
       text: "Cosa cerchi davvero, quando cerchi te?",
@@ -376,7 +380,7 @@ export const dialogues = {
     { speaker: "FIORE", text: "Splendida frase. La ricamerò su una foglia." },
     { speaker: "GATTO", text: "Miao." },
     { speaker: "FIORE", text: "Sì, gatto. Anche io ho sentito un po’ di soddisfazione." },
-    { speaker: "SISTEMA", text: "Fine ramo Madama — prossimo step: prato delle margherite." }
+    { speaker: "SISTEMA", text: "Romy lascia il laboratorio: davanti, nel sentiero, qualcosa di bianco muove le orecchie.", action: "continueToRabbit" }
   ],
 
   madama_choice_ritmo: [
@@ -386,7 +390,7 @@ export const dialogues = {
     { speaker: "FIORE", text: "Splendida frase. La ricamerò su una foglia." },
     { speaker: "GATTO", text: "Miao." },
     { speaker: "FIORE", text: "Sì, gatto. Anche io ho sentito un po’ di soddisfazione." },
-    { speaker: "SISTEMA", text: "Fine ramo Madama — prossimo step: prato delle margherite." }
+    { speaker: "SISTEMA", text: "Romy lascia il laboratorio: davanti, nel sentiero, qualcosa di bianco muove le orecchie.", action: "continueToRabbit" }
   ],
 
   madama_choice_quiete: [
@@ -396,7 +400,7 @@ export const dialogues = {
     { speaker: "FIORE", text: "Splendida frase. La ricamerò su una foglia." },
     { speaker: "GATTO", text: "Miao." },
     { speaker: "FIORE", text: "Sì, gatto. Anche io ho sentito un po’ di soddisfazione." },
-    { speaker: "SISTEMA", text: "Fine ramo Madama — prossimo step: prato delle margherite." }
+    { speaker: "SISTEMA", text: "Romy lascia il laboratorio: davanti, nel sentiero, qualcosa di bianco muove le orecchie.", action: "continueToRabbit" }
   ],
 
   sposine_intro: [

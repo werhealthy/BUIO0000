@@ -5,6 +5,7 @@ import { GameState } from '../systems/GameState.js';
 
 // Gli asset restano in src/assets: Vite li trasforma in URL sicuri.
 import backgroundUrl from '../assets/backgrounds/background_01.png?url';
+import backgroundGioielliUrl from '../assets/backgrounds/background_gioielli.png?url';
 import romyIdle01Url from '../assets/sprites/characters/romy/romy_idle_01.png?url';
 import romyIdle02Url from '../assets/sprites/characters/romy/romy_idle_02.png?url';
 import romyIdle03Url from '../assets/sprites/characters/romy/romy_idle_03.png?url';
@@ -163,6 +164,7 @@ const ONOFRIO_FRAME_RATE = 2;
 const MADAMA_FRAME_RATE = 3;
 const CAPPELLAIO_IDLE_FRAME_RATE = 3;
 const CAPPELLAIO_WALK_FRAME_RATE = 7;
+const CAPPELLAIO_DISPLAY_HEIGHT = 210;
 const ROAD_Y = (canvasHeight) => canvasHeight - 118;
 const ROMY_DISPLAY_HEIGHT = 142;
 const CAT_DISPLAY_HEIGHT = 82;
@@ -175,6 +177,8 @@ const CAT_TARGET_X = 430;
 const DAISY_X = 720;
 const ONOFRIO_X = 920;
 const SIGN_X = 2520;
+const CAPPELLAIO_X = SIGN_X - 170;
+const RABBIT_X = 2440;
 const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
 const CAT_FOLLOW_DISTANCE = 92;
@@ -198,6 +202,7 @@ export class ForestScene extends Phaser.Scene {
   preload() {
     // Carica solo gli asset reali elencati per personaggio.
     this.load.image('background-01', backgroundUrl);
+    this.load.image('background-gioielli', backgroundGioielliUrl);
     loadFrames(this, ROMY_IDLE_FRAMES);
     loadFrames(this, ROMY_WALK_FRAMES);
     loadFrames(this, ROMY_WAKE_FRAMES);
@@ -221,6 +226,7 @@ export class ForestScene extends Phaser.Scene {
   create() {
     GameState.resetForNewRun?.();
     this.isTransitioning = false;
+    this.autoWalkingToRabbit = false;
     this.catIntroStarted = false;
     this.daisyRevealed = false;
     this.isWakingUp = false;
@@ -238,6 +244,8 @@ export class ForestScene extends Phaser.Scene {
     this.createDialogueManager();
     this.createInput();
     this.createCappellaioAnimations();
+    this.createCappellaio();
+    this.createRabbitPlaceholder();
     this.updateNpcVisibility();
     this.startInitialIntro();
   }
@@ -248,6 +256,7 @@ export class ForestScene extends Phaser.Scene {
     this.updateCatIntro();
     this.updateCatFollower();
     this.updateNextSceneTrigger();
+    this.updateAutoWalkToRabbit();
     this.updateContactShadows();
     this.updateInteractionHint();
     this.cameras.main.scrollY = 0;
@@ -260,6 +269,7 @@ export class ForestScene extends Phaser.Scene {
     this.background = this.add.image(0, 0, 'background-01').setOrigin(0, 0).setDepth(0);
     this.backgroundScale = height / this.background.height;
     this.background.setScale(this.backgroundScale);
+    this.currentBackgroundKey = 'background-01';
 
     this.worldWidth = Math.max(width, this.background.displayWidth);
     this.roadY = ROAD_Y(height);
@@ -472,6 +482,50 @@ export class ForestScene extends Phaser.Scene {
         repeat: -1
       });
     }
+  }
+
+  createCappellaio() {
+    const firstFrame = CAPPELLAIO_IDLE_FRAMES[0]?.key ?? CAPPELLAIO_WALK_FRAMES[0]?.key;
+
+    if (!firstFrame) {
+      return;
+    }
+
+    this.cappellaioContainer = this.add.container(CAPPELLAIO_X, this.groundY).setDepth(12);
+    this.cappellaio = this.add.sprite(0, 0, firstFrame).setOrigin(0.5, 1);
+    this.setSpriteDisplayHeight(this.cappellaio, CAPPELLAIO_DISPLAY_HEIGHT);
+    this.cappellaioContainer.add(this.cappellaio);
+    this.cappellaioShadow = this.createContactShadow(this.cappellaioContainer, { width: 92, height: 18, alpha: 0.3, depth: 11 });
+    this.updateCappellaioAnimation();
+  }
+
+  updateCappellaioAnimation() {
+    if (!this.cappellaio) {
+      return;
+    }
+
+    const animationKey = GameState.hatterColored && this.anims.exists('cappellaio-idle-colour')
+      ? 'cappellaio-idle-colour'
+      : this.anims.exists('cappellaio-idle')
+        ? 'cappellaio-idle'
+        : null;
+
+    if (animationKey) {
+      this.cappellaio.anims.play(animationKey, true);
+    }
+  }
+
+  createRabbitPlaceholder() {
+    this.rabbitContainer = this.add.container(RABBIT_X, this.groundY).setDepth(12);
+    const body = this.add.ellipse(0, -38, 42, 58, 0xf6f1df, 0.95).setStrokeStyle(2, 0x6f5c4a, 0.8);
+    const head = this.add.ellipse(0, -82, 34, 32, 0xfff8e7, 0.98).setStrokeStyle(2, 0x6f5c4a, 0.8);
+    const earLeft = this.add.ellipse(-9, -114, 12, 46, 0xfff8e7, 0.98).setStrokeStyle(2, 0x6f5c4a, 0.8);
+    const earRight = this.add.ellipse(9, -114, 12, 46, 0xfff8e7, 0.98).setStrokeStyle(2, 0x6f5c4a, 0.8);
+    const eye = this.add.circle(7, -86, 2, 0x17212b, 1);
+    const label = this.add.text(0, -150, 'Coniglio', { fontFamily: 'Georgia, Times New Roman, serif', fontSize: '14px', color: '#fff4c4' }).setOrigin(0.5);
+    this.rabbitContainer.add([earLeft, earRight, body, head, eye, label]);
+    this.rabbitShadow = this.createContactShadow(this.rabbitContainer, { width: 44, height: 10, alpha: 0.26, depth: 11 });
+    this.rabbitContainer.setVisible(false);
   }
 
   createAtmosphereOverlay() {
@@ -896,6 +950,9 @@ export class ForestScene extends Phaser.Scene {
     this.interactables.forEach((interactable) => {
       interactable.container.setVisible(this.isNpcVisible(interactable));
     });
+    this.cappellaioContainer?.setVisible(GameState.currentArea === 'forest' && GameState.hasSpruzzino);
+    this.rabbitContainer?.setVisible(GameState.currentArea === 'madama' && GameState.madamaCompleted);
+    this.updateCappellaioAnimation();
   }
 
   isNpcVisible(interactable) {
@@ -917,6 +974,10 @@ export class ForestScene extends Phaser.Scene {
 
     if (['madama', 'sposine', 'pittore'].includes(interactable.id)) {
       return GameState.currentArea === interactable.id;
+    }
+
+    if (interactable.id === 'rabbit') {
+      return false;
     }
 
     return true;
@@ -1155,6 +1216,46 @@ export class ForestScene extends Phaser.Scene {
     });
   }
 
+  updateAutoWalkToRabbit() {
+    if (!this.autoWalkingToRabbit || this.dialogueManager?.isActive() || this.isTransitioning) {
+      return;
+    }
+
+    const targetX = Math.min(RABBIT_X - 96, this.worldWidth - 40);
+    this.romy.y = this.getRomyY();
+    this.romy.setFlipX(false);
+
+    if (this.romy.x >= targetX) {
+      this.autoWalkingToRabbit = false;
+      this.romy.setVelocity(0, 0);
+      this.playRomyIdleAnimation();
+      return;
+    }
+
+    this.romy.setVelocity(PLAYER_SPEED * 0.58, 0);
+    this.romy.anims.play(this.getRomyWalkAnimationKey(), true);
+  }
+
+  startRabbitFinalWalk() {
+    GameState.madamaCompleted = true;
+    this.updateNpcVisibility();
+    this.autoWalkingToRabbit = true;
+    this.isTransitioning = false;
+  }
+
+  updateAreaBackground(area) {
+    const textureKey = area === 'madama' ? 'background-gioielli' : 'background-01';
+
+    if (this.currentBackgroundKey === textureKey || !this.textures.exists(textureKey)) {
+      return;
+    }
+
+    this.background.setTexture(textureKey);
+    this.backgroundScale = this.scale.height / this.background.height;
+    this.background.setScale(this.backgroundScale);
+    this.currentBackgroundKey = textureKey;
+  }
+
   transitionToArea(area) {
     const targetX = AREA_SPAWN_X[area];
 
@@ -1175,6 +1276,7 @@ export class ForestScene extends Phaser.Scene {
       duration: 360,
       ease: 'Sine.easeInOut',
       onComplete: () => {
+        this.updateAreaBackground(area);
         this.romy.setPosition(targetX, this.getRomyY());
         this.cameras.main.scrollY = 0;
         this.cameras.main.centerOnX(targetX);
