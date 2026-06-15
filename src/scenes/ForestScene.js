@@ -37,12 +37,12 @@ import onofrioIdle01Url from '../assets/sprites/characters/onofrio/onofrio_sprit
 import onofrioIdle02Url from '../assets/sprites/characters/onofrio/onofrio_sprite_02.png?url';
 import onofrioIdle03Url from '../assets/sprites/characters/onofrio/onofrio_sprite_03.png?url';
 
-const signpostAssets = import.meta.glob('../assets/sprites/objects/signpost/signpost_crossroad.png', {
+const signpostAssets = import.meta.glob('../assets/objects/signpost/signpost_crossroad.png', {
   eager: true,
   query: '?url',
   import: 'default'
 });
-const signpostCrossroadUrl = signpostAssets['../assets/sprites/objects/signpost/signpost_crossroad.png'];
+const signpostCrossroadUrl = signpostAssets['../assets/objects/signpost/signpost_crossroad.png'];
 
 const frame = (key, url) => ({ key, url });
 
@@ -164,7 +164,7 @@ export class ForestScene extends Phaser.Scene {
     loadFrames(this, ONOFRIO_IDLE_FRAMES);
 
     if (signpostCrossroadUrl) {
-      this.load.image('signpost-crossroad', signpostCrossroadUrl);
+      this.load.image('crossroadSignV2', signpostCrossroadUrl);
     }
   }
 
@@ -478,9 +478,9 @@ export class ForestScene extends Phaser.Scene {
   }
 
   createSignpost(x, y, interactable) {
-    if (this.textures.exists('signpost-crossroad')) {
+    if (this.textures.exists('crossroadSignV2')) {
       const container = this.add.container(x, y).setDepth(10);
-      const signpost = this.add.sprite(0, 0, 'signpost-crossroad').setOrigin(0.5, 1);
+      const signpost = this.add.sprite(0, 0, 'crossroadSignV2').setOrigin(0.5, 1);
       signpost.setScale(interactable.scale ?? SIGN_SCALE);
       container.add([signpost]);
       interactable.sprite = signpost;

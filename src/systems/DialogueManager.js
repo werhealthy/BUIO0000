@@ -39,6 +39,7 @@ export class DialogueManager {
     this.currentLine = null;
     this.active = false;
     this.choosing = false;
+    this.choiceQuestionMode = false;
     this.choiceIndex = 0;
     this.choiceRows = [];
     this.systemMode = false;
@@ -139,6 +140,41 @@ export class DialogueManager {
       .setAlpha(0.76)
       .setScrollFactor(0)
       .setDepth(1006);
+
+    this.choicePromptGraphics = this.scene.add.graphics().setScrollFactor(0).setDepth(1005);
+    this.choicePromptSpeakerText = this.scene.add
+      .text(width / 2, 0, '', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '12px',
+        color: '#ffe9a8',
+        fontStyle: 'bold'
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1008);
+    this.choicePromptText = this.scene.add
+      .text(width / 2, 0, '', {
+        fontFamily: 'Georgia, Times New Roman, serif',
+        fontSize: '17px',
+        color: '#fffaf0',
+        align: 'center',
+        lineSpacing: 5,
+        wordWrap: { width: Math.round(width * 0.62) }
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1008);
+    this.choicePromptHintText = this.scene.add
+      .text(width / 2, 0, '↑↓ scegli · E conferma', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '12px',
+        color: '#c7d7d0'
+      })
+      .setOrigin(0.5)
+      .setAlpha(0.82)
+      .setScrollFactor(0)
+      .setDepth(1008);
+
   }
 
   drawDialogueFrame() {
@@ -203,6 +239,12 @@ export class DialogueManager {
 
     const speaker = this.currentLine.speaker ?? '';
     this.systemMode = normalizeSpeaker(speaker) === 'SISTEMA';
+    this.choiceQuestionMode = this.hasChoices(this.currentLine);
+
+    if (this.choiceQuestionMode) {
+      this.showChoiceQuestionLine(speaker);
+      return;
+    }
 
     if (this.systemMode) {
       this.showSystemLine();
@@ -210,6 +252,7 @@ export class DialogueManager {
     }
 
     this.hideSystemUi();
+    this.hideChoicePromptUi();
     this.showStandardUi();
     const hasPortrait = this.updatePortrait(speaker);
     const textLeft = this.getTextLeft(hasPortrait);
@@ -237,6 +280,7 @@ export class DialogueManager {
 
   showSystemLine() {
     this.hideStandardUi();
+    this.hideChoicePromptUi();
     this.portraitContainer.setVisible(false);
     this.systemGraphics.setVisible(true);
     this.systemText.setVisible(true);
@@ -273,6 +317,57 @@ export class DialogueManager {
     this.systemHintText.setPosition(width / 2, y + panelHeight - 16);
     this.systemHintText.setText(this.currentLine.autoAdvance ? 'SPACE/E salta' : 'SPACE continua');
     this.scheduleAutoAdvance();
+  }
+
+
+  hasChoices(line) {
+    return Array.isArray(line?.choices) && line.choices.length > 0;
+  }
+
+  showChoiceQuestionLine(speaker) {
+    this.hideStandardUi();
+    this.hideSystemUi();
+    this.hideChoicePromptUi();
+    this.portraitContainer.setVisible(false);
+    this.choiceQuestionMode = true;
+    this.choosing = true;
+    this.choiceIndex = 0;
+
+    const { width, height } = this.layout;
+    const panelWidth = Math.round(width * 0.7);
+    const panelX = Math.round((width - panelWidth) / 2);
+    const panelY = Math.round(height * 0.1);
+    const panelHeight = 116;
+    const speakerLabel = normalizeSpeaker(speaker) === 'SISTEMA' ? 'CARTELLO' : speaker;
+
+    this.choicePromptGraphics.setVisible(true);
+    this.choicePromptSpeakerText.setVisible(Boolean(speakerLabel));
+    this.choicePromptText.setVisible(true);
+    this.choicePromptHintText.setVisible(true);
+    this.choiceGraphics.setVisible(true);
+
+    this.choicePromptGraphics.clear();
+    this.choicePromptGraphics.fillStyle(0x000000, 0.28);
+    this.choicePromptGraphics.fillRoundedRect(panelX + 6, panelY + 6, panelWidth, panelHeight, 16);
+    this.choicePromptGraphics.fillStyle(0x061620, 0.86);
+    this.choicePromptGraphics.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 16);
+    this.choicePromptGraphics.lineStyle(2, 0xf3df9b, 0.7);
+    this.choicePromptGraphics.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 16);
+    this.choicePromptGraphics.lineStyle(1, 0x9fd7c6, 0.32);
+    this.choicePromptGraphics.strokeRoundedRect(panelX + 5, panelY + 5, panelWidth - 10, panelHeight - 10, 12);
+
+    this.choicePromptSpeakerText.setPosition(width / 2, panelY + 22).setText(speakerLabel ?? '');
+    this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 66 : 55));
+    this.choicePromptText.setWordWrapWidth(panelWidth - 64);
+    this.choicePromptText.setText(this.currentLine.text ?? '');
+
+    this.renderChoices();
+    const rowHeight = 34;
+    const gap = 8;
+    const totalChoiceHeight = this.currentLine.choices.length * rowHeight + Math.max(0, this.currentLine.choices.length - 1) * gap;
+    const choicesBottom = Math.round(height * 0.34) + totalChoiceHeight;
+    this.choicePromptHintText.setPosition(width / 2, choicesBottom + 26);
+    this.choicePromptHintText.setText('↑↓ scegli · E conferma');
   }
 
   getTextLeft(hasPortrait) {
@@ -385,6 +480,7 @@ export class DialogueManager {
     this.clearAutoAdvance();
     this.active = false;
     this.choosing = false;
+    this.choiceQuestionMode = false;
     this.currentDialogue = [];
     this.currentIndex = 0;
     this.currentLine = null;
@@ -403,20 +499,29 @@ export class DialogueManager {
     this.clearChoices();
 
     const choices = this.currentLine.choices ?? [];
+    const promptMode = this.choiceQuestionMode;
     const hasPortrait = this.portraitContainer.visible;
-    const left = this.systemMode ? Math.round(this.layout.width * 0.17) : this.getTextLeft(hasPortrait);
-    const rowWidth = this.systemMode
-      ? Math.round(this.layout.width * 0.66)
-      : this.layout.boxRight - left - this.layout.textRightPadding;
-    const rowHeight = this.systemMode ? 30 : 26;
-    const gap = this.systemMode ? 7 : 6;
+    const left = promptMode
+      ? Math.round(this.layout.width * 0.18)
+      : this.systemMode
+        ? Math.round(this.layout.width * 0.17)
+        : this.getTextLeft(hasPortrait);
+    const rowWidth = promptMode
+      ? Math.round(this.layout.width * 0.64)
+      : this.systemMode
+        ? Math.round(this.layout.width * 0.66)
+        : this.layout.boxRight - left - this.layout.textRightPadding;
+    const rowHeight = promptMode || this.systemMode ? 34 : 26;
+    const gap = promptMode || this.systemMode ? 8 : 6;
     const totalHeight = choices.length * rowHeight + Math.max(0, choices.length - 1) * gap;
-    const startY = this.systemMode
+    const startY = promptMode
       ? Math.round(this.layout.height * 0.34)
-      : Math.min(
-          this.layout.boxTop + Math.round(this.layout.boxHeight * 0.56),
-          this.layout.boxBottom - 18 - totalHeight
-        );
+      : this.systemMode
+        ? Math.round(this.layout.height * 0.34)
+        : Math.min(
+            this.layout.boxTop + Math.round(this.layout.boxHeight * 0.56),
+            this.layout.boxBottom - 18 - totalHeight
+          );
 
     choices.forEach((choice, index) => {
       const selected = index === this.choiceIndex;
@@ -435,7 +540,7 @@ export class DialogueManager {
         })
         .setOrigin(0, 0.5)
         .setScrollFactor(0)
-        .setDepth(this.systemMode ? 1007 : 1004);
+        .setDepth(this.choiceQuestionMode || this.systemMode ? 1008 : 1004);
 
       const label = this.scene.add
         .text(left + 40, y + rowHeight / 2, choice.text, {
@@ -446,7 +551,7 @@ export class DialogueManager {
         })
         .setOrigin(0, 0.5)
         .setScrollFactor(0)
-        .setDepth(this.systemMode ? 1007 : 1004);
+        .setDepth(this.choiceQuestionMode || this.systemMode ? 1008 : 1004);
 
       this.choiceRows.push(arrow, label);
     });
@@ -549,6 +654,7 @@ export class DialogueManager {
   hideUi() {
     this.hideStandardUi();
     this.hideSystemUi();
+    this.hideChoicePromptUi();
     this.portraitContainer.setVisible(false);
     this.clearChoices();
   }
@@ -577,5 +683,12 @@ export class DialogueManager {
     this.systemGraphics.setVisible(false);
     this.systemText.setVisible(false);
     this.systemHintText.setVisible(false);
+  }
+
+  hideChoicePromptUi() {
+    this.choicePromptGraphics.setVisible(false);
+    this.choicePromptSpeakerText.setVisible(false);
+    this.choicePromptText.setVisible(false);
+    this.choicePromptHintText.setVisible(false);
   }
 }
