@@ -219,7 +219,7 @@ const ONOFRIO_FRAME_RATE = 2;
 const MADAMA_FRAME_RATE = 3;
 const SPOSE_FRAME_RATE = 4;
 const CAVALLO_FRAME_RATE = 3;
-const RABBIT_FRAME_RATE = 6;
+const RABBIT_FRAME_RATE = 4;
 const CAPPELLAIO_IDLE_FRAME_RATE = 3;
 const CAPPELLAIO_WALK_FRAME_RATE = 7;
 const CAPPELLAIO_DISPLAY_HEIGHT = 210;
@@ -241,14 +241,14 @@ const CAPPELLAIO_X = SIGN_X - 170;
 const CAPPELLAIO_ENTRANCE_OFFSET = 140;
 const RABBIT_X = 2440;
 const FINAL_MEADOW_X = 1460;
-const FINAL_DAISY_X = 1720;
-const FINAL_DIALOGUE_TRIGGER_X = 1540;
-const FINAL_RABBIT_START_OFFSET = -240;
-const FINAL_RABBIT_EXIT_MARGIN = 180;
-const FINAL_RABBIT_MIN_DURATION = 7600;
-const FINAL_RABBIT_MAX_DURATION = 10800;
-const FINAL_SLEEP_FRAME_DELAY = 980;
-const FINAL_SLEEP_DURATION = 4200;
+const FINAL_DAISY_X = 1900;
+const FINAL_DIALOGUE_TRIGGER_X = 1820;
+const FINAL_RABBIT_START_OFFSET = -360;
+const FINAL_RABBIT_EXIT_MARGIN = 320;
+const FINAL_RABBIT_MIN_DURATION = 12500;
+const FINAL_RABBIT_MAX_DURATION = 16500;
+const FINAL_SLEEP_FRAME_DELAY = 1180;
+const FINAL_SLEEP_DURATION = 5200;
 const FINAL_FADE_DURATION = 4300;
 const FINAL_CITY_FADE_IN_DURATION = 2600;
 const FINAL_WALLPAPER_FADE_DURATION = 3200;
@@ -330,6 +330,7 @@ export class ForestScene extends Phaser.Scene {
     this.contactShadows = [];
     this.finalRabbitSequenceRunning = false;
     this.finalCitySceneActive = false;
+    this.finalSleepSequenceStarted = false;
 
     this.createBackground();
     this.createRomy();
@@ -1005,7 +1006,7 @@ export class ForestScene extends Phaser.Scene {
     this.cameras.main.scrollX = 0;
     this.cameras.main.scrollY = 0;
     this.cameras.main.setZoom(1);
-    this.cameras.main.startFollow(this.romy, true, 0.12, 0, 0, 0);
+    this.cameras.main.startFollow(this.romy, true, 0.065, 0, 0, 0);
     this.cameras.main.setDeadzone(Math.round(width * 0.4), height);
   }
 
@@ -1603,9 +1604,9 @@ export class ForestScene extends Phaser.Scene {
     this.dialogueManager?.endDialogue?.();
     this.interactHint?.setVisible(false);
 
-    this.time.delayedCall(900, () => this.showRomyExclamation());
-    this.time.delayedCall(1900, () => this.panCameraForRabbitEntrance());
-    this.time.delayedCall(3600, () => this.playFinalRabbitEntrance());
+    this.time.delayedCall(1300, () => this.showRomyExclamation());
+    this.time.delayedCall(2700, () => this.panCameraForRabbitEntrance());
+    this.time.delayedCall(5000, () => this.playFinalRabbitEntrance());
   }
 
   showRomyExclamation() {
@@ -1634,7 +1635,7 @@ export class ForestScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.cameras.main,
       scrollX: targetScrollX,
-      duration: 2600,
+      duration: 3800,
       ease: 'Sine.easeInOut'
     });
   }
@@ -1643,14 +1644,14 @@ export class ForestScene extends Phaser.Scene {
     const startX = this.cameras.main.scrollX + FINAL_RABBIT_START_OFFSET;
     const endX = Math.max(this.worldWidth + FINAL_RABBIT_EXIT_MARGIN, this.cameras.main.scrollX + this.scale.width + FINAL_RABBIT_EXIT_MARGIN);
     const travelDistance = Math.abs(endX - startX);
-    const duration = Phaser.Math.Clamp(travelDistance * 5.2, FINAL_RABBIT_MIN_DURATION, FINAL_RABBIT_MAX_DURATION);
+    const duration = Phaser.Math.Clamp(travelDistance * 8.2, FINAL_RABBIT_MIN_DURATION, FINAL_RABBIT_MAX_DURATION);
 
     this.rabbitContainer.setPosition(startX, this.getRomyY());
     this.rabbitContainer.setVisible(true);
     this.rabbitSprite?.setFlipX(false);
     this.rabbitSprite?.anims?.play('rabbit_walk', true);
     this.rabbitShadow?.setVisible(true);
-    this.cameras.main.startFollow(this.rabbitContainer, true, 0.012, 0, 0, 0);
+    this.cameras.main.startFollow(this.rabbitContainer, true, 0.006, 0, 0, 0);
 
     this.tweens.add({
       targets: this.rabbitContainer,
@@ -1659,7 +1660,7 @@ export class ForestScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
       onComplete: () => {
         this.rabbitContainer?.setVisible(false);
-        this.cameras.main.startFollow(this.romy, true, 0.018, 0, 0, 0);
+        this.cameras.main.startFollow(this.romy, true, 0.01, 0, 0, 0);
         this.finalRabbitSequenceRunning = false;
         this.dialogueManager?.startDialogue('final_rabbit_reaction');
       }
@@ -1667,10 +1668,16 @@ export class ForestScene extends Phaser.Scene {
   }
 
   playRomySleepSequence() {
+    if (this.finalSleepSequenceStarted) {
+      return;
+    }
+
+    this.finalSleepSequenceStarted = true;
+    this.stopRomy();
     const sleepFrames = ['romy-wake-04', 'romy-wake-03', 'romy-wake-02', 'romy-wake-01'];
     this.romy.anims.stop();
     sleepFrames.forEach((texture, index) => {
-      this.time.delayedCall(index * FINAL_SLEEP_FRAME_DELAY, () => {
+      this.time.delayedCall(index * FINAL_SLEEP_FRAME_DELAY + 420, () => {
         this.romy.setTexture(texture);
         this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
       });
@@ -1688,7 +1695,7 @@ export class ForestScene extends Phaser.Scene {
     this.stopRomy();
     this.dialogueManager?.endDialogue?.();
     this.playRomySleepSequence();
-    this.time.delayedCall(FINAL_SLEEP_DURATION, () => {
+    this.time.delayedCall(FINAL_SLEEP_DURATION + 450, () => {
       this.BlackTransition?.setVisible(true).setAlpha(0);
       this.tweens.add({
         targets: this.BlackTransition,

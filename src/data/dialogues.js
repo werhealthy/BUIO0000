@@ -579,9 +579,9 @@ export const dialogues = {
   ],
 
   final_rabbit_reaction: [
-    { speaker: "ROMY", text: "Oddio…", autoAdvance: true, autoAdvanceDelay: 1800 },
-    { speaker: "ROMY", text: "Mi si chiudono gli occhi…", autoAdvance: true, autoAdvanceDelay: 2200 },
-    { speaker: "ROMY", text: "Cosa sta succedendo?", autoAdvance: true, autoAdvanceDelay: 2200 },
+    { speaker: "ROMY", text: "Oddio…", action: "playRomySleepSequence", autoAdvance: true, autoAdvanceDelay: 2200 },
+    { speaker: "ROMY", text: "Mi si chiudono gli occhi…", autoAdvance: true, autoAdvanceDelay: 2600 },
+    { speaker: "ROMY", text: "Cosa sta succedendo?", autoAdvance: true, autoAdvanceDelay: 2600 },
     { speaker: "SISTEMA", text: "Il prato si fa silenzioso. Romy scivola lentamente nel sonno.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 2400 }
   ],
 
