@@ -134,7 +134,7 @@ export class DialogueManager {
       boxBottom: boxTop + boxHeight,
       textLeftWithPortrait: boxLeft + 154,
       textLeftNoPortrait: boxLeft + 24,
-      textRightPadding: 26
+      textRightPadding: 30
     };
 
     this.boxShadow = this.scene.add.graphics().setScrollFactor(0).setDepth(999);
@@ -172,7 +172,7 @@ export class DialogueManager {
         fontSize: '15px',
         color: '#fffaf0',
         lineSpacing: 4,
-        wordWrap: { width: boxWidth - 172 }
+        wordWrap: { width: boxWidth - 190, useAdvancedWrap: true }
       })
       .setScrollFactor(0)
       .setDepth(1004);
@@ -196,7 +196,7 @@ export class DialogueManager {
         color: '#f8efd6',
         align: 'center',
         lineSpacing: 5,
-        wordWrap: { width: Math.round(width * 0.68) }
+        wordWrap: { width: Math.round(width * 0.58), useAdvancedWrap: true }
       })
       .setOrigin(0.5)
       .setScrollFactor(0)
@@ -230,7 +230,7 @@ export class DialogueManager {
         color: '#fffaf0',
         align: 'center',
         lineSpacing: 5,
-        wordWrap: { width: Math.round(width * 0.62) }
+        wordWrap: { width: Math.round(width * 0.56), useAdvancedWrap: true }
       })
       .setOrigin(0.5)
       .setScrollFactor(0)
@@ -377,12 +377,12 @@ export class DialogueManager {
     this.systemHintText.setVisible(true);
 
     const { width, height } = this.layout;
-    const panelWidth = Math.round(width * 0.62);
+    const panelWidth = Math.round(width * 0.68);
     const text = this.interpolateText(this.currentLine.text ?? '');
-    const estimatedLines = Math.max(1, Math.ceil(text.length / 48));
+    const estimatedLines = Math.max(1, Math.ceil(text.length / 42));
     const panelHeight = this.currentLine.choices
-      ? Phaser.Math.Clamp(116 + estimatedLines * 10, 128, 176)
-      : Phaser.Math.Clamp(74 + estimatedLines * 18, 92, 154);
+      ? Phaser.Math.Clamp(126 + estimatedLines * 12, 144, 198)
+      : Phaser.Math.Clamp(82 + estimatedLines * 20, 104, 176);
     const x = Math.round((width - panelWidth) / 2);
     const y = Math.round(height * 0.1);
 
@@ -395,7 +395,7 @@ export class DialogueManager {
     this.systemGraphics.strokeRoundedRect(x + 5, y + 5, panelWidth - 10, panelHeight - 10, 12);
 
     this.systemText.setFontSize(text.length > 105 ? '14px' : '15px');
-    this.systemText.setWordWrapWidth(panelWidth - 96);
+    this.systemText.setWordWrapWidth(panelWidth - 72);
     this.systemText.setPosition(width / 2, y + (this.currentLine.choices ? 34 : panelHeight / 2 - 4));
     this.systemText.setText(text);
     this.choosing = Array.isArray(this.currentLine.choices) && this.currentLine.choices.length > 0;
@@ -431,11 +431,11 @@ export class DialogueManager {
     this.choiceIndex = 0;
 
     const { width, height } = this.layout;
-    const panelWidth = Math.round(width * 0.66);
+    const panelWidth = Math.round(width * 0.72);
     const panelX = Math.round((width - panelWidth) / 2);
     const panelY = Math.round(height * 0.08);
     const questionLength = (this.currentLine.text ?? '').length;
-    const panelHeight = Phaser.Math.Clamp(136 + Math.ceil(questionLength / 44) * 22, 164, 238);
+    const panelHeight = Phaser.Math.Clamp(150 + Math.ceil(questionLength / 38) * 24, 178, 270);
     const speakerLabel = normalizeSpeaker(speaker) === 'sistema' ? 'CARTELLO' : speaker;
 
     this.choicePromptGraphics.setVisible(true);
@@ -457,7 +457,7 @@ export class DialogueManager {
     this.choicePromptSpeakerText.setPosition(width / 2, panelY + 22).setText(speakerLabel ?? '');
     this.choicePromptText.setFontSize(questionLength > 120 ? '14px' : '15px');
     this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 72 : 58));
-    this.choicePromptText.setWordWrapWidth(panelWidth - 128);
+    this.choicePromptText.setWordWrapWidth(panelWidth - 86);
     this.choicePromptText.setText(this.interpolateText(this.currentLine.text ?? ''));
 
     this.renderChoices();
@@ -683,14 +683,14 @@ export class DialogueManager {
     const promptMode = this.choiceQuestionMode;
     const hasPortrait = this.portraitContainer.visible;
     const left = promptMode
-      ? Math.round(this.layout.width * 0.17)
+      ? Math.round(this.layout.width * 0.14)
       : this.systemMode
-        ? Math.round(this.layout.width * 0.17)
+        ? Math.round(this.layout.width * 0.14)
         : this.getTextLeft(hasPortrait);
     const rowWidth = promptMode
-      ? Math.round(this.layout.width * 0.66)
+      ? Math.round(this.layout.width * 0.72)
       : this.systemMode
-        ? Math.round(this.layout.width * 0.66)
+        ? Math.round(this.layout.width * 0.72)
         : this.layout.boxRight - left - this.layout.textRightPadding;
     const rowHeight = promptMode ? 58 : this.systemMode ? 44 : 32;
     const gap = promptMode || this.systemMode ? 8 : 6;
@@ -726,9 +726,9 @@ export class DialogueManager {
       const label = this.scene.add
         .text(left + 40, y + rowHeight / 2, choice.text, {
           fontFamily: 'Georgia, Times New Roman, serif',
-          fontSize: promptMode ? '13px' : '13px',
+          fontSize: promptMode ? '12px' : '13px',
           color: selected ? '#fff7d6' : '#e7f2ee',
-          wordWrap: { width: rowWidth - 54 }
+          wordWrap: { width: rowWidth - 66, useAdvancedWrap: true }
         })
         .setOrigin(0, 0.5)
         .setScrollFactor(0)
@@ -819,6 +819,9 @@ export class DialogueManager {
       },
       startFinalRabbit: () => {
         this.scene.startFinalRabbit?.();
+      },
+      playRomySleepSequence: () => {
+        this.scene.playRomySleepSequence?.();
       },
       finishFinalFade: () => {
         this.scene.finishFinalFade?.();
