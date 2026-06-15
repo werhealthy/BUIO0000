@@ -7,6 +7,7 @@ import { GameState } from '../systems/GameState.js';
 import backgroundUrl from '../assets/backgrounds/background_01.png?url';
 import backgroundGioielliUrl from '../assets/backgrounds/background_gioielli.png?url';
 import backgroundSposineUrl from '../assets/backgrounds/background_sposine.png?url';
+import backgroundCavalloUrl from '../assets/backgrounds/background_cavallo.png?url';
 import romyIdle01Url from '../assets/sprites/characters/romy/romy_idle_01.png?url';
 import romyIdle02Url from '../assets/sprites/characters/romy/romy_idle_02.png?url';
 import romyIdle03Url from '../assets/sprites/characters/romy/romy_idle_03.png?url';
@@ -51,20 +52,26 @@ const cappellaioAssets = import.meta.glob('../assets/sprites/characters/cappella
 });
 const cappellaioUrl = (fileName) => cappellaioAssets[`../assets/sprites/characters/cappellaio/${fileName}`];
 
-const cavalloAssets = import.meta.glob('../assets/sprites/characters/cavallo/*.png', {
+const cavalloAssets = import.meta.glob('../assets/sprites/characters/cavallo/{cavallo_idle_01.png,cavallo_idle_02.png,cavallo_idle_03.png}', {
   eager: true,
   query: '?url',
   import: 'default'
 });
 const cavalloUrl = (fileName) => cavalloAssets[`../assets/sprites/characters/cavallo/${fileName}`];
 
-const sposeAssets = import.meta.glob('../assets/sprites/characters/{spose,sposine}/*.png', {
+const sposeAssets = import.meta.glob('../assets/sprites/characters/sposine/{spose_idle_01.png,spose_idle_02.png,spose_idle_03.png}', {
   eager: true,
   query: '?url',
   import: 'default'
 });
-const sposeUrl = (fileName) => sposeAssets[`../assets/sprites/characters/spose/${fileName}`]
-  ?? sposeAssets[`../assets/sprites/characters/sposine/${fileName}`];
+const sposeUrl = (fileName) => sposeAssets[`../assets/sprites/characters/sposine/${fileName}`];
+
+const backgroundAssets = import.meta.glob('../assets/backgrounds/*.png', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+const backgroundMargheriteUrl = backgroundAssets['../assets/backgrounds/background_margherite.png'];
 
 const signpostAssets = import.meta.glob('../assets/objects/signpost/signpost_crossroad.png', {
   eager: true,
@@ -228,8 +235,10 @@ const ATMOSPHERE_ALPHA = 0.08;
 const AREA_SPAWN_X = {
   forest: PLAYER_START_X,
   madama: 160,
-  sposine: 2180,
-  pittore: 2680
+  sposine: 160,
+  cavallo: 160,
+  finale: 160,
+  pittore: 160
 };
 
 export class ForestScene extends Phaser.Scene {
@@ -242,6 +251,10 @@ export class ForestScene extends Phaser.Scene {
     this.load.image('background-01', backgroundUrl);
     this.load.image('background-gioielli', backgroundGioielliUrl);
     this.load.image('background-sposine', backgroundSposineUrl);
+    this.load.image('background-cavallo', backgroundCavalloUrl);
+    if (backgroundMargheriteUrl) {
+      this.load.image('background-margherite', backgroundMargheriteUrl);
+    }
     loadFrames(this, ROMY_IDLE_FRAMES);
     loadFrames(this, ROMY_WALK_FRAMES);
     loadFrames(this, ROMY_WAKE_FRAMES);
@@ -445,12 +458,23 @@ export class ForestScene extends Phaser.Scene {
       {
         id: 'sposine',
         label: 'Sposine',
-        x: AREA_SPAWN_X.sposine + 180,
+        x: 1180,
         color: 0xffffff,
         dialogueKey: 'sposine_intro',
         isAvailable: () => GameState.currentArea === 'sposine' && !GameState.sposineStarted,
         onInteract: () => {
           GameState.sposineStarted = true;
+        }
+      },
+      {
+        id: 'cavallo',
+        label: 'Cavallo',
+        x: 1180,
+        color: 0x8bd3ff,
+        dialogueKey: 'cavallo_intro',
+        isAvailable: () => GameState.currentArea === 'cavallo' && !GameState.cavalloStarted,
+        onInteract: () => {
+          GameState.cavalloStarted = true;
         }
       },
       {
@@ -461,7 +485,7 @@ export class ForestScene extends Phaser.Scene {
         width: 112,
         height: 80,
         dialogueKey: 'final_daisy_placed',
-        isAvailable: () => GameState.currentArea === 'madama' && GameState.finalMeadowStarted && !GameState.finalDaisyPlaced,
+        isAvailable: () => GameState.currentArea === 'finale' && GameState.finalMeadowStarted && !GameState.finalDaisyPlaced,
         onInteract: () => {
           this.placeFinalDaisy();
         }
@@ -556,9 +580,9 @@ export class ForestScene extends Phaser.Scene {
   }
 
   createCavalloAnimations() {
-    if (CAVALLO_IDLE_FRAMES.length > 1 && !this.anims.exists('cavallo-idle')) {
+    if (CAVALLO_IDLE_FRAMES.length > 1 && !this.anims.exists('cavallo_idle')) {
       this.anims.create({
-        key: 'cavallo-idle',
+        key: 'cavallo_idle',
         frames: phaserFrames(CAVALLO_IDLE_FRAMES),
         frameRate: CAVALLO_FRAME_RATE,
         repeat: -1
@@ -575,8 +599,8 @@ export class ForestScene extends Phaser.Scene {
     const cavallo = this.add.sprite(0, 0, CAVALLO_IDLE_FRAMES[0].key).setOrigin(0.5, 1);
     this.setSpriteDisplayHeight(cavallo, CAVALLO_DISPLAY_HEIGHT);
 
-    if (this.anims.exists('cavallo-idle')) {
-      cavallo.anims.play('cavallo-idle');
+    if (this.anims.exists('cavallo_idle')) {
+      cavallo.anims.play('cavallo_idle');
     }
 
     container.add([cavallo]);
@@ -959,14 +983,18 @@ export class ForestScene extends Phaser.Scene {
         return;
       }
 
-      this.dialogueManager.skipOrNextLine();
+      this.dialogueManager.nextLine();
     };
 
     this.input.keyboard.on('keydown-SPACE', skipDialogue);
 
     this.input.keyboard.on('keydown-TAB', (event) => {
       event?.preventDefault?.();
-      skipDialogue();
+      if (this.blackIntroActive) {
+        this.advanceBlackIntro();
+        return;
+      }
+      this.dialogueManager.skipCurrentDialogueBlock();
     });
 
     this.input.keyboard.on('keydown-UP', () => {
@@ -1088,7 +1116,7 @@ export class ForestScene extends Phaser.Scene {
     });
     this.cappellaioContainer?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
     this.cappellaioShadow?.setVisible(GameState.currentArea === 'forest' && (GameState.cappellaioEntered || this.cappellaioEntranceStarted));
-    this.rabbitContainer?.setVisible(GameState.currentArea === 'madama' && GameState.finalRabbitSeen);
+    this.rabbitContainer?.setVisible(GameState.currentArea === 'finale' && GameState.finalRabbitSeen);
     if (!this.isCappellaioEntering) {
       this.updateCappellaioAnimation();
     }
@@ -1112,7 +1140,7 @@ export class ForestScene extends Phaser.Scene {
     }
 
     if (interactable.id === 'final_daisy') {
-      return GameState.currentArea === 'madama' && GameState.finalMeadowStarted;
+      return GameState.currentArea === 'finale' && GameState.finalMeadowStarted;
     }
 
     if (['madama', 'sposine', 'pittore', 'cavallo'].includes(interactable.id)) {
@@ -1453,21 +1481,33 @@ export class ForestScene extends Phaser.Scene {
   }
 
   updateFinalMeadowTrigger() {
-    if (GameState.currentArea !== 'madama' || !GameState.madamaCompleted || GameState.finalMeadowStarted || this.isTransitioning || this.dialogueManager?.isActive()) {
+    if (!['madama','sposine','cavallo'].includes(GameState.currentArea) || !this.isCurrentAreaCompleted() || this.isTransitioning || this.dialogueManager?.isActive()) {
       return;
     }
 
-    if (this.romy.x >= FINAL_MEADOW_X - 90) {
-      GameState.finalMeadowStarted = true;
-      this.finalMeadowContainer?.setVisible(true);
-      this.stopRomy();
-      this.dialogueManager.startDialogue('final_meadow_intro');
+    if (this.romy.x >= this.worldWidth - NEXT_SCENE_MARGIN) {
+      this.transitionToArea('finale');
     }
+  }
+
+  isCurrentAreaCompleted() {
+    return (GameState.currentArea === 'madama' && GameState.madamaCompleted)
+      || (GameState.currentArea === 'sposine' && GameState.sposineCompleted)
+      || (GameState.currentArea === 'cavallo' && GameState.cavalloCompleted);
   }
 
   completeMadamaArea() {
     GameState.madamaCompleted = true;
-    this.finalMeadowContainer?.setVisible(true);
+    this.updateNpcVisibility();
+  }
+
+  completeSposineArea() {
+    GameState.sposineCompleted = true;
+    this.updateNpcVisibility();
+  }
+
+  completeCavalloArea() {
+    GameState.cavalloCompleted = true;
     this.updateNpcVisibility();
   }
 
@@ -1522,12 +1562,34 @@ export class ForestScene extends Phaser.Scene {
     });
   }
 
+
+  showFinalBackgroundPlaceholder(visible) {
+    if (!visible) {
+      this.finalBackgroundPlaceholder?.setVisible(false);
+      return;
+    }
+
+    if (!this.finalBackgroundPlaceholder) {
+      this.finalBackgroundPlaceholder = this.add.container(0, 0).setDepth(1);
+      const sky = this.add.rectangle(0, 0, this.worldWidth, this.scale.height, 0xdff3ff, 0.28).setOrigin(0, 0);
+      const meadow = this.add.rectangle(0, this.groundY - 120, this.worldWidth, 260, 0xd9edbd, 0.32).setOrigin(0, 0);
+      const haze = this.add.ellipse(820, this.groundY - 130, 1180, 250, 0xfff4c7, 0.18);
+      this.finalBackgroundPlaceholder.add([sky, meadow, haze]);
+    }
+
+    this.finalBackgroundPlaceholder.setVisible(true);
+  }
+
   updateAreaBackground(area) {
     const textureKey = area === 'madama'
       ? 'background-gioielli'
       : area === 'sposine'
         ? 'background-sposine'
-        : 'background-01';
+        : area === 'cavallo'
+          ? 'background-cavallo'
+          : area === 'finale' && this.textures.exists('background-margherite')
+            ? 'background-margherite'
+            : 'background-01';
 
     if (this.currentBackgroundKey === textureKey || !this.textures.exists(textureKey)) {
       return;
@@ -1570,7 +1632,16 @@ export class ForestScene extends Phaser.Scene {
           cat.entranceComplete = true;
         }
         this.cameras.main.scrollY = 0;
-        this.cameras.main.scrollX = area === 'madama' ? 0 : Phaser.Math.Clamp(targetX - this.scale.width / 2, 0, Math.max(0, this.worldWidth - this.scale.width));
+        this.cameras.main.scrollX = 0;
+        if (area === 'finale') {
+          GameState.finalMeadowStarted = true;
+          this.showFinalBackgroundPlaceholder(!this.textures.exists('background-margherite'));
+          this.finalMeadowContainer?.setPosition(940, this.groundY).setVisible(true);
+          this.dialogueManager.startDialogue('final_meadow_intro');
+        } else {
+          this.showFinalBackgroundPlaceholder(false);
+          this.finalMeadowContainer?.setVisible(false);
+        }
         this.updateNpcVisibility();
 
         this.tweens.add({
