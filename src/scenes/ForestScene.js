@@ -66,6 +66,14 @@ const sposeAssets = import.meta.glob('../assets/sprites/characters/sposine/{spos
 });
 const sposeUrl = (fileName) => sposeAssets[`../assets/sprites/characters/sposine/${fileName}`];
 
+
+const rabbitAssets = import.meta.glob('../assets/sprites/characters/coniglio/{coniglio_walk_01.png,coniglio_walk_02.png,coniglio_walk_03.png,coniglio_walk_04.png}', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+const rabbitUrl = (fileName) => rabbitAssets[`../assets/sprites/characters/coniglio/${fileName}`];
+
 const backgroundAssets = import.meta.glob('../assets/backgrounds/*.png', {
   eager: true,
   query: '?url',
@@ -182,6 +190,13 @@ const CAVALLO_IDLE_FRAMES = [
   frame('cavallo-idle-03', cavalloUrl('cavallo_idle_03.png'))
 ].filter(({ url }) => Boolean(url));
 
+const RABBIT_WALK_FRAMES = [
+  frame('rabbit-walk-01', rabbitUrl('coniglio_walk_01.png')),
+  frame('rabbit-walk-02', rabbitUrl('coniglio_walk_02.png')),
+  frame('rabbit-walk-03', rabbitUrl('coniglio_walk_03.png')),
+  frame('rabbit-walk-04', rabbitUrl('coniglio_walk_04.png'))
+].filter(({ url }) => Boolean(url));
+
 const loadFrames = (scene, frames) => {
   frames.forEach(({ key, url }) => {
     scene.load.image(key, url);
@@ -200,6 +215,7 @@ const ONOFRIO_FRAME_RATE = 2;
 const MADAMA_FRAME_RATE = 3;
 const SPOSE_FRAME_RATE = 4;
 const CAVALLO_FRAME_RATE = 3;
+const RABBIT_FRAME_RATE = 10;
 const CAPPELLAIO_IDLE_FRAME_RATE = 3;
 const CAPPELLAIO_WALK_FRAME_RATE = 7;
 const CAPPELLAIO_DISPLAY_HEIGHT = 210;
@@ -220,10 +236,11 @@ const SIGN_X = 2520;
 const CAPPELLAIO_X = SIGN_X - 170;
 const CAPPELLAIO_ENTRANCE_OFFSET = 140;
 const RABBIT_X = 2440;
-const FINAL_MEADOW_X = 3950;
-const FINAL_DAISY_X = 4300;
+const FINAL_MEADOW_X = 940;
+const FINAL_DAISY_X = 980;
+const FINAL_DIALOGUE_TRIGGER_X = 760;
 const FINAL_RABBIT_START_OFFSET = -140;
-const FINAL_RABBIT_END_X = 4850;
+const FINAL_RABBIT_END_X = 1650;
 const NEXT_SCENE_MARGIN = 180;
 const INTERACTION_DISTANCE = 110;
 const CAT_FOLLOW_DISTANCE = 92;
@@ -270,6 +287,7 @@ export class ForestScene extends Phaser.Scene {
     loadFrames(this, CAPPELLAIO_WALK_FRAMES);
     loadFrames(this, CAPPELLAIO_IDLE_COLOUR_FRAMES);
     loadFrames(this, CAVALLO_IDLE_FRAMES);
+    loadFrames(this, RABBIT_WALK_FRAMES);
 
     if (signpostCrossroadUrl) {
       // REAL SIGNPOST ASSET: src/assets/objects/signpost/signpost_crossroad.png
@@ -299,6 +317,7 @@ export class ForestScene extends Phaser.Scene {
     this.createInput();
     this.createCappellaioAnimations();
     this.createCavalloAnimations();
+    this.createRabbitAnimations();
     this.createCappellaio();
     this.createRabbitPlaceholder();
     this.createFinalMeadow();
@@ -590,6 +609,17 @@ export class ForestScene extends Phaser.Scene {
     }
   }
 
+  createRabbitAnimations() {
+    if (RABBIT_WALK_FRAMES.length > 1 && !this.anims.exists('rabbit_walk')) {
+      this.anims.create({
+        key: 'rabbit_walk',
+        frames: phaserFrames(RABBIT_WALK_FRAMES),
+        frameRate: RABBIT_FRAME_RATE,
+        repeat: -1
+      });
+    }
+  }
+
   createCavallo(x, y, interactable) {
     if (!CAVALLO_IDLE_FRAMES.length) {
       return this.createPlaceholder(x, y, interactable);
@@ -669,13 +699,21 @@ export class ForestScene extends Phaser.Scene {
 
   createRabbitPlaceholder() {
     this.rabbitContainer = this.add.container(RABBIT_X, this.groundY).setDepth(12);
-    const body = this.add.ellipse(0, -38, 42, 58, 0xf6f1df, 0.95).setStrokeStyle(2, 0x6f5c4a, 0.8);
-    const head = this.add.ellipse(0, -82, 34, 32, 0xfff8e7, 0.98).setStrokeStyle(2, 0x6f5c4a, 0.8);
-    const earLeft = this.add.ellipse(-9, -114, 12, 46, 0xfff8e7, 0.98).setStrokeStyle(2, 0x6f5c4a, 0.8);
-    const earRight = this.add.ellipse(9, -114, 12, 46, 0xfff8e7, 0.98).setStrokeStyle(2, 0x6f5c4a, 0.8);
-    const eye = this.add.circle(7, -86, 2, 0x17212b, 1);
-    const label = this.add.text(0, -150, 'Coniglio', { fontFamily: 'Georgia, Times New Roman, serif', fontSize: '14px', color: '#fff4c4' }).setOrigin(0.5);
-    this.rabbitContainer.add([earLeft, earRight, body, head, eye, label]);
+    const firstFrame = RABBIT_WALK_FRAMES[0]?.key;
+
+    if (firstFrame) {
+      this.rabbitSprite = this.add.sprite(0, 0, firstFrame).setOrigin(0.5, 1);
+      this.setSpriteDisplayHeight(this.rabbitSprite, 96);
+      if (this.anims.exists('rabbit_walk')) {
+        this.rabbitSprite.anims.play('rabbit_walk');
+      }
+      this.rabbitContainer.add(this.rabbitSprite);
+    } else {
+      const body = this.add.ellipse(0, -38, 42, 58, 0xf6f1df, 0.95).setStrokeStyle(2, 0x6f5c4a, 0.8);
+      const head = this.add.ellipse(0, -82, 34, 32, 0xfff8e7, 0.98).setStrokeStyle(2, 0x6f5c4a, 0.8);
+      this.rabbitContainer.add([body, head]);
+    }
+
     this.rabbitShadow = this.createContactShadow(this.rabbitContainer, { width: 44, height: 10, alpha: 0.26, depth: 11 });
     this.rabbitContainer.setVisible(false);
   }
@@ -1140,7 +1178,7 @@ export class ForestScene extends Phaser.Scene {
     }
 
     if (interactable.id === 'final_daisy') {
-      return GameState.currentArea === 'finale' && GameState.finalMeadowStarted;
+      return GameState.currentArea === 'finale' && (GameState.finalMeadowStarted || GameState.finalDaisyPlaced);
     }
 
     if (['madama', 'sposine', 'pittore', 'cavallo'].includes(interactable.id)) {
@@ -1481,12 +1519,21 @@ export class ForestScene extends Phaser.Scene {
   }
 
   updateFinalMeadowTrigger() {
-    if (!['madama','sposine','cavallo'].includes(GameState.currentArea) || !this.isCurrentAreaCompleted() || this.isTransitioning || this.dialogueManager?.isActive()) {
+    if (this.isTransitioning || this.dialogueManager?.isActive()) {
       return;
     }
 
-    if (this.romy.x >= this.worldWidth - NEXT_SCENE_MARGIN) {
-      this.transitionToArea('finale');
+    if (['madama','sposine','cavallo'].includes(GameState.currentArea) && this.isCurrentAreaCompleted()) {
+      if (this.romy.x >= this.worldWidth - NEXT_SCENE_MARGIN) {
+        this.transitionToArea('finale');
+      }
+      return;
+    }
+
+    if (GameState.currentArea === 'finale' && !GameState.finalMeadowStarted && this.romy.x >= FINAL_DIALOGUE_TRIGGER_X) {
+      GameState.finalMeadowStarted = true;
+      this.stopRomy();
+      this.dialogueManager.startDialogue('final_meadow_intro');
     }
   }
 
@@ -1529,6 +1576,9 @@ export class ForestScene extends Phaser.Scene {
     const startX = Math.max(0, this.cameras.main.scrollX + FINAL_RABBIT_START_OFFSET);
     this.rabbitContainer.setPosition(startX, this.getRomyY());
     this.rabbitContainer.setVisible(true);
+    this.rabbitSprite?.setFlipX(false);
+    this.rabbitSprite?.anims?.play('rabbit_walk', true);
+    this.cameras.main.startFollow(this.rabbitContainer, true, 0.08, 0, 0, 0);
     this.rabbitShadow?.setVisible(true);
 
     const exclamation = this.add.text(this.romy.x, this.romy.y - ROMY_DISPLAY_HEIGHT - 28, '!', {
@@ -1541,27 +1591,71 @@ export class ForestScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(40);
 
     this.tweens.add({ targets: exclamation, y: exclamation.y - 18, alpha: 0, duration: 1200, ease: 'Sine.easeOut', onComplete: () => exclamation.destroy() });
-    this.tweens.add({ targets: this.rabbitContainer, x: Math.min(FINAL_RABBIT_END_X, this.worldWidth + 120), duration: 2400, ease: 'Sine.easeIn', onComplete: () => this.rabbitContainer?.setVisible(false) });
+    this.tweens.add({
+      targets: this.rabbitContainer,
+      x: Math.min(FINAL_RABBIT_END_X, this.worldWidth + 120),
+      duration: 3000,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.rabbitContainer?.setVisible(false);
+        this.cameras.main.startFollow(this.romy, true, 0.12, 0, 0, 0);
+      }
+    });
+  }
+
+  playRomySleepSequence() {
+    const sleepFrames = ['romy-wake-04', 'romy-wake-03', 'romy-wake-02', 'romy-wake-01'];
+    this.romy.anims.stop();
+    sleepFrames.forEach((texture, index) => {
+      this.time.delayedCall(index * 520, () => {
+        this.romy.setTexture(texture);
+        this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
+      });
+    });
+    this.tweens.add({
+      targets: this.romy,
+      angle: -8,
+      alpha: 0.55,
+      duration: 2300,
+      ease: 'Sine.easeInOut'
+    });
   }
 
   finishFinalFade() {
     this.stopRomy();
-    this.tweens.add({
-      targets: this.romy,
-      angle: -8,
-      alpha: 0.45,
-      duration: 1800,
-      ease: 'Sine.easeInOut'
-    });
+    this.playRomySleepSequence();
     this.BlackTransition?.setVisible(true).setAlpha(0);
     this.tweens.add({
       targets: this.BlackTransition,
       alpha: 1,
       duration: 3200,
-      ease: 'Sine.easeInOut'
+      ease: 'Sine.easeInOut',
+      onComplete: () => this.showFinalEndingPlaceholder()
     });
   }
 
+
+  showFinalEndingPlaceholder() {
+    if (GameState.finalEndingShown) {
+      return;
+    }
+
+    GameState.finalEndingShown = true;
+    const endingLabels = {
+      madama: 'Città finale · Madama',
+      sposine: 'Città finale · Sposine',
+      cavallo: 'Città finale · Cavallo'
+    };
+    const label = endingLabels[GameState.currentPath] ?? 'Città finale';
+    this.add.text(this.scale.width / 2, this.scale.height / 2, label, {
+      fontFamily: 'Georgia, Times New Roman, serif',
+      fontSize: '28px',
+      color: '#fff4c4',
+      align: 'center',
+      backgroundColor: '#000000',
+      padding: { x: 24, y: 14 }
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(1300);
+  }
 
   showFinalBackgroundPlaceholder(visible) {
     if (!visible) {
@@ -1613,7 +1707,9 @@ export class ForestScene extends Phaser.Scene {
 
     this.isTransitioning = true;
     GameState.currentArea = area;
-    GameState.currentPath = area;
+    if (area !== 'finale') {
+      GameState.currentPath = area;
+    }
     this.interactHint.setVisible(false);
     this.stopRomy();
 
@@ -1634,10 +1730,12 @@ export class ForestScene extends Phaser.Scene {
         this.cameras.main.scrollY = 0;
         this.cameras.main.scrollX = 0;
         if (area === 'finale') {
-          GameState.finalMeadowStarted = true;
+          GameState.finalMeadowStarted = false;
           this.showFinalBackgroundPlaceholder(!this.textures.exists('background-margherite'));
-          this.finalMeadowContainer?.setPosition(940, this.groundY).setVisible(true);
-          this.dialogueManager.startDialogue('final_meadow_intro');
+          this.finalMeadowContainer?.setPosition(FINAL_MEADOW_X, this.groundY).setVisible(true);
+          const finalDaisy = this.interactables?.find((interactable) => interactable.id === 'final_daisy');
+          finalDaisy?.container?.setPosition(FINAL_DAISY_X, this.groundY);
+          finalDaisy?.sprite?.setVisible(false);
         } else {
           this.showFinalBackgroundPlaceholder(false);
           this.finalMeadowContainer?.setVisible(false);

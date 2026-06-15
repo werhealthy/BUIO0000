@@ -23,7 +23,8 @@ const initialState = {
   cappellaioEntered: false,
   finalMeadowStarted: false,
   finalDaisyPlaced: false,
-  finalRabbitSeen: false
+  finalRabbitSeen: false,
+  finalEndingShown: false
 };
 
 export const GameState = {

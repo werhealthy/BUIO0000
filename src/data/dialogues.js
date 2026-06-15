@@ -234,25 +234,25 @@ export const dialogues = {
   cap_choice_calore: [
     { speaker: "ROMY", text: "Un posto che sappia di sole." },
     { speaker: "CAPPELLAIO", text: "Ah! Il sole che cola, che scalda, che resta." },
-    { speaker: "SISTEMA", text: "Scegli una direzione sul cartello, poi prosegui oltre per entrare nel sentiero nero.", next: "crossroad_choose_path" }
+    { speaker: "SISTEMA", text: "Osserva il cartello: scegli un simbolo e lascia che il bosco apra il prossimo sentiero.", next: "crossroad_choose_path" }
   ],
 
   cap_choice_ritmo: [
     { speaker: "ROMY", text: "Una luce lontana da seguire." },
     { speaker: "CAPPELLAIO", text: "Oh! La luce che chiama da sopra i cortili." },
-    { speaker: "SISTEMA", text: "Scegli una direzione sul cartello, poi prosegui oltre per entrare nel sentiero nero.", next: "crossroad_choose_path" }
+    { speaker: "SISTEMA", text: "Osserva il cartello: scegli un simbolo e lascia che il bosco apra il prossimo sentiero.", next: "crossroad_choose_path" }
   ],
 
   cap_choice_quiete: [
     { speaker: "ROMY", text: "Qualcosa che non chieda spiegazioni." },
     { speaker: "CAPPELLAIO", text: "Ah! Una cosa che resta vicino al cuore." },
-    { speaker: "SISTEMA", text: "Scegli una direzione sul cartello, poi prosegui oltre per entrare nel sentiero nero.", next: "crossroad_choose_path" }
+    { speaker: "SISTEMA", text: "Osserva il cartello: scegli un simbolo e lascia che il bosco apra il prossimo sentiero.", next: "crossroad_choose_path" }
   ],
 
   crossroad_choose_path: [
     {
       speaker: "SISTEMA",
-      text: "Il cartello non ha parole. Solo tre simboli incisi nel legno. Quale segui?",
+      text: "Il cartello tace, ma i tre simboli brillano piano. Quale sentiero vuoi seguire?",
       choices: [
         {
           text: "Fragola",
@@ -366,7 +366,7 @@ export const dialogues = {
     { speaker: "FIORE", text: "Il gatto approva con una certa violenza emotiva." },
     {
       speaker: "MADAMA",
-      text: "Se proprio devi andartene, scegli almeno un frammento dal banco. Il bosco ama chi porta via prove.",
+      text: "Se desideri davvero proseguire, scegli un piccolo frammento dal banco: il bosco ama lasciare ricordi luminosi.",
       choices: [
         {
           text: "Prendi la moneta tiepida che profuma di forno.",
@@ -467,7 +467,7 @@ export const dialogues = {
     { speaker: "SPOSINA UNO", text: "Scegli cosa lasciare sul tavolo degli sposi!" },
     {
       speaker: "SPOSINA DUE",
-      text: "Che poi forse siamo noi!",
+      text: "Scegli un dono gentile da lasciare sul tavolo degli sposi.",
       choices: [
         {
           text: "Lascia una tovaglia calda con briciole, agrumi e sole.",
@@ -533,7 +533,7 @@ export const dialogues = {
     { speaker: "FIORE", text: "Traduzione: si sente molto importante perché ha una criniera." },
     { speaker: "CAVALLO", text: "Una criniera è una responsabilità poetica." },
     { speaker: "ROMY", text: "Io sto cercando l'uscita dal bosco." },
-    { speaker: "CAVALLO", text: "Allora devi scegliere che passo dare al coraggio.", choices: [
+    { speaker: "CAVALLO", text: "Allora dimmi con quale passo vuoi accompagnare il tuo coraggio.", choices: [
       { text: "Un passo caldo, come sole sulla strada.", score: "calore", next: "cavallo_choice_calore" },
       { text: "Un galoppo leggero, pieno di ritmo.", score: "ritmo", next: "cavallo_choice_ritmo" },
       { text: "Un passo quieto, senza spaventare l'erba.", score: "quiete", next: "cavallo_choice_quiete" }
@@ -564,20 +564,25 @@ export const dialogues = {
   ],
 
   final_meadow_intro: [
-    { speaker: "ROMY", text: "È bellissimo qui." },
-    { speaker: "FIORE", text: "Lo so. Finalmente un posto con un minimo di gusto botanico." },
-    { speaker: "ROMY", text: "Sembra fatto apposta per te." },
-    { speaker: "FIORE", text: "Infatti… Romy?" },
+    { speaker: "ROMY", text: "Oh... guarda quante margherite." },
+    { speaker: "FIORE", text: "Finalmente un posto con un certo senso dell'accoglienza botanica." },
+    { speaker: "ROMY", text: "Sembra morbido. Come se il prato stesse respirando piano." },
+    { speaker: "FIORE", text: "Romy?" },
     { speaker: "ROMY", text: "Sì?" },
-    { speaker: "FIORE", text: "Mi poseresti qui?" },
+    { speaker: "FIORE", text: "Mi poseresti qui? Credo che questo sia un buon posto per restare un momento." },
+    { speaker: "ROMY", text: "Certo. Piano piano." },
     { speaker: "SISTEMA", text: "Premi E per posare la Margherita." }
   ],
 
   final_daisy_placed: [
-    { speaker: "SISTEMA", text: "Hai posato la Margherita nel prato." },
-    { speaker: "SISTEMA", text: "Qualcosa fruscia all'improvviso tra i fiori.", action: "startFinalRabbit" },
-    { speaker: "ROMY", text: "Oddio…" },
-    { speaker: "ROMY", text: "Che bello, un coniglio." },
-    { speaker: "SISTEMA", text: "Il Coniglio attraversa il prato e scompare oltre la luce.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 1800 }
+    { speaker: "SISTEMA", text: "Romy posa la Margherita nel prato. I petali si muovono come se sorridessero." },
+    { speaker: "ROMY", text: "Eccoti. Stai benissimo qui." },
+    { speaker: "FIORE", text: "Lo so, ma detto da te è più carino." },
+    { speaker: "SISTEMA", text: "Un fruscio leggero corre tra i fiori.", action: "startFinalRabbit" },
+    { speaker: "ROMY", text: "Oddio... che bello quel coniglio..." },
+    { speaker: "ROMY", text: "Mi si stanno chiudendo gli occhi..." },
+    { speaker: "ROMY", text: "Forse non mi sento bene... ma non ho paura." },
+    { speaker: "ROMY", text: "Non so cosa sta succedendo..." },
+    { speaker: "SISTEMA", text: "Il prato si fa silenzioso. Romy scivola lentamente nel sonno.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 2200 }
   ]
 };
