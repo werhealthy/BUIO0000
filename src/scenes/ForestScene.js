@@ -36,6 +36,10 @@ import daisyIdle03Url from '../assets/sprites/characters/daisy/daisy_idle_03.png
 import onofrioIdle01Url from '../assets/sprites/characters/onofrio/onofrio_sprite_01.png?url';
 import onofrioIdle02Url from '../assets/sprites/characters/onofrio/onofrio_sprite_02.png?url';
 import onofrioIdle03Url from '../assets/sprites/characters/onofrio/onofrio_sprite_03.png?url';
+import madamaIdle01Url from '../assets/sprites/characters/madama/madama_idle_01.png?url';
+import madamaIdle02Url from '../assets/sprites/characters/madama/madama_idle_02.png?url';
+import madamaIdle03Url from '../assets/sprites/characters/madama/madama_idle_03.png?url';
+import madamaIdle04Url from '../assets/sprites/characters/madama/madama_idle_04.png?url';
 
 const signpostAssets = import.meta.glob('../assets/objects/signpost/signpost_crossroad.png', {
   eager: true,
@@ -104,6 +108,13 @@ const ONOFRIO_IDLE_FRAMES = [
   frame('onofrio-idle-03', onofrioIdle03Url)
 ];
 
+const MADAMA_IDLE_FRAMES = [
+  frame('madama-idle-01', madamaIdle01Url),
+  frame('madama-idle-02', madamaIdle02Url),
+  frame('madama-idle-03', madamaIdle03Url),
+  frame('madama-idle-04', madamaIdle04Url)
+];
+
 const loadFrames = (scene, frames) => {
   frames.forEach(({ key, url }) => {
     scene.load.image(key, url);
@@ -119,11 +130,13 @@ const CAT_WALK_FRAME_RATE = 6;
 const CAT_IDLE_FRAME_RATE = 3;
 const DAISY_FRAME_RATE = 3;
 const ONOFRIO_FRAME_RATE = 2;
+const MADAMA_FRAME_RATE = 3;
 const ROAD_Y = (canvasHeight) => canvasHeight - 118;
 const ROMY_DISPLAY_HEIGHT = 142;
 const CAT_DISPLAY_HEIGHT = 82;
 const DAISY_DISPLAY_HEIGHT = 56;
 const ONOFRIO_DISPLAY_HEIGHT = 312;
+const MADAMA_DISPLAY_HEIGHT = 230;
 const SIGN_SCALE = 0.58;
 const PLAYER_START_X = 260;
 const CAT_TARGET_X = 430;
@@ -162,9 +175,11 @@ export class ForestScene extends Phaser.Scene {
     loadFrames(this, CAT_WALK_FRAMES);
     loadFrames(this, DAISY_IDLE_FRAMES);
     loadFrames(this, ONOFRIO_IDLE_FRAMES);
+    loadFrames(this, MADAMA_IDLE_FRAMES);
 
     if (signpostCrossroadUrl) {
-      this.load.image('crossroadSignV2', signpostCrossroadUrl);
+      // REAL SIGNPOST ASSET: src/assets/objects/signpost/signpost_crossroad.png
+      this.load.image('crossroadSignFinal', signpostCrossroadUrl);
     }
   }
 
@@ -223,6 +238,10 @@ export class ForestScene extends Phaser.Scene {
     this.romy.setOrigin(0.5, 1);
     this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
     this.romy.setCollideWorldBounds(true);
+    // INTRO WAKE INITIAL POSE: Romy starts hidden on romy_wake_01 so no idle frame can flash before wake.
+    this.romy.anims.stop();
+    this.romy.setTexture('romy-wake-01');
+    this.romy.setVisible(false);
 
     // Corpo fisico compatto: il movimento resta solo orizzontale e la base resta su ROAD_Y.
     const bodyWidth = 48 / this.romy.scaleX;
@@ -325,6 +344,7 @@ export class ForestScene extends Phaser.Scene {
       {
         id: 'madama',
         label: 'Madama',
+        objectName: 'Trigger_Madama',
         x: AREA_SPAWN_X.madama + 180,
         color: 0xf38bd5,
         dialogueKey: 'madama_intro',
@@ -375,6 +395,11 @@ export class ForestScene extends Phaser.Scene {
 
       if (interactable.id === 'sign_directions') {
         interactable.container = this.createSignpost(interactable.x, this.groundY, interactable);
+        return;
+      }
+
+      if (interactable.id === 'madama') {
+        interactable.container = this.createMadama(interactable.x, this.groundY, interactable);
         return;
       }
 
@@ -477,10 +502,37 @@ export class ForestScene extends Phaser.Scene {
     return container;
   }
 
+
+  createMadama(x, y, interactable) {
+    const container = this.add.container(x, y).setDepth(12);
+    const madama = this.add.sprite(0, 0, 'madama-idle-01').setOrigin(0.5, 1);
+    this.setSpriteDisplayHeight(madama, MADAMA_DISPLAY_HEIGHT);
+
+    // MADAMA REAL ASSETS: src/assets/sprites/characters/madama/madama_idle_01.png ... madama_idle_04.png
+    if (MADAMA_IDLE_FRAMES.length > 1) {
+      this.anims.create({
+        key: 'madama-idle',
+        frames: phaserFrames(MADAMA_IDLE_FRAMES),
+        frameRate: MADAMA_FRAME_RATE,
+        repeat: -1
+      });
+      madama.anims.play('madama-idle');
+    }
+
+    container.add([madama]);
+    interactable.sprite = madama;
+    interactable.shadow = this.createContactShadow(container, { width: 92, height: 18, alpha: 0.3, depth: 11 });
+    return container;
+  }
+
   createSignpost(x, y, interactable) {
-    if (this.textures.exists('crossroadSignV2')) {
+    // REAL SIGNPOST ASSET: src/assets/objects/signpost/signpost_crossroad.png
+    if (this.textures.exists('crossroadSignFinal')) {
+      if (import.meta.env?.DEV) {
+        console.log('Using real signpost asset: signpost_crossroad.png');
+      }
       const container = this.add.container(x, y).setDepth(10);
-      const signpost = this.add.sprite(0, 0, 'crossroadSignV2').setOrigin(0.5, 1);
+      const signpost = this.add.sprite(0, 0, 'crossroadSignFinal').setOrigin(0.5, 1);
       signpost.setScale(interactable.scale ?? SIGN_SCALE);
       container.add([signpost]);
       interactable.sprite = signpost;
@@ -527,7 +579,7 @@ export class ForestScene extends Phaser.Scene {
   }
 
   startInitialIntro() {
-    this.stopRomy();
+    this.prepareRomyWakeIntroPose();
     this.BlackTransition?.setVisible(true).setAlpha(1);
     this.startBlackIntro();
   }
@@ -926,6 +978,7 @@ export class ForestScene extends Phaser.Scene {
     this.isTransitioning = true;
     this.interactHint.setVisible(false);
     this.dialogueManager.hideUi();
+    this.prepareRomyWakeIntroPose(true);
     this.tweens.add({
       targets: this.BlackTransition,
       alpha: 0,
@@ -938,6 +991,21 @@ export class ForestScene extends Phaser.Scene {
         this.dialogueManager.startDialogue('main_intro');
       }
     });
+  }
+
+  prepareRomyWakeIntroPose(makeVisible = false) {
+    if (!this.romy) {
+      return;
+    }
+
+    // INTRO WAKE INITIAL POSE: this is the only intro setup path before the forest is revealed.
+    this.isWakingUp = true;
+    this.romy.anims.stop();
+    this.romy.setTexture('romy-wake-01');
+    this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
+    this.romy.setPosition(this.romy.x || PLAYER_START_X, this.getRomyY());
+    this.romy.setVelocity(0, 0);
+    this.romy.setVisible(Boolean(makeVisible));
   }
 
   setRomyPose(pose) {

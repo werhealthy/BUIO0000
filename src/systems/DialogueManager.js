@@ -4,8 +4,12 @@ import { GameState } from './GameState.js';
 
 const SCORE_KEYS = ['calore', 'ritmo', 'quiete'];
 
-const PORTRAIT_MAX_HEIGHT = 166;
-const PORTRAIT_MAX_WIDTH = 142;
+const DEBUG_UI = false;
+// PORTRAIT FIXED FRAME: these constants keep the circle identical for every speaker.
+const PORTRAIT_FRAME_X = 70;
+const PORTRAIT_FRAME_Y = 98;
+const PORTRAIT_FRAME_SIZE = 118;
+const PORTRAIT_INNER_PADDING = 14;
 
 const PORTRAITS = {
   ROMY: { texture: 'romy-idle-01', daisyTexture: 'romy-daisy-idle-01', height: 146, maxWidth: 118, flipX: false },
@@ -13,7 +17,8 @@ const PORTRAITS = {
   DAISY: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
   FIORE: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
   MARGHERITA: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
-  ONOFRIO: { texture: 'onofrio-idle-01', height: 166, maxWidth: 138, flipX: false }
+  ONOFRIO: { texture: 'onofrio-idle-01', flipX: false },
+  MADAMA: { texture: 'madama-idle-01', flipX: false }
 };
 
 const getAutoAdvanceDelay = (line = {}) => {
@@ -67,7 +72,7 @@ export class DialogueManager {
       boxTop,
       boxRight: boxLeft + boxWidth,
       boxBottom: boxTop + boxHeight,
-      textLeftWithPortrait: boxLeft + 138,
+      textLeftWithPortrait: boxLeft + 154,
       textLeftNoPortrait: boxLeft + 24,
       textRightPadding: 26
     };
@@ -79,10 +84,16 @@ export class DialogueManager {
 
     this.drawDialogueFrame();
 
-    this.portraitContainer = this.scene.add.container(boxLeft + 70, boxTop + boxHeight + 6).setScrollFactor(0).setDepth(1003);
-    this.portraitGlow = this.scene.add.graphics();
-    this.portraitSprite = this.scene.add.sprite(0, 0, 'romy-idle-01').setOrigin(0.5, 1);
-    this.portraitContainer.add([this.portraitGlow, this.portraitSprite]);
+    this.portraitContainer = this.scene.add.container(boxLeft + PORTRAIT_FRAME_X, boxTop + PORTRAIT_FRAME_Y).setScrollFactor(0).setDepth(1003);
+    this.portraitFrame = this.scene.add.graphics();
+    this.portraitSprite = this.scene.add.sprite(0, 0, 'romy-idle-01').setOrigin(0.5, 0.5);
+    this.portraitMaskShape = this.scene.add.graphics().setVisible(false);
+    this.portraitMaskShape.fillStyle(0xffffff, 1);
+    this.portraitMaskShape.fillCircle(boxLeft + PORTRAIT_FRAME_X, boxTop + PORTRAIT_FRAME_Y, PORTRAIT_FRAME_SIZE / 2 - PORTRAIT_INNER_PADDING / 2);
+    this.portraitMask = this.portraitMaskShape.createGeometryMask();
+    this.portraitSprite.setMask(this.portraitMask);
+    this.portraitContainer.add([this.portraitFrame, this.portraitSprite]);
+    this.drawFixedPortraitFrame();
 
     this.speakerText = this.scene.add
       .text(this.layout.textLeftWithPortrait, boxTop + 15, '', {
@@ -164,6 +175,12 @@ export class DialogueManager {
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(1008);
+    this.debugChoiceText = this.scene.add
+      .text(10, 10, '', { fontFamily: 'monospace', fontSize: '10px', color: '#00ff88' })
+      .setScrollFactor(0)
+      .setDepth(1100)
+      .setVisible(DEBUG_UI);
+
     this.choicePromptHintText = this.scene.add
       .text(width / 2, 0, '↑↓ scegli · E conferma', {
         fontFamily: 'Arial, sans-serif',
@@ -191,6 +208,18 @@ export class DialogueManager {
     this.box.strokeRoundedRect(boxLeft, boxTop, boxWidth, boxHeight, 16);
     this.box.lineStyle(1, 0x9fd7c6, 0.28);
     this.box.strokeRoundedRect(boxLeft + 5, boxTop + 5, boxWidth - 10, boxHeight - 10, 12);
+  }
+
+  drawFixedPortraitFrame() {
+    // PORTRAIT FIXED FRAME: the frame is drawn once at fixed size; sprites scale inside it.
+    const radius = PORTRAIT_FRAME_SIZE / 2;
+    this.portraitFrame.clear();
+    this.portraitFrame.fillStyle(0xf5df9a, 0.14);
+    this.portraitFrame.fillCircle(0, 0, radius);
+    this.portraitFrame.lineStyle(3, 0xf3df9b, 0.72);
+    this.portraitFrame.strokeCircle(0, 0, radius);
+    this.portraitFrame.lineStyle(1, 0xffffff, 0.22);
+    this.portraitFrame.strokeCircle(0, 0, radius - 6);
   }
 
   drawNamePlate(hasPortrait) {
@@ -325,6 +354,7 @@ export class DialogueManager {
   }
 
   showChoiceQuestionLine(speaker) {
+    // CHOICE QUESTION MODE: standard dialogue UI/portrait is hidden; only question box + separate choice boxes render.
     this.hideStandardUi();
     this.hideSystemUi();
     this.hideChoicePromptUi();
@@ -336,8 +366,8 @@ export class DialogueManager {
     const { width, height } = this.layout;
     const panelWidth = Math.round(width * 0.7);
     const panelX = Math.round((width - panelWidth) / 2);
-    const panelY = Math.round(height * 0.1);
-    const panelHeight = 116;
+    const panelY = Math.round(height * 0.12);
+    const panelHeight = 128;
     const speakerLabel = normalizeSpeaker(speaker) === 'SISTEMA' ? 'CARTELLO' : speaker;
 
     this.choicePromptGraphics.setVisible(true);
@@ -357,17 +387,18 @@ export class DialogueManager {
     this.choicePromptGraphics.strokeRoundedRect(panelX + 5, panelY + 5, panelWidth - 10, panelHeight - 10, 12);
 
     this.choicePromptSpeakerText.setPosition(width / 2, panelY + 22).setText(speakerLabel ?? '');
-    this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 66 : 55));
+    this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 72 : 62));
     this.choicePromptText.setWordWrapWidth(panelWidth - 64);
     this.choicePromptText.setText(this.currentLine.text ?? '');
 
     this.renderChoices();
-    const rowHeight = 34;
+    const rowHeight = 46;
     const gap = 8;
     const totalChoiceHeight = this.currentLine.choices.length * rowHeight + Math.max(0, this.currentLine.choices.length - 1) * gap;
-    const choicesBottom = Math.round(height * 0.34) + totalChoiceHeight;
-    this.choicePromptHintText.setPosition(width / 2, choicesBottom + 26);
+    const choicesBottom = this.getChoiceStartY() + totalChoiceHeight;
+    this.choicePromptHintText.setPosition(Math.round(width * 0.82), choicesBottom + 24);
     this.choicePromptHintText.setText('↑↓ scegli · E conferma');
+    this.debugChoiceText?.setText(DEBUG_UI ? 'CHOICE QUESTION MODE active' : '');
   }
 
   getTextLeft(hasPortrait) {
@@ -388,26 +419,21 @@ export class DialogueManager {
 
     this.portraitSprite.setTexture(texture);
     this.portraitSprite.setFlipX(portrait.flipX);
-    this.setPortraitSize(portrait);
-
-    this.portraitGlow.clear();
-    this.portraitGlow.fillStyle(0xf5df9a, 0.14);
-    this.portraitGlow.fillEllipse(0, -Math.round(this.portraitSprite.displayHeight * 0.44), 96, Math.min(118, this.portraitSprite.displayHeight));
-    this.portraitGlow.lineStyle(1, 0xffffff, 0.18);
-    this.portraitGlow.strokeEllipse(0, -Math.round(this.portraitSprite.displayHeight * 0.44), 106, Math.min(128, this.portraitSprite.displayHeight + 8));
+    this.setPortraitSize();
+    this.portraitSprite.setPosition(0, 0);
+    this.drawFixedPortraitFrame();
 
     this.portraitContainer.setVisible(true);
     return true;
   }
 
-  setPortraitSize(portrait) {
+  setPortraitSize() {
     if (!this.portraitSprite || this.portraitSprite.height === 0 || this.portraitSprite.width === 0) {
       return;
     }
 
-    const maxHeight = Math.min(portrait.height ?? PORTRAIT_MAX_HEIGHT, PORTRAIT_MAX_HEIGHT);
-    const maxWidth = Math.min(portrait.maxWidth ?? PORTRAIT_MAX_WIDTH, PORTRAIT_MAX_WIDTH);
-    const scale = Math.min(maxHeight / this.portraitSprite.height, maxWidth / this.portraitSprite.width);
+    const maxSize = PORTRAIT_FRAME_SIZE - PORTRAIT_INNER_PADDING * 2;
+    const scale = Math.min(maxSize / this.portraitSprite.height, maxSize / this.portraitSprite.width);
     this.portraitSprite.setScale(scale);
   }
 
@@ -495,6 +521,10 @@ export class DialogueManager {
     return this.choosing;
   }
 
+  getChoiceStartY() {
+    return Math.round(this.layout.height * 0.42);
+  }
+
   renderChoices() {
     this.clearChoices();
 
@@ -511,11 +541,11 @@ export class DialogueManager {
       : this.systemMode
         ? Math.round(this.layout.width * 0.66)
         : this.layout.boxRight - left - this.layout.textRightPadding;
-    const rowHeight = promptMode || this.systemMode ? 34 : 26;
+    const rowHeight = promptMode ? 46 : this.systemMode ? 34 : 26;
     const gap = promptMode || this.systemMode ? 8 : 6;
     const totalHeight = choices.length * rowHeight + Math.max(0, choices.length - 1) * gap;
     const startY = promptMode
-      ? Math.round(this.layout.height * 0.34)
+      ? this.getChoiceStartY()
       : this.systemMode
         ? Math.round(this.layout.height * 0.34)
         : Math.min(
@@ -533,7 +563,7 @@ export class DialogueManager {
       this.choiceGraphics.strokeRoundedRect(left, y, rowWidth, rowHeight, 9);
 
       const arrow = this.scene.add
-        .text(left + 14, y + rowHeight / 2, selected ? '➤' : '•', {
+        .text(left + 14, y + rowHeight / 2, selected ? '➤' : '', {
           fontFamily: 'Arial, sans-serif',
           fontSize: selected ? '14px' : '11px',
           color: selected ? '#ffe9a8' : '#9fd7c6'
@@ -545,7 +575,7 @@ export class DialogueManager {
       const label = this.scene.add
         .text(left + 40, y + rowHeight / 2, choice.text, {
           fontFamily: 'Georgia, Times New Roman, serif',
-          fontSize: '14px',
+          fontSize: promptMode ? '15px' : '14px',
           color: selected ? '#fff7d6' : '#e7f2ee',
           wordWrap: { width: rowWidth - 54 }
         })
@@ -690,5 +720,6 @@ export class DialogueManager {
     this.choicePromptSpeakerText.setVisible(false);
     this.choicePromptText.setVisible(false);
     this.choicePromptHintText.setVisible(false);
+    this.debugChoiceText?.setText(DEBUG_UI ? 'choice prompt hidden' : '');
   }
 }
