@@ -14,7 +14,8 @@ const initialState = {
   ritmo: 0,
   quiete: 0,
   lastChoice: null,
-  hatterColored: false
+  hatterColored: false,
+  madamaCompleted: false
 };
 
 export const GameState = {
