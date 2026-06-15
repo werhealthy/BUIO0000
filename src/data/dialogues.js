@@ -585,17 +585,17 @@ export const dialogues = {
     { speaker: "SISTEMA", text: "Il prato si fa silenzioso. Romy scivola lentamente nel sonno.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 2400 }
   ],
 
-  final_checco: [
-    { speaker: "CHECCO", text: "Tutto bene, amore?" },
+  final_cecco: [
+    { speaker: "CECCO", text: "Tutto bene, amore?" },
     { speaker: "ROMY", text: "Dove siamo?" },
-    { speaker: "CHECCO", text: "Come dove siamo? Siamo a [NOME CITTÀ]." },
+    { speaker: "CECCO", text: "Come dove siamo? Siamo a [NOME CITTÀ]." },
     { speaker: "ROMY", text: "Ma che ci facciamo qua?" },
-    { speaker: "CHECCO", text: "Amore, siamo qui per il viaggio del tuo compleanno." },
+    { speaker: "CECCO", text: "Amore, siamo qui per il viaggio del tuo compleanno." },
     { speaker: "ROMY", text: "Oddio…" },
     { speaker: "ROMY", text: "Davvero?" },
     { speaker: "ROMY", text: "Che bello…" },
     { speaker: "ROMY", text: "Però è strano…" },
     { speaker: "ROMY", text: "Mi sembra di aver appena sognato." },
-    { speaker: "ROMY", text: "Mi sembrava di cadere giù per un buco.", action: "showFinalWallpaper" }
+    { speaker: "ROMY", text: "Mi sembrava di cadere giù per un buco.", action: "showFinalCredits" }
   ]
 };
