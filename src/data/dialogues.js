@@ -394,7 +394,7 @@ export const dialogues = {
     { speaker: "FIORE", text: "Splendida frase. La ricamerò su una foglia." },
     { speaker: "GATTO", text: "Miao." },
     { speaker: "FIORE", text: "Sì, gatto. Anche io ho sentito un po’ di soddisfazione." },
-    { speaker: "SISTEMA", text: "Romy lascia il laboratorio: davanti, nel sentiero, qualcosa di bianco muove le orecchie.", action: "continueToRabbit" }
+    { speaker: "SISTEMA", text: "Romy lascia il laboratorio: più avanti il sentiero sembra schiarirsi, come se il bosco stesse finendo.", action: "completeMadamaArea" }
   ],
 
   madama_choice_ritmo: [
@@ -404,7 +404,7 @@ export const dialogues = {
     { speaker: "FIORE", text: "Splendida frase. La ricamerò su una foglia." },
     { speaker: "GATTO", text: "Miao." },
     { speaker: "FIORE", text: "Sì, gatto. Anche io ho sentito un po’ di soddisfazione." },
-    { speaker: "SISTEMA", text: "Romy lascia il laboratorio: davanti, nel sentiero, qualcosa di bianco muove le orecchie.", action: "continueToRabbit" }
+    { speaker: "SISTEMA", text: "Romy lascia il laboratorio: più avanti il sentiero sembra schiarirsi, come se il bosco stesse finendo.", action: "completeMadamaArea" }
   ],
 
   madama_choice_quiete: [
@@ -414,7 +414,7 @@ export const dialogues = {
     { speaker: "FIORE", text: "Splendida frase. La ricamerò su una foglia." },
     { speaker: "GATTO", text: "Miao." },
     { speaker: "FIORE", text: "Sì, gatto. Anche io ho sentito un po’ di soddisfazione." },
-    { speaker: "SISTEMA", text: "Romy lascia il laboratorio: davanti, nel sentiero, qualcosa di bianco muove le orecchie.", action: "continueToRabbit" }
+    { speaker: "SISTEMA", text: "Romy lascia il laboratorio: più avanti il sentiero sembra schiarirsi, come se il bosco stesse finendo.", action: "completeMadamaArea" }
   ],
 
   sposine_intro: [
@@ -530,5 +530,26 @@ export const dialogues = {
   pittore_intro: [
     { speaker: "PITTORE", text: "Io non vivo nel bosco. Io lascio che il bosco mi attraversi." },
     { speaker: "ROMY", text: "Quindi vivi nel bosco." }
+  ],
+
+  final_meadow_intro: [
+    { speaker: "ROMY", text: "Aspetta... il bosco si apre." },
+    { speaker: "ROMY", text: "È un prato di margherite. È bellissimo." },
+    { speaker: "MARGHERITA", text: "Lo è. Non dirlo troppo forte o si monterà la corolla." },
+    { speaker: "ROMY", text: "Sembra calmo. Come se qui anche le foglie parlassero piano." },
+    { speaker: "MARGHERITA", text: "Romy... credo che questo sia il posto giusto." },
+    { speaker: "ROMY", text: "Per cosa?" },
+    { speaker: "MARGHERITA", text: "Per posarmi. Solo un momento. Prometto di non fare la tragica." },
+    { speaker: "SISTEMA", text: "Premi E vicino al prato per posare la Margherita." }
+  ],
+
+  final_daisy_placed: [
+    { speaker: "ROMY", text: "Ecco. Piano piano." },
+    { speaker: "MARGHERITA", text: "Oh. La terra si ricorda di me." },
+    { speaker: "ROMY", text: "Stai bene?" },
+    { speaker: "MARGHERITA", text: "Sì. Forse perfino meglio di bene." },
+    { speaker: "SISTEMA", text: "Qualcosa fruscia all'improvviso tra i fiori.", action: "startFinalRabbit" },
+    { speaker: "ROMY", text: "Oddio... che bello, un coniglio." },
+    { speaker: "SISTEMA", text: "Il Coniglio attraversa il prato e scompare oltre la luce.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 1800 }
   ]
 };
