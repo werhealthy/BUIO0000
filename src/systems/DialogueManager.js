@@ -7,9 +7,10 @@ const SCORE_KEYS = ['calore', 'ritmo', 'quiete'];
 const DEBUG_UI = false;
 // PORTRAIT FIXED FRAME: these constants keep the circle identical for every speaker.
 const PORTRAIT_FRAME_X = 70;
-const PORTRAIT_FRAME_Y = 98;
+const PORTRAIT_CENTER_Y_OFFSET = 70;
 const PORTRAIT_FRAME_SIZE = 118;
 const PORTRAIT_INNER_PADDING = 14;
+const PORTRAIT_CONTENT_MAX_HEIGHT = PORTRAIT_FRAME_SIZE - PORTRAIT_INNER_PADDING * 2;
 
 const PORTRAITS = {
   ROMY: { texture: 'romy-idle-01', daisyTexture: 'romy-daisy-idle-01', height: 146, maxWidth: 118, flipX: false },
@@ -18,6 +19,7 @@ const PORTRAITS = {
   FIORE: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
   MARGHERITA: { texture: 'daisy-idle-01', height: 104, maxWidth: 92, flipX: false },
   ONOFRIO: { texture: 'onofrio-idle-01', flipX: false },
+  CAPPELLAIO: { texture: 'cappellaio-idle-01', colourTexture: 'cappellaio-idle-colour-01', flipX: false },
   MADAMA: { texture: 'madama-idle-01', flipX: false }
 };
 
@@ -84,12 +86,12 @@ export class DialogueManager {
 
     this.drawDialogueFrame();
 
-    this.portraitContainer = this.scene.add.container(boxLeft + PORTRAIT_FRAME_X, boxTop + PORTRAIT_FRAME_Y).setScrollFactor(0).setDepth(1003);
+    this.portraitContainer = this.scene.add.container(boxLeft + PORTRAIT_FRAME_X, boxTop + PORTRAIT_CENTER_Y_OFFSET).setScrollFactor(0).setDepth(1003);
     this.portraitFrame = this.scene.add.graphics();
     this.portraitSprite = this.scene.add.sprite(0, 0, 'romy-idle-01').setOrigin(0.5, 0.5);
     this.portraitMaskShape = this.scene.add.graphics().setVisible(false);
     this.portraitMaskShape.fillStyle(0xffffff, 1);
-    this.portraitMaskShape.fillCircle(boxLeft + PORTRAIT_FRAME_X, boxTop + PORTRAIT_FRAME_Y, PORTRAIT_FRAME_SIZE / 2 - PORTRAIT_INNER_PADDING / 2);
+    this.portraitMaskShape.fillCircle(boxLeft + PORTRAIT_FRAME_X, boxTop + PORTRAIT_CENTER_Y_OFFSET, PORTRAIT_FRAME_SIZE / 2 - PORTRAIT_INNER_PADDING / 2);
     this.portraitMask = this.portraitMaskShape.createGeometryMask();
     this.portraitSprite.setMask(this.portraitMask);
     this.portraitContainer.add([this.portraitFrame, this.portraitSprite]);
@@ -408,9 +410,15 @@ export class DialogueManager {
   updatePortrait(speaker) {
     const normalizedSpeaker = normalizeSpeaker(speaker);
     const portrait = PORTRAITS[normalizedSpeaker];
-    const texture = normalizedSpeaker === 'ROMY' && GameState.hasDaisy && this.scene.textures.exists(portrait?.daisyTexture)
-      ? portrait.daisyTexture
-      : portrait?.texture;
+    let texture = portrait?.texture;
+
+    if (normalizedSpeaker === 'ROMY' && GameState.hasDaisy && this.scene.textures.exists(portrait?.daisyTexture)) {
+      texture = portrait.daisyTexture;
+    }
+
+    if (normalizedSpeaker === 'CAPPELLAIO' && GameState.hatterColored && this.scene.textures.exists(portrait?.colourTexture)) {
+      texture = portrait.colourTexture;
+    }
 
     if (!portrait || !this.scene.textures.exists(texture)) {
       this.portraitContainer.setVisible(false);
@@ -432,7 +440,7 @@ export class DialogueManager {
       return;
     }
 
-    const maxSize = PORTRAIT_FRAME_SIZE - PORTRAIT_INNER_PADDING * 2;
+    const maxSize = PORTRAIT_CONTENT_MAX_HEIGHT;
     const scale = Math.min(maxSize / this.portraitSprite.height, maxSize / this.portraitSprite.width);
     this.portraitSprite.setScale(scale);
   }

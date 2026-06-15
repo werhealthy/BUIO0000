@@ -41,6 +41,14 @@ import madamaIdle02Url from '../assets/sprites/characters/madama/madama_idle_02.
 import madamaIdle03Url from '../assets/sprites/characters/madama/madama_idle_03.png?url';
 import madamaIdle04Url from '../assets/sprites/characters/madama/madama_idle_04.png?url';
 
+
+const cappellaioAssets = import.meta.glob('../assets/sprites/characters/cappellaio/*.png', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+const cappellaioUrl = (fileName) => cappellaioAssets[`../assets/sprites/characters/cappellaio/${fileName}`];
+
 const signpostAssets = import.meta.glob('../assets/objects/signpost/signpost_crossroad.png', {
   eager: true,
   query: '?url',
@@ -108,6 +116,28 @@ const ONOFRIO_IDLE_FRAMES = [
   frame('onofrio-idle-03', onofrioIdle03Url)
 ];
 
+
+const CAPPELLAIO_IDLE_FRAMES = [
+  frame('cappellaio-idle-01', cappellaioUrl('cappellaio_idle_01.png')),
+  frame('cappellaio-idle-02', cappellaioUrl('cappellaio_idle_02.png')),
+  frame('cappellaio-idle-03', cappellaioUrl('cappellaio_idle_03.png')),
+  frame('cappellaio-idle-04', cappellaioUrl('cappellaio_idle_04.png'))
+].filter(({ url }) => Boolean(url));
+
+const CAPPELLAIO_WALK_FRAMES = [
+  frame('cappellaio-walk-01', cappellaioUrl('cappellaio_walk_01.png')),
+  frame('cappellaio-walk-02', cappellaioUrl('cappellaio_walk_02.png')),
+  frame('cappellaio-walk-03', cappellaioUrl('cappellaio_walk_03.png')),
+  frame('cappellaio-walk-04', cappellaioUrl('cappellaio_walk_04.png'))
+].filter(({ url }) => Boolean(url));
+
+const CAPPELLAIO_IDLE_COLOUR_FRAMES = [
+  frame('cappellaio-idle-colour-01', cappellaioUrl('cappellaio_idle_colour_01.png')),
+  frame('cappellaio-idle-colour-02', cappellaioUrl('cappellaio_idle_colour_02.png')),
+  frame('cappellaio-idle-colour-03', cappellaioUrl('cappellaio_idle_colour_03.png')),
+  frame('cappellaio-idle-colour-04', cappellaioUrl('cappellaio_idle_colour_04.png'))
+].filter(({ url }) => Boolean(url));
+
 const MADAMA_IDLE_FRAMES = [
   frame('madama-idle-01', madamaIdle01Url),
   frame('madama-idle-02', madamaIdle02Url),
@@ -131,6 +161,8 @@ const CAT_IDLE_FRAME_RATE = 3;
 const DAISY_FRAME_RATE = 3;
 const ONOFRIO_FRAME_RATE = 2;
 const MADAMA_FRAME_RATE = 3;
+const CAPPELLAIO_IDLE_FRAME_RATE = 3;
+const CAPPELLAIO_WALK_FRAME_RATE = 7;
 const ROAD_Y = (canvasHeight) => canvasHeight - 118;
 const ROMY_DISPLAY_HEIGHT = 142;
 const CAT_DISPLAY_HEIGHT = 82;
@@ -176,6 +208,9 @@ export class ForestScene extends Phaser.Scene {
     loadFrames(this, DAISY_IDLE_FRAMES);
     loadFrames(this, ONOFRIO_IDLE_FRAMES);
     loadFrames(this, MADAMA_IDLE_FRAMES);
+    loadFrames(this, CAPPELLAIO_IDLE_FRAMES);
+    loadFrames(this, CAPPELLAIO_WALK_FRAMES);
+    loadFrames(this, CAPPELLAIO_IDLE_COLOUR_FRAMES);
 
     if (signpostCrossroadUrl) {
       // REAL SIGNPOST ASSET: src/assets/objects/signpost/signpost_crossroad.png
@@ -202,6 +237,7 @@ export class ForestScene extends Phaser.Scene {
     this.createUi();
     this.createDialogueManager();
     this.createInput();
+    this.createCappellaioAnimations();
     this.updateNpcVisibility();
     this.startInitialIntro();
   }
@@ -405,6 +441,37 @@ export class ForestScene extends Phaser.Scene {
 
       interactable.container = this.createPlaceholder(interactable.x, this.groundY, interactable);
     });
+  }
+
+
+  createCappellaioAnimations() {
+    // Optional Cappellaio assets are connected only when real files exist in src/assets/sprites/characters/cappellaio/.
+    if (CAPPELLAIO_IDLE_FRAMES.length > 1 && !this.anims.exists('cappellaio-idle')) {
+      this.anims.create({
+        key: 'cappellaio-idle',
+        frames: phaserFrames(CAPPELLAIO_IDLE_FRAMES),
+        frameRate: CAPPELLAIO_IDLE_FRAME_RATE,
+        repeat: -1
+      });
+    }
+
+    if (CAPPELLAIO_WALK_FRAMES.length > 1 && !this.anims.exists('cappellaio-walk')) {
+      this.anims.create({
+        key: 'cappellaio-walk',
+        frames: phaserFrames(CAPPELLAIO_WALK_FRAMES),
+        frameRate: CAPPELLAIO_WALK_FRAME_RATE,
+        repeat: -1
+      });
+    }
+
+    if (CAPPELLAIO_IDLE_COLOUR_FRAMES.length > 1 && !this.anims.exists('cappellaio-idle-colour')) {
+      this.anims.create({
+        key: 'cappellaio-idle-colour',
+        frames: phaserFrames(CAPPELLAIO_IDLE_COLOUR_FRAMES),
+        frameRate: CAPPELLAIO_IDLE_FRAME_RATE,
+        repeat: -1
+      });
+    }
   }
 
   createAtmosphereOverlay() {
