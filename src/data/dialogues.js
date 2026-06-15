@@ -307,15 +307,15 @@ export const dialogues = {
   path_zampa_transition: [
     {
       speaker: "SISTEMA",
-      text: "Segui la zampa di gatto tra le radici. Il sentiero diventa blu, silenzioso, e da lontano arriva il suono morbido di una chitarra.",
-      action: "setPathPittore",
+      text: "Segui la zampa di gatto tra le radici. Il sentiero diventa blu, silenzioso, e da lontano arriva un nitrito dolce.",
+      action: "setPathCavallo",
       autoAdvance: true,
       autoAdvanceDelay: 2600
     },
     {
       speaker: "SISTEMA",
-      text: "Qualcosa nel bosco trattiene il respiro. Poi tutto sfuma in nero, senza fretta.",
-      action: "transitionToAreaPittore",
+      text: "Qualcosa nel bosco trattiene il respiro. Poi tutto sfuma verso un sentiero di criniere e vento.",
+      action: "transitionToAreaCavallo",
       autoAdvance: true,
       autoAdvanceDelay: 2000
     }
@@ -498,7 +498,7 @@ export const dialogues = {
     { speaker: "SPOSINA UNO", text: "Sei ufficialmente già stata invitata da sempre." },
     { speaker: "GATTO", text: "Miao." },
     { speaker: "FIORE", text: "Il gatto dice che il matrimonio è pericoloso ma ben organizzato." },
-    { speaker: "SISTEMA", text: "Fine ramo Sposine — prossimo step: prato delle margherite." }
+    { speaker: "SISTEMA", text: "Le Sposine ti salutano tra veli e coriandoli. Il sentiero più avanti sembra schiarirsi.", action: "completeSposineArea" }
   ],
 
   sposine_choice_ritmo: [
@@ -511,7 +511,7 @@ export const dialogues = {
     { speaker: "SPOSINA UNO", text: "Sei ufficialmente già stata invitata da sempre." },
     { speaker: "GATTO", text: "Miao." },
     { speaker: "FIORE", text: "Il gatto dice che la torta sta seguendo il tempo in quattro quarti." },
-    { speaker: "SISTEMA", text: "Fine ramo Sposine — prossimo step: prato delle margherite." }
+    { speaker: "SISTEMA", text: "Le Sposine ti salutano tra veli e coriandoli. Il sentiero più avanti sembra schiarirsi.", action: "completeSposineArea" }
   ],
 
   sposine_choice_quiete: [
@@ -524,7 +524,38 @@ export const dialogues = {
     { speaker: "SPOSINA UNO", text: "Sei ufficialmente già stata invitata da sempre." },
     { speaker: "GATTO", text: "Miao." },
     { speaker: "FIORE", text: "Il gatto dice che apprezza le ore lente. Soprattutto se includono sonnellini." },
-    { speaker: "SISTEMA", text: "Fine ramo Sposine — prossimo step: prato delle margherite." }
+    { speaker: "SISTEMA", text: "Le Sposine ti salutano tra veli e coriandoli. Il sentiero più avanti sembra schiarirsi.", action: "completeSposineArea" }
+  ],
+
+  cavallo_intro: [
+    { speaker: "ROMY", text: "Ciao. Tu sei il padrone di questo sentiero?" },
+    { speaker: "CAVALLO", text: "Padrone no. Diciamo che lo attraverso con una certa eleganza." },
+    { speaker: "FIORE", text: "Traduzione: si sente molto importante perché ha una criniera." },
+    { speaker: "CAVALLO", text: "Una criniera è una responsabilità poetica." },
+    { speaker: "ROMY", text: "Io sto cercando l'uscita dal bosco." },
+    { speaker: "CAVALLO", text: "Allora devi scegliere che passo dare al coraggio.", choices: [
+      { text: "Un passo caldo, come sole sulla strada.", score: "calore", next: "cavallo_choice_calore" },
+      { text: "Un galoppo leggero, pieno di ritmo.", score: "ritmo", next: "cavallo_choice_ritmo" },
+      { text: "Un passo quieto, senza spaventare l'erba.", score: "quiete", next: "cavallo_choice_quiete" }
+    ] }
+  ],
+
+  cavallo_choice_calore: [
+    { speaker: "ROMY", text: "Scelgo un passo caldo." },
+    { speaker: "CAVALLO", text: "Allora il sentiero saprà ricordare il sole." },
+    { speaker: "SISTEMA", text: "Il Cavallo si sposta con grazia. Più avanti il bosco sembra finire.", action: "completeCavalloArea" }
+  ],
+
+  cavallo_choice_ritmo: [
+    { speaker: "ROMY", text: "Scelgo un galoppo leggero." },
+    { speaker: "CAVALLO", text: "Ottima scelta. Anche le ombre hanno bisogno di tempo." },
+    { speaker: "SISTEMA", text: "Il Cavallo si sposta con grazia. Più avanti il bosco sembra finire.", action: "completeCavalloArea" }
+  ],
+
+  cavallo_choice_quiete: [
+    { speaker: "ROMY", text: "Scelgo un passo quieto." },
+    { speaker: "CAVALLO", text: "Allora arriverai senza ferire il silenzio." },
+    { speaker: "SISTEMA", text: "Il Cavallo si sposta con grazia. Più avanti il bosco sembra finire.", action: "completeCavalloArea" }
   ],
 
   pittore_intro: [
@@ -533,23 +564,20 @@ export const dialogues = {
   ],
 
   final_meadow_intro: [
-    { speaker: "ROMY", text: "Aspetta... il bosco si apre." },
-    { speaker: "ROMY", text: "È un prato di margherite. È bellissimo." },
-    { speaker: "MARGHERITA", text: "Lo è. Non dirlo troppo forte o si monterà la corolla." },
-    { speaker: "ROMY", text: "Sembra calmo. Come se qui anche le foglie parlassero piano." },
-    { speaker: "MARGHERITA", text: "Romy... credo che questo sia il posto giusto." },
-    { speaker: "ROMY", text: "Per cosa?" },
-    { speaker: "MARGHERITA", text: "Per posarmi. Solo un momento. Prometto di non fare la tragica." },
-    { speaker: "SISTEMA", text: "Premi E vicino al prato per posare la Margherita." }
+    { speaker: "ROMY", text: "È bellissimo qui." },
+    { speaker: "FIORE", text: "Lo so. Finalmente un posto con un minimo di gusto botanico." },
+    { speaker: "ROMY", text: "Sembra fatto apposta per te." },
+    { speaker: "FIORE", text: "Infatti… Romy?" },
+    { speaker: "ROMY", text: "Sì?" },
+    { speaker: "FIORE", text: "Mi poseresti qui?" },
+    { speaker: "SISTEMA", text: "Premi E per posare la Margherita." }
   ],
 
   final_daisy_placed: [
-    { speaker: "ROMY", text: "Ecco. Piano piano." },
-    { speaker: "MARGHERITA", text: "Oh. La terra si ricorda di me." },
-    { speaker: "ROMY", text: "Stai bene?" },
-    { speaker: "MARGHERITA", text: "Sì. Forse perfino meglio di bene." },
+    { speaker: "SISTEMA", text: "Hai posato la Margherita nel prato." },
     { speaker: "SISTEMA", text: "Qualcosa fruscia all'improvviso tra i fiori.", action: "startFinalRabbit" },
-    { speaker: "ROMY", text: "Oddio... che bello, un coniglio." },
+    { speaker: "ROMY", text: "Oddio…" },
+    { speaker: "ROMY", text: "Che bello, un coniglio." },
     { speaker: "SISTEMA", text: "Il Coniglio attraversa il prato e scompare oltre la luce.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 1800 }
   ]
 };

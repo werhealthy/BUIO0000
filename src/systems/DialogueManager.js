@@ -361,7 +361,7 @@ export class DialogueManager {
     }
 
     this.clearChoices();
-    this.hintText.setText(this.currentLine.autoAdvance ? 'SPACE/E/TAB salta' : 'SPACE continua · TAB salta');
+    this.hintText.setText('SPACE continua · TAB salta');
     this.scheduleAutoAdvance();
   }
 
@@ -402,7 +402,7 @@ export class DialogueManager {
 
     this.clearChoices();
     this.systemHintText.setPosition(width / 2, y + panelHeight - 16);
-    this.systemHintText.setText(this.currentLine.autoAdvance ? 'SPACE/E/TAB salta' : 'SPACE continua · TAB salta');
+    this.systemHintText.setText('SPACE continua · TAB salta');
     this.scheduleAutoAdvance();
   }
 
@@ -556,6 +556,40 @@ export class DialogueManager {
     }
 
     this.nextLine();
+  }
+
+  skipCurrentDialogueBlock() {
+    if (!this.active || this.choosing || this.scene.isCappellaioEntering) {
+      return;
+    }
+
+    this.clearAutoAdvance();
+
+    const nextChoiceIndex = this.currentDialogue.findIndex((line, index) => index > this.currentIndex && this.hasChoices(line));
+
+    if (nextChoiceIndex !== -1) {
+      for (let index = this.currentIndex; index < nextChoiceIndex; index += 1) {
+        this.runAction(this.currentDialogue[index]?.action);
+      }
+      this.currentIndex = nextChoiceIndex;
+      this.showCurrentLine();
+      return;
+    }
+
+    for (let index = this.currentIndex; index < this.currentDialogue.length; index += 1) {
+      this.runAction(this.currentDialogue[index]?.action);
+      if (!this.active) {
+        return;
+      }
+    }
+
+    const nextDialogue = this.currentDialogue[this.currentDialogue.length - 1]?.next;
+    if (nextDialogue) {
+      this.startDialogue(nextDialogue);
+      return;
+    }
+
+    this.endDialogue();
   }
 
   nextLine() {
@@ -737,10 +771,16 @@ export class DialogueManager {
         this.scene.transitionToArea?.('sposine');
       },
       setPathPittore: () => {
-        GameState.currentPath = 'pittore';
+        GameState.currentPath = 'cavallo';
+      },
+      setPathCavallo: () => {
+        GameState.currentPath = 'cavallo';
       },
       transitionToPittoreArea: () => {
-        this.scene.transitionToArea?.('pittore');
+        this.scene.transitionToArea?.('cavallo');
+      },
+      transitionToCavalloArea: () => {
+        this.scene.transitionToArea?.('cavallo');
       },
       transitionToAreaMadama: () => {
         this.scene.transitionToArea?.('madama');
@@ -749,10 +789,19 @@ export class DialogueManager {
         this.scene.transitionToArea?.('sposine');
       },
       transitionToAreaPittore: () => {
-        this.scene.transitionToArea?.('pittore');
+        this.scene.transitionToArea?.('cavallo');
+      },
+      transitionToAreaCavallo: () => {
+        this.scene.transitionToArea?.('cavallo');
       },
       completeMadamaArea: () => {
         this.scene.completeMadamaArea?.();
+      },
+      completeSposineArea: () => {
+        this.scene.completeSposineArea?.();
+      },
+      completeCavalloArea: () => {
+        this.scene.completeCavalloArea?.();
       },
       startFinalRabbit: () => {
         this.scene.startFinalRabbit?.();
