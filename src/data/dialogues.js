@@ -579,24 +579,23 @@ export const dialogues = {
   ],
 
   final_rabbit_reaction: [
-    { speaker: "ROMY", text: "Oddio…" },
-    { speaker: "ROMY", text: "Che bello quel coniglio…" },
-    { speaker: "ROMY", text: "Mi si stanno chiudendo gli occhi…" },
-    { speaker: "ROMY", text: "Forse non mi sento bene." },
-    { speaker: "ROMY", text: "Non so cosa sta succedendo…" },
-    { speaker: "SISTEMA", text: "Il prato si fa silenzioso. Romy scivola lentamente nel sonno.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 2200 }
+    { speaker: "ROMY", text: "Oddio…", autoAdvance: true, autoAdvanceDelay: 1800 },
+    { speaker: "ROMY", text: "Mi si chiudono gli occhi…", autoAdvance: true, autoAdvanceDelay: 2200 },
+    { speaker: "ROMY", text: "Cosa sta succedendo?", autoAdvance: true, autoAdvanceDelay: 2200 },
+    { speaker: "SISTEMA", text: "Il prato si fa silenzioso. Romy scivola lentamente nel sonno.", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 2400 }
   ],
 
   final_checco: [
     { speaker: "CHECCO", text: "Tutto bene, amore?" },
-    { speaker: "CHECCO", text: "Per un attimo mi è sembrato che ti fossi persa in un altro mondo." },
-    { speaker: "ROMY", text: "Io…" },
-    { speaker: "ROMY", text: "Credo di essere caduta giù per un BUKO." },
-    { speaker: "CHECCO", text: "Un buco?" },
-    { speaker: "ROMY", text: "No. Un BUKO. Con la K." },
-    { speaker: "CHECCO", text: "Allora dev’essere stato serio." },
-    { speaker: "ROMY", text: "C’erano funghi, cartelli, margherite, un coniglio…" },
-    { speaker: "ROMY", text: "E credo di aver lasciato un pezzetto di me in un prato." },
-    { speaker: "CHECCO", text: "Magari era il posto giusto." }
+    { speaker: "ROMY", text: "Dove siamo?" },
+    { speaker: "CHECCO", text: "Come dove siamo? Siamo a [NOME CITTÀ]." },
+    { speaker: "ROMY", text: "Ma che ci facciamo qua?" },
+    { speaker: "CHECCO", text: "Amore, siamo qui per il viaggio del tuo compleanno." },
+    { speaker: "ROMY", text: "Oddio…" },
+    { speaker: "ROMY", text: "Davvero?" },
+    { speaker: "ROMY", text: "Che bello…" },
+    { speaker: "ROMY", text: "Però è strano…" },
+    { speaker: "ROMY", text: "Mi sembra di aver appena sognato." },
+    { speaker: "ROMY", text: "Mi sembrava di cadere giù per un buco.", action: "showFinalWallpaper" }
   ]
 };

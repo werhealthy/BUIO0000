@@ -1,6 +1,13 @@
 import Phaser from 'phaser';
 import backgroundUrl from '../assets/backgrounds/background_01.png?url';
 
+const backgroundAssets = import.meta.glob('../assets/backgrounds/background_menu_final.png', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+const menuFinalBackgroundUrl = backgroundAssets['../assets/backgrounds/background_menu_final.png'];
+
 const TITLE = 'Il Bosco delle Mille Direzioni';
 
 export class MenuScene extends Phaser.Scene {
@@ -9,7 +16,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('menu-background-01', backgroundUrl);
+    this.load.image('menu-background-01', menuFinalBackgroundUrl ?? backgroundUrl);
   }
 
   create() {

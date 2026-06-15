@@ -108,6 +108,7 @@ export class DialogueManager {
     this.choiceRows = [];
     this.systemMode = false;
     this.autoAdvanceEvent = null;
+    this.context = {};
 
     this.createUi();
     this.hideUi();
@@ -291,7 +292,7 @@ export class DialogueManager {
     this.namePlate.strokeRoundedRect(textLeft - 10, this.layout.boxTop + 8, 132, 24, 9);
   }
 
-  startDialogue(dialogueKey) {
+  startDialogue(dialogueKey, context = {}) {
     const dialogue = dialogues[dialogueKey];
 
     if (!dialogue) {
@@ -300,6 +301,7 @@ export class DialogueManager {
     }
 
     this.clearAutoAdvance();
+    this.context = context;
     this.currentDialogue = dialogue;
     this.currentIndex = 0;
     this.active = true;
@@ -351,7 +353,7 @@ export class DialogueManager {
     this.speakerText.setText(speaker);
     this.bodyText.setPosition(textLeft, this.layout.boxTop + 43);
     this.bodyText.setWordWrapWidth(wrapWidth);
-    this.bodyText.setText(this.currentLine.text ?? '');
+    this.bodyText.setText(this.interpolateText(this.currentLine.text ?? ''));
     this.choosing = Array.isArray(this.currentLine.choices) && this.currentLine.choices.length > 0;
     this.choiceIndex = 0;
 
@@ -375,8 +377,8 @@ export class DialogueManager {
     this.systemHintText.setVisible(true);
 
     const { width, height } = this.layout;
-    const panelWidth = Math.round(width * 0.54);
-    const text = this.currentLine.text ?? '';
+    const panelWidth = Math.round(width * 0.62);
+    const text = this.interpolateText(this.currentLine.text ?? '');
     const estimatedLines = Math.max(1, Math.ceil(text.length / 48));
     const panelHeight = this.currentLine.choices
       ? Phaser.Math.Clamp(116 + estimatedLines * 10, 128, 176)
@@ -393,7 +395,7 @@ export class DialogueManager {
     this.systemGraphics.strokeRoundedRect(x + 5, y + 5, panelWidth - 10, panelHeight - 10, 12);
 
     this.systemText.setFontSize(text.length > 105 ? '14px' : '15px');
-    this.systemText.setWordWrapWidth(panelWidth - 74);
+    this.systemText.setWordWrapWidth(panelWidth - 96);
     this.systemText.setPosition(width / 2, y + (this.currentLine.choices ? 34 : panelHeight / 2 - 4));
     this.systemText.setText(text);
     this.choosing = Array.isArray(this.currentLine.choices) && this.currentLine.choices.length > 0;
@@ -429,7 +431,7 @@ export class DialogueManager {
     this.choiceIndex = 0;
 
     const { width, height } = this.layout;
-    const panelWidth = Math.round(width * 0.56);
+    const panelWidth = Math.round(width * 0.66);
     const panelX = Math.round((width - panelWidth) / 2);
     const panelY = Math.round(height * 0.08);
     const questionLength = (this.currentLine.text ?? '').length;
@@ -455,8 +457,8 @@ export class DialogueManager {
     this.choicePromptSpeakerText.setPosition(width / 2, panelY + 22).setText(speakerLabel ?? '');
     this.choicePromptText.setFontSize(questionLength > 120 ? '14px' : '15px');
     this.choicePromptText.setPosition(width / 2, panelY + (speakerLabel ? 72 : 58));
-    this.choicePromptText.setWordWrapWidth(panelWidth - 116);
-    this.choicePromptText.setText(this.currentLine.text ?? '');
+    this.choicePromptText.setWordWrapWidth(panelWidth - 128);
+    this.choicePromptText.setText(this.interpolateText(this.currentLine.text ?? ''));
 
     this.renderChoices();
     const rowHeight = 46;
@@ -557,6 +559,10 @@ export class DialogueManager {
     this.autoAdvanceEvent = null;
   }
 
+  interpolateText(text) {
+    return String(text).replaceAll('[NOME CITTÀ]', this.context.cityName ?? 'Grecia');
+  }
+
   skipOrNextLine() {
     if (this.choosing) {
       return;
@@ -652,6 +658,7 @@ export class DialogueManager {
     this.choosing = false;
     this.choiceQuestionMode = false;
     this.currentDialogue = [];
+    this.context = {};
     this.currentIndex = 0;
     this.currentLine = null;
     this.hideUi();
@@ -676,12 +683,12 @@ export class DialogueManager {
     const promptMode = this.choiceQuestionMode;
     const hasPortrait = this.portraitContainer.visible;
     const left = promptMode
-      ? Math.round(this.layout.width * 0.2)
+      ? Math.round(this.layout.width * 0.17)
       : this.systemMode
         ? Math.round(this.layout.width * 0.17)
         : this.getTextLeft(hasPortrait);
     const rowWidth = promptMode
-      ? Math.round(this.layout.width * 0.6)
+      ? Math.round(this.layout.width * 0.66)
       : this.systemMode
         ? Math.round(this.layout.width * 0.66)
         : this.layout.boxRight - left - this.layout.textRightPadding;
@@ -815,6 +822,9 @@ export class DialogueManager {
       },
       finishFinalFade: () => {
         this.scene.finishFinalFade?.();
+      },
+      showFinalWallpaper: () => {
+        this.scene.showFinalWallpaper?.();
       },
       revealForestIntro: () => {
         this.scene.revealForestIntro?.();
