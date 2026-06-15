@@ -837,9 +837,6 @@ export class DialogueManager {
       showFinalWallpaper: () => {
         this.scene.showFinalWallpaper?.();
       },
-      showFinalCredits: () => {
-        this.scene.showFinalCredits?.();
-      },
       revealForestIntro: () => {
         this.scene.revealForestIntro?.();
       },
