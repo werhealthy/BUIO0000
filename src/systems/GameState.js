@@ -27,7 +27,12 @@ const initialState = {
   finalEndingShown: false,
   daisyAppearCutscenePlayed: false,
   daisyPickCutscenePlayed: false,
-  onofrioIntroCutscenePlayed: false
+  onofrioIntroCutscenePlayed: false,
+  introWakeCutscenePlayed: false,
+  signpostHatterCutscenePlayed: false,
+  madamaIntroCutscenePlayed: false,
+  sposineIntroCutscenePlayed: false,
+  cavalloIntroCutscenePlayed: false
 };
 
 export const GameState = {

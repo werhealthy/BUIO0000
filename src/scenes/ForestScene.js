@@ -105,9 +105,14 @@ const videoAssets = import.meta.glob('../assets/videos/*.mp4', {
   import: 'default'
 });
 const CUTSCENE_VIDEOS = {
+  'video-intro-wake': videoAssets['../assets/videos/cutscene_intro_wake.mp4'],
   'video-daisy-appear': videoAssets['../assets/videos/cutscene_daisy_appear.mp4'],
   'video-daisy-pick': videoAssets['../assets/videos/cutscene_daisy_pick.mp4'],
-  'video-onofrio-intro': videoAssets['../assets/videos/cutscene_onofrio_intro.mp4']
+  'video-onofrio-intro': videoAssets['../assets/videos/cutscene_onofrio_intro.mp4'],
+  'video-signpost-hatter-approach': videoAssets['../assets/videos/cutscene_signpost_hatter_approach.mp4'],
+  'video-madama-intro': videoAssets['../assets/videos/cutscene_madama_intro.mp4'],
+  'video-sposine-intro': videoAssets['../assets/videos/cutscene_sposine_intro.mp4'],
+  'video-cavallo-intro': videoAssets['../assets/videos/cutscene_cavallo_intro.mp4']
 };
 
 const frame = (key, url) => ({ key, url });
@@ -286,6 +291,17 @@ const CAT_FOLLOW_DEADZONE = 24;
 const CAT_FOLLOW_SPEED = 118;
 const HINT_TEXT = 'Premi E per interagire';
 const ATMOSPHERE_ALPHA = 0.08;
+const AMBIENT_PARTICLE_DEPTH = 4;
+const AREA_INTRO_VIDEO_KEYS = {
+  madama: 'video-madama-intro',
+  sposine: 'video-sposine-intro',
+  cavallo: 'video-cavallo-intro'
+};
+const AREA_INTRO_FLAGS = {
+  madama: 'madamaIntroCutscenePlayed',
+  sposine: 'sposineIntroCutscenePlayed',
+  cavallo: 'cavalloIntroCutscenePlayed'
+};
 
 const AREA_SPAWN_X = {
   forest: PLAYER_START_X,
@@ -372,11 +388,14 @@ export class ForestScene extends Phaser.Scene {
     this.finalWallpaperButton = null;
     this.isCutscenePlaying = false;
     this.activeCutscene = null;
+    this.ambientParticles = null;
+    this.ambientParticleTweens = [];
 
     this.createBackground();
     this.createRomy();
     this.createNpcPlaceholders();
     this.createAtmosphereOverlay();
+    this.createAmbientParticlesForArea('forest');
     this.createNarrativeTriggers();
     this.createCamera();
     this.createUi();
@@ -388,6 +407,7 @@ export class ForestScene extends Phaser.Scene {
     this.createCeccoAnimations();
     this.createCappellaio();
     this.createRabbitPlaceholder();
+    this.scale.on('resize', () => this.createAmbientParticlesForArea(GameState.currentArea ?? 'forest'));
     this.createFinalMeadow();
     this.updateNpcVisibility();
     this.startInitialIntro();
@@ -1401,13 +1421,19 @@ export class ForestScene extends Phaser.Scene {
 
     if (interactable.id === 'daisy' && !GameState.daisyPickCutscenePlayed) {
       GameState.daisyPickCutscenePlayed = true;
-      this.playCutsceneVideo('video-daisy-pick', startDialogue);
+      this.playCutsceneVideo('video-daisy-pick', startDialogue, { flagKey: 'daisyPickCutscenePlayed' });
       return;
     }
 
     if (interactable.id === 'onofrio' && !GameState.onofrioIntroCutscenePlayed && !GameState.onofrioCompleted) {
       GameState.onofrioIntroCutscenePlayed = true;
-      this.playCutsceneVideo('video-onofrio-intro', startDialogue);
+      this.playCutsceneVideo('video-onofrio-intro', startDialogue, { flagKey: 'onofrioIntroCutscenePlayed' });
+      return;
+    }
+
+    if (interactable.id === 'sign_directions' && !GameState.signpostHatterCutscenePlayed) {
+      GameState.signpostHatterCutscenePlayed = true;
+      this.playCutsceneVideo('video-signpost-hatter-approach', startDialogue, { flagKey: 'signpostHatterCutscenePlayed' });
       return;
     }
 
@@ -1424,18 +1450,28 @@ export class ForestScene extends Phaser.Scene {
     this.interactHint.setVisible(false);
     this.dialogueManager.hideUi();
     this.prepareRomyWakeIntroPose(true);
-    this.tweens.add({
-      targets: this.BlackTransition,
-      alpha: 0,
-      duration: 1150,
-      ease: 'Sine.easeInOut',
-      onComplete: () => {
-        this.BlackTransition?.setVisible(false);
-        this.setRomyPose('wake_01');
-        this.isTransitioning = false;
-        this.dialogueManager.startDialogue('main_intro');
-      }
-    });
+    const startPlayableIntro = () => {
+      this.tweens.add({
+        targets: this.BlackTransition,
+        alpha: 0,
+        duration: 1150,
+        ease: 'Sine.easeInOut',
+        onComplete: () => {
+          this.BlackTransition?.setVisible(false);
+          this.setRomyPose('wake_01');
+          this.isTransitioning = false;
+          this.dialogueManager.startDialogue('main_intro');
+        }
+      });
+    };
+
+    if (!GameState.introWakeCutscenePlayed) {
+      GameState.introWakeCutscenePlayed = true;
+      this.playCutsceneVideo('video-intro-wake', startPlayableIntro, { flagKey: 'introWakeCutscenePlayed' });
+      return;
+    }
+
+    startPlayableIntro();
   }
 
   prepareRomyWakeIntroPose(makeVisible = false) {
@@ -1544,12 +1580,15 @@ export class ForestScene extends Phaser.Scene {
     }
 
     GameState.daisyAppearCutscenePlayed = true;
-    this.playCutsceneVideo('video-daisy-appear', onComplete);
+    this.playCutsceneVideo('video-daisy-appear', onComplete, { flagKey: 'daisyAppearCutscenePlayed' });
   }
 
-  playCutsceneVideo(videoKey, onComplete) {
+  playCutsceneVideo(videoKey, onComplete, options = {}) {
     if (!videoKey || !this.cache.video.exists(videoKey)) {
       console.warn(`[Cutscene] Video non disponibile: ${videoKey}`);
+      if (options.flagKey) {
+        GameState[options.flagKey] = true;
+      }
       onComplete?.();
       return;
     }
@@ -1565,10 +1604,14 @@ export class ForestScene extends Phaser.Scene {
       this.activeCutscene?.video?.off('error', completeOnce);
       this.scale.off('resize', resizeCover);
       this.activeCutscene?.video?.stop();
+      this.activeCutscene?.video?.setVisible(false);
       this.activeCutscene?.video?.destroy();
       this.activeCutscene = null;
       this.isCutscenePlaying = false;
       this.interactHint?.setVisible(false);
+      if (options.flagKey) {
+        GameState[options.flagKey] = true;
+      }
       onComplete?.();
     };
 
@@ -1585,7 +1628,7 @@ export class ForestScene extends Phaser.Scene {
       const scale = Math.max(width / videoWidth, height / videoHeight);
 
       video.setPosition(width / 2, height / 2);
-      video.setDisplaySize(videoWidth * scale, videoHeight * scale);
+      video.setScale(scale);
     };
 
     this.isCutscenePlaying = true;
@@ -1603,6 +1646,8 @@ export class ForestScene extends Phaser.Scene {
     video.once('error', completeOnce);
     video.once('play', resizeCover);
     video.once('created', resizeCover);
+    video.once('unlocked', resizeCover);
+    video.video?.addEventListener?.('loadedmetadata', resizeCover, { once: true });
     this.scale.on('resize', resizeCover);
     resizeCover();
 
@@ -1628,6 +1673,53 @@ export class ForestScene extends Phaser.Scene {
 
     GameState.catIntroSeen = true;
     this.revealDaisy();
+  }
+
+  destroyAmbientParticles() {
+    this.ambientParticleTweens?.forEach((tween) => tween?.stop?.());
+    this.ambientParticleTweens = [];
+    this.ambientParticles?.destroy(true);
+    this.ambientParticles = null;
+  }
+
+  createAmbientParticlesForArea(areaKey = 'forest') {
+    this.destroyAmbientParticles();
+
+    const configs = {
+      forest: { count: 30, colors: [0x9fd7ff, 0xfff1a8], alpha: [0.16, 0.42], radius: [1.2, 3.2], drift: 42 },
+      madama: { count: 24, colors: [0xffdf8f, 0xffffff], alpha: [0.12, 0.34], radius: [1, 2.8], drift: 30 },
+      sposine: { count: 28, colors: [0xffffff, 0xffc8e8], alpha: [0.12, 0.32], radius: [1, 3], drift: 36 },
+      cavallo: { count: 24, colors: [0x9edcff, 0xdff6ff], alpha: [0.1, 0.28], radius: [1, 2.6], drift: 38 },
+      finale: { count: 34, colors: [0xfff2b0, 0xffffff], alpha: [0.12, 0.36], radius: [1, 3.2], drift: 34 },
+      pittore: { count: 18, colors: [0xffffff, 0xcfe6ff], alpha: [0.08, 0.2], radius: [1, 2.2], drift: 24 },
+      'background-grecia': { count: 14, colors: [0xffffff, 0xdfefff], alpha: [0.06, 0.16], radius: [1, 2.4], drift: 20 },
+      'background-sicilia': { count: 16, colors: [0xffe0a3, 0xffffff], alpha: [0.07, 0.18], radius: [1, 2.4], drift: 20 },
+      'background-bristol': { count: 14, colors: [0xdfe9ff, 0xffffff], alpha: [0.05, 0.14], radius: [1, 2.2], drift: 18 }
+    };
+    const config = configs[areaKey] ?? configs.forest;
+    const width = Math.max(this.worldWidth ?? this.scale.width, this.scale.width);
+    const height = this.scale.height;
+    this.ambientParticles = this.add.container(0, 0).setDepth(AMBIENT_PARTICLE_DEPTH);
+
+    for (let i = 0; i < config.count; i += 1) {
+      const radius = Phaser.Math.FloatBetween(config.radius[0], config.radius[1]);
+      const color = Phaser.Utils.Array.GetRandom(config.colors);
+      const alpha = Phaser.Math.FloatBetween(config.alpha[0], config.alpha[1]);
+      const particle = this.add.circle(Phaser.Math.Between(0, width), Phaser.Math.Between(35, Math.max(40, height - 165)), radius, color, alpha);
+      particle.setScrollFactor(Phaser.Math.FloatBetween(0.18, 0.72));
+      this.ambientParticles.add(particle);
+      this.ambientParticleTweens.push(this.tweens.add({
+        targets: particle,
+        x: particle.x + Phaser.Math.Between(-config.drift, config.drift),
+        y: particle.y + Phaser.Math.Between(-18, 18),
+        alpha: { from: alpha * 0.45, to: alpha },
+        duration: Phaser.Math.Between(2800, 6200),
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        delay: Phaser.Math.Between(0, 1800)
+      }));
+    }
   }
 
   createContactShadow(target, options = {}) {
@@ -1927,6 +2019,7 @@ export class ForestScene extends Phaser.Scene {
       this.worldWidth = Math.max(this.scale.width, this.background.displayWidth);
       this.physics.world.setBounds(0, 0, this.worldWidth, this.scale.height);
       this.cameras.main.setBounds(0, 0, this.worldWidth, this.scale.height);
+      this.createAmbientParticlesForArea(textureKey);
     }
 
     this.finalMeadowContainer?.setVisible(false);
@@ -2100,6 +2193,20 @@ export class ForestScene extends Phaser.Scene {
     this.worldWidth = Math.max(this.scale.width, this.background.displayWidth);
     this.physics.world.setBounds(0, 0, this.worldWidth, this.scale.height);
     this.cameras.main.setBounds(0, 0, this.worldWidth, this.scale.height);
+    this.createAmbientParticlesForArea(area);
+  }
+
+  playAreaIntroCutscene(area, onComplete) {
+    const videoKey = AREA_INTRO_VIDEO_KEYS[area];
+    const flagKey = AREA_INTRO_FLAGS[area];
+
+    if (!videoKey || !flagKey || GameState[flagKey]) {
+      onComplete?.();
+      return;
+    }
+
+    GameState[flagKey] = true;
+    this.playCutsceneVideo(videoKey, onComplete, { flagKey });
   }
 
   transitionToArea(area) {
@@ -2153,7 +2260,9 @@ export class ForestScene extends Phaser.Scene {
           ease: 'Sine.easeInOut',
           onComplete: () => {
             this.BlackTransition?.setVisible(false);
-            this.isTransitioning = false;
+            this.playAreaIntroCutscene(area, () => {
+              this.isTransitioning = false;
+            });
           }
         });
       }
