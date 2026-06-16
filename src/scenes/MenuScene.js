@@ -18,15 +18,19 @@ export class MenuScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
 
-    const background = this.add.image(width / 2, height / 2, 'menu-background-01').setOrigin(0.5);
-    const scale = Math.max(width / background.width, height / background.height);
-    background.setScale(scale);
+    this.background = this.add.image(width / 2, height / 2, 'menu-background-01').setOrigin(0.5);
+    this.fitBackgroundCover();
+    this.createMenuParticles();
 
     this.createButton(width / 2, height * 0.72, 'Inizia', true, () => this.startGame());
 
 
     this.input.keyboard.on('keydown-SPACE', () => this.startGame());
     this.input.keyboard.on('keydown-E', () => this.startGame());
+    this.scale.on('resize', () => {
+      this.fitBackgroundCover();
+      this.createMenuParticles();
+    });
   }
 
   startGame() {
@@ -40,10 +44,48 @@ export class MenuScene extends Phaser.Scene {
     });
   }
 
+  fitBackgroundCover() {
+    if (!this.background) {
+      return;
+    }
+
+    const { width, height } = this.scale;
+    const scale = Math.max(width / this.background.width, height / this.background.height);
+    this.background.setPosition(width / 2, height / 2).setScale(scale);
+  }
+
+  createMenuParticles() {
+    const { width, height } = this.scale;
+    this.menuParticles?.destroy(true);
+    this.menuParticles = this.add.container(0, 0).setDepth(2);
+
+    for (let i = 0; i < 34; i += 1) {
+      const particle = this.add.circle(
+        Phaser.Math.Between(0, width),
+        Phaser.Math.Between(24, height - 24),
+        Phaser.Math.FloatBetween(1.2, 3.4),
+        Phaser.Utils.Array.GetRandom([0xfff1a8, 0x9fd7ff, 0xffffff]),
+        Phaser.Math.FloatBetween(0.12, 0.34)
+      ).setScrollFactor(0);
+      this.menuParticles.add(particle);
+      this.tweens.add({
+        targets: particle,
+        x: particle.x + Phaser.Math.Between(-28, 28),
+        y: particle.y + Phaser.Math.Between(-18, 18),
+        alpha: { from: particle.alpha * 0.45, to: particle.alpha },
+        duration: Phaser.Math.Between(3200, 7200),
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        delay: Phaser.Math.Between(0, 1600)
+      });
+    }
+  }
+
   createButton(x, y, label, enabled, onClick = () => {}) {
     const width = 220;
     const height = 58;
-    const container = this.add.container(x, y);
+    const container = this.add.container(x, y).setDepth(5);
     const fill = enabled ? 0x4b2f24 : 0x1a1e24;
     const stroke = enabled ? 0xffe0a3 : 0x566063;
     const alpha = enabled ? 0.88 : 0.56;
@@ -60,6 +102,19 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     container.add([box, text]);
+
+    if (enabled) {
+      this.tweens.add({
+        targets: container,
+        scaleX: 1.035,
+        scaleY: 1.035,
+        alpha: 0.92,
+        duration: 1650,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
 
     if (!enabled) {
       this.add
