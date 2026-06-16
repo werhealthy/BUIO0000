@@ -24,7 +24,10 @@ const initialState = {
   finalMeadowStarted: false,
   finalDaisyPlaced: false,
   finalRabbitSeen: false,
-  finalEndingShown: false
+  finalEndingShown: false,
+  daisyAppearCutscenePlayed: false,
+  daisyPickCutscenePlayed: false,
+  onofrioIntroCutscenePlayed: false
 };
 
 export const GameState = {

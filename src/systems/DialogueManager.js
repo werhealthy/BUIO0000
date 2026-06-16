@@ -105,6 +105,7 @@ export class DialogueManager {
     this.currentLine = null;
     this.active = false;
     this.choosing = false;
+    this.waitingForAction = false;
     this.choiceQuestionMode = false;
     this.choiceIndex = 0;
     this.choiceRows = [];
@@ -580,7 +581,7 @@ export class DialogueManager {
   }
 
   skipCurrentDialogueBlock() {
-    if (!this.active || this.choosing || this.scene.isCappellaioEntering) {
+    if (!this.active || this.choosing || this.waitingForAction || this.scene.isCappellaioEntering) {
       return;
     }
 
@@ -590,7 +591,10 @@ export class DialogueManager {
 
     if (nextChoiceIndex !== -1) {
       for (let index = this.currentIndex; index < nextChoiceIndex; index += 1) {
-        this.runAction(this.currentDialogue[index]?.action);
+        const result = this.runAction(this.currentDialogue[index]?.action);
+        if (result === 'pending' || !this.active) {
+          return;
+        }
       }
       this.currentIndex = nextChoiceIndex;
       this.showCurrentLine();
@@ -598,8 +602,8 @@ export class DialogueManager {
     }
 
     for (let index = this.currentIndex; index < this.currentDialogue.length; index += 1) {
-      this.runAction(this.currentDialogue[index]?.action);
-      if (!this.active) {
+      const result = this.runAction(this.currentDialogue[index]?.action);
+      if (result === 'pending' || !this.active) {
         return;
       }
     }
@@ -614,14 +618,14 @@ export class DialogueManager {
   }
 
   nextLine() {
-    if (!this.active || this.choosing || this.scene.isCappellaioEntering) {
+    if (!this.active || this.choosing || this.waitingForAction || this.scene.isCappellaioEntering) {
       return;
     }
 
     this.clearAutoAdvance();
-    this.runAction(this.currentLine?.action);
+    const actionResult = this.runAction(this.currentLine?.action);
 
-    if (!this.active) {
+    if (!this.active || actionResult === 'pending') {
       return;
     }
 
@@ -664,6 +668,7 @@ export class DialogueManager {
     this.clearAutoAdvance();
     this.active = false;
     this.choosing = false;
+    this.waitingForAction = false;
     this.choiceQuestionMode = false;
     this.currentDialogue = [];
     this.context = {};
@@ -754,17 +759,22 @@ export class DialogueManager {
 
   runAction(action) {
     if (!action) {
-      return;
+      return undefined;
     }
 
     if (Array.isArray(action)) {
-      action.forEach((singleAction) => this.runAction(singleAction));
-      return;
+      for (const singleAction of action) {
+        const result = this.runAction(singleAction);
+        if (result === 'pending') {
+          return result;
+        }
+      }
+      return undefined;
     }
 
     if (typeof action === 'string' && action.startsWith('set_romy_pose ')) {
       this.scene.setRomyPose?.(action.replace('set_romy_pose ', ''));
-      return;
+      return undefined;
     }
 
     const actions = {
@@ -844,7 +854,25 @@ export class DialogueManager {
         this.scene.startCatEntrance?.();
       },
       revealDaisy: () => {
-        this.scene.revealDaisy?.();
+        if (GameState.daisyAppearCutscenePlayed) {
+          this.scene.revealDaisy?.();
+          return undefined;
+        }
+
+        this.waitingForAction = true;
+        this.scene.playDaisyAppearCutscene?.(() => {
+          this.scene.revealDaisy?.();
+          if (!this.active) {
+            this.waitingForAction = false;
+            return;
+          }
+
+          this.waitingForAction = false;
+          this.currentIndex += 1;
+          this.showUi();
+          this.showCurrentLine();
+        });
+        return 'pending';
       },
       finishMainIntro: () => {
         this.scene.finishMainIntro?.();
@@ -869,7 +897,7 @@ export class DialogueManager {
       }
     };
 
-    actions[action]?.();
+    return actions[action]?.();
   }
 
 
