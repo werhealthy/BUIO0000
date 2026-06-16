@@ -99,6 +99,17 @@ const signpostAssets = import.meta.glob('../assets/objects/signpost/signpost_cro
 });
 const signpostCrossroadUrl = signpostAssets['../assets/objects/signpost/signpost_crossroad.png'];
 
+const videoAssets = import.meta.glob('../assets/videos/*.mp4', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+const CUTSCENE_VIDEOS = {
+  'video-daisy-appear': videoAssets['../assets/videos/cutscene_daisy_appear.mp4'],
+  'video-daisy-pick': videoAssets['../assets/videos/cutscene_daisy_pick.mp4'],
+  'video-onofrio-intro': videoAssets['../assets/videos/cutscene_onofrio_intro.mp4']
+};
+
 const frame = (key, url) => ({ key, url });
 
 const ROMY_IDLE_FRAMES = [
@@ -333,6 +344,15 @@ export class ForestScene extends Phaser.Scene {
       // REAL SIGNPOST ASSET: src/assets/objects/signpost/signpost_crossroad.png
       this.load.image('crossroadSignFinal', signpostCrossroadUrl);
     }
+
+    Object.entries(CUTSCENE_VIDEOS).forEach(([key, url]) => {
+      if (!url) {
+        console.warn(`[Cutscene] Video asset mancante per ${key}`);
+        return;
+      }
+
+      this.load.video(key, url, 'loadeddata', false, false);
+    });
   }
 
   create() {
@@ -350,6 +370,8 @@ export class ForestScene extends Phaser.Scene {
     this.finalSleepSequenceStarted = false;
     this.finalRabbitExited = false;
     this.finalWallpaperButton = null;
+    this.isCutscenePlaying = false;
+    this.activeCutscene = null;
 
     this.createBackground();
     this.createRomy();
@@ -1085,6 +1107,11 @@ export class ForestScene extends Phaser.Scene {
 
     this.input.keyboard.on('keydown-TAB', (event) => {
       event?.preventDefault?.();
+      if (this.isCutscenePlaying) {
+        this.skipCutsceneVideo();
+        return;
+      }
+
       if (this.blackIntroActive) {
         this.advanceBlackIntro();
         return;
@@ -1109,6 +1136,10 @@ export class ForestScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on('keydown-E', () => {
+      if (this.isCutscenePlaying) {
+        return;
+      }
+
       if (this.blackIntroActive) {
         this.advanceBlackIntro();
         return;
@@ -1153,7 +1184,7 @@ export class ForestScene extends Phaser.Scene {
   }
 
   moveRomy() {
-    if (this.isWakingUp || this.dialogueManager?.isActive() || this.isTransitioning || this.finalRabbitSequenceRunning || this.finalCitySceneActive) {
+    if (this.isCutscenePlaying || this.isWakingUp || this.dialogueManager?.isActive() || this.isTransitioning || this.finalRabbitSequenceRunning || this.finalCitySceneActive) {
       this.romy.y = this.getRomyY();
       this.romy.setVelocity(0, 0);
       return;
@@ -1341,7 +1372,7 @@ export class ForestScene extends Phaser.Scene {
   }
 
   getNearestAvailableInteractable() {
-    if (this.dialogueManager?.isActive() || this.isTransitioning || this.finalRabbitSequenceRunning || this.finalCitySceneActive) {
+    if (this.isCutscenePlaying || this.dialogueManager?.isActive() || this.isTransitioning || this.finalRabbitSequenceRunning || this.finalCitySceneActive) {
       return null;
     }
 
@@ -1362,9 +1393,25 @@ export class ForestScene extends Phaser.Scene {
       return;
     }
 
-    interactable.onInteract?.();
-    this.interactHint.setVisible(false);
-    this.dialogueManager.startDialogue(interactable.dialogueKey);
+    const startDialogue = () => {
+      interactable.onInteract?.();
+      this.interactHint.setVisible(false);
+      this.dialogueManager.startDialogue(interactable.dialogueKey);
+    };
+
+    if (interactable.id === 'daisy' && !GameState.daisyPickCutscenePlayed) {
+      GameState.daisyPickCutscenePlayed = true;
+      this.playCutsceneVideo('video-daisy-pick', startDialogue);
+      return;
+    }
+
+    if (interactable.id === 'onofrio' && !GameState.onofrioIntroCutscenePlayed && !GameState.onofrioCompleted) {
+      GameState.onofrioIntroCutscenePlayed = true;
+      this.playCutsceneVideo('video-onofrio-intro', startDialogue);
+      return;
+    }
+
+    startDialogue();
   }
 
   revealForestIntro() {
@@ -1488,6 +1535,90 @@ export class ForestScene extends Phaser.Scene {
   revealDaisy() {
     this.daisyRevealed = true;
     this.updateNpcVisibility();
+  }
+
+  playDaisyAppearCutscene(onComplete) {
+    if (GameState.daisyAppearCutscenePlayed) {
+      onComplete?.();
+      return;
+    }
+
+    GameState.daisyAppearCutscenePlayed = true;
+    this.playCutsceneVideo('video-daisy-appear', onComplete);
+  }
+
+  playCutsceneVideo(videoKey, onComplete) {
+    if (!videoKey || !this.cache.video.exists(videoKey)) {
+      console.warn(`[Cutscene] Video non disponibile: ${videoKey}`);
+      onComplete?.();
+      return;
+    }
+
+    let completed = false;
+    const completeOnce = () => {
+      if (completed) {
+        return;
+      }
+
+      completed = true;
+      this.activeCutscene?.video?.off('complete', completeOnce);
+      this.activeCutscene?.video?.off('error', completeOnce);
+      this.scale.off('resize', resizeCover);
+      this.activeCutscene?.video?.stop();
+      this.activeCutscene?.video?.destroy();
+      this.activeCutscene = null;
+      this.isCutscenePlaying = false;
+      this.interactHint?.setVisible(false);
+      onComplete?.();
+    };
+
+    const resizeCover = () => {
+      const video = this.activeCutscene?.video;
+      if (!video) {
+        return;
+      }
+
+      const { width, height } = this.scale;
+      const media = video.video;
+      const videoWidth = media?.videoWidth || video.width || width;
+      const videoHeight = media?.videoHeight || video.height || height;
+      const scale = Math.max(width / videoWidth, height / videoHeight);
+
+      video.setPosition(width / 2, height / 2);
+      video.setDisplaySize(videoWidth * scale, videoHeight * scale);
+    };
+
+    this.isCutscenePlaying = true;
+    this.stopRomy();
+    this.dialogueManager?.hideUi();
+    this.interactHint?.setVisible(false);
+
+    const video = this.add.video(this.scale.width / 2, this.scale.height / 2, videoKey)
+      .setOrigin(0.5, 0.5)
+      .setScrollFactor(0)
+      .setDepth(5000);
+
+    this.activeCutscene = { video, complete: completeOnce };
+    video.once('complete', completeOnce);
+    video.once('error', completeOnce);
+    video.once('play', resizeCover);
+    video.once('created', resizeCover);
+    this.scale.on('resize', resizeCover);
+    resizeCover();
+
+    try {
+      video.play(false);
+    } catch (error) {
+      console.warn(`[Cutscene] Impossibile riprodurre ${videoKey}`, error);
+      completeOnce();
+      return;
+    }
+
+    this.time.delayedCall(100, resizeCover);
+  }
+
+  skipCutsceneVideo() {
+    this.activeCutscene?.complete?.();
   }
 
   finishMainIntro() {
