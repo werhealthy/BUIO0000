@@ -528,34 +528,53 @@ export const dialogues = {
   ],
 
   cavallo_intro: [
-    { speaker: "ROMY", text: "Ciao. Tu sei il padrone di questo sentiero?" },
-    { speaker: "CAVALLO", text: "Padrone no. Diciamo che lo attraverso con una certa eleganza." },
-    { speaker: "FIORE", text: "Traduzione: si sente molto importante perché ha una criniera." },
-    { speaker: "CAVALLO", text: "Una criniera è una responsabilità poetica." },
-    { speaker: "ROMY", text: "Io sto cercando l'uscita dal bosco." },
-    { speaker: "CAVALLO", text: "Allora dimmi con quale passo vuoi accompagnare il tuo coraggio.", choices: [
-      { text: "Un passo caldo, come sole sulla strada.", score: "calore", next: "cavallo_choice_calore" },
-      { text: "Un galoppo leggero, pieno di ritmo.", score: "ritmo", next: "cavallo_choice_ritmo" },
-      { text: "Un passo quieto, senza spaventare l'erba.", score: "quiete", next: "cavallo_choice_quiete" }
+    { speaker: "ROMY", text: "Questo sentiero ha un cavalletto." },
+    { speaker: "FIORE", text: "Allora non siamo più in pericolo. Siamo in un monologo." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice di prepararti emotivamente." },
+    { speaker: "CAVALLO", text: "Fermati un istante." },
+    { speaker: "ROMY", text: "Stai dipingendo?" },
+    { speaker: "CAVALLO", text: "Ci sto provando. Ma mi manca il blu." },
+    { speaker: "ROMY", text: "Il blu?" },
+    { speaker: "CAVALLO", text: "Non il colore. Quello ce l’ho." },
+    { speaker: "CAVALLO", text: "Mi manca il modo di guardarlo." },
+    { speaker: "ROMY", text: "Non sono sicura di saperlo spiegare." },
+    { speaker: "CAVALLO", text: "Allora sei perfetta." },
+    { speaker: "FIORE", text: "Nel bosco l’insicurezza è spesso un pennello con un nome elegante." },
+    { speaker: "CAVALLO", text: "Il blu non entra nelle risposte piccole, ma a volte entra in una voce gentile." },
+    { speaker: "CAVALLO", text: "Dimmi, Romy: come descriveresti il blu?", choices: [
+      { text: "Come una cosa calma, che resta anche quando chiudi gli occhi.", score: "quiete", next: "cavallo_choice_quiete" },
+      { text: "Come una porta fredda, ma non triste.", score: "calore", next: "cavallo_choice_calore" },
+      { text: "Come il silenzio prima di capire dove andare.", score: "ritmo", next: "cavallo_choice_ritmo" }
     ] }
   ],
 
   cavallo_choice_calore: [
-    { speaker: "ROMY", text: "Scelgo un passo caldo." },
-    { speaker: "CAVALLO", text: "Allora il sentiero saprà ricordare il sole." },
-    { speaker: "SISTEMA", text: "Il Cavallo si sposta con grazia. Più avanti il bosco sembra finire.", action: "completeCavalloArea" }
+    { speaker: "ROMY", text: "Come una porta fredda, ma non triste." },
+    { speaker: "CAVALLO", text: "Sì. Un blu che si apre senza spaventare. Un blu con una maniglia di luce." },
+    { speaker: "ROMY", text: "Non pensavo di saperlo dire." },
+    { speaker: "CAVALLO", text: "Le cose viste bene aspettano solo una frase abbastanza morbida." },
+    { speaker: "FIORE", text: "Questa frase ha appena chiesto una cornice." },
+    { speaker: "SISTEMA", text: "Il Cavallo-pittore si sposta con grazia. Più avanti il bosco sembra finire.", action: "completeCavalloArea" }
   ],
 
   cavallo_choice_ritmo: [
-    { speaker: "ROMY", text: "Scelgo un galoppo leggero." },
-    { speaker: "CAVALLO", text: "Ottima scelta. Anche le ombre hanno bisogno di tempo." },
-    { speaker: "SISTEMA", text: "Il Cavallo si sposta con grazia. Più avanti il bosco sembra finire.", action: "completeCavalloArea" }
+    { speaker: "ROMY", text: "Come il silenzio prima di capire dove andare." },
+    { speaker: "CAVALLO", text: "Sì. Un blu sospeso, con il passo già pronto ma ancora invisibile." },
+    { speaker: "ROMY", text: "È strano. Mi sembra quasi di sentirlo." },
+    { speaker: "CAVALLO", text: "Allora il blu ti aveva già parlato." },
+    { speaker: "GATTO", text: "Miao." },
+    { speaker: "FIORE", text: "Il gatto dice che preferisce il silenzio, soprattutto quando gli altri lo capiscono." },
+    { speaker: "SISTEMA", text: "Il Cavallo-pittore si sposta con grazia. Più avanti il bosco sembra finire.", action: "completeCavalloArea" }
   ],
 
   cavallo_choice_quiete: [
-    { speaker: "ROMY", text: "Scelgo un passo quieto." },
-    { speaker: "CAVALLO", text: "Allora arriverai senza ferire il silenzio." },
-    { speaker: "SISTEMA", text: "Il Cavallo si sposta con grazia. Più avanti il bosco sembra finire.", action: "completeCavalloArea" }
+    { speaker: "ROMY", text: "Come una cosa calma, che resta anche quando chiudi gli occhi." },
+    { speaker: "CAVALLO", text: "Sì. Un blu che non pretende. Un blu che resta vicino senza fare rumore." },
+    { speaker: "ROMY", text: "Questo mi piace." },
+    { speaker: "CAVALLO", text: "Allora tienilo. I colori migliori non chiedono permesso." },
+    { speaker: "FIORE", text: "Finalmente un furto cromatico educato." },
+    { speaker: "SISTEMA", text: "Il Cavallo-pittore si sposta con grazia. Più avanti il bosco sembra finire.", action: "completeCavalloArea" }
   ],
 
   pittore_intro: [
@@ -579,10 +598,12 @@ export const dialogues = {
   ],
 
   final_rabbit_reaction: [
-    { speaker: "ROMY", text: "Oddio…", autoAdvance: true, autoAdvanceDelay: 1800 },
-    { speaker: "ROMY", text: "Mi sento poco bene…", autoAdvance: true, autoAdvanceDelay: 2100 },
-    { speaker: "ROMY", text: "Mi si chiudono gli occhi…", autoAdvance: true, autoAdvanceDelay: 2100 },
-    { speaker: "ROMY", text: "Cosa sta succedendo?", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 1900 }
+    { speaker: "ROMY", text: "Oddio…", autoAdvance: true, autoAdvanceDelay: 1500 },
+    { speaker: "ROMY", text: "Un coniglio bianco.", autoAdvance: true, autoAdvanceDelay: 1700 },
+    { speaker: "ROMY", text: "Che bello…", autoAdvance: true, autoAdvanceDelay: 1700 },
+    { speaker: "ROMY", text: "Mi è venuto sonno tutto insieme…", autoAdvance: true, autoAdvanceDelay: 2100 },
+    { speaker: "ROMY", text: "Forse devo solo distendermi un attimo…", autoAdvance: true, autoAdvanceDelay: 2300 },
+    { speaker: "ROMY", text: "Sì… solo un attimo…", action: "finishFinalFade", autoAdvance: true, autoAdvanceDelay: 1800 }
   ],
 
   final_cecco: [
@@ -594,7 +615,7 @@ export const dialogues = {
     { speaker: "ROMY", text: "Oddio…" },
     { speaker: "ROMY", text: "Davvero?" },
     { speaker: "ROMY", text: "Che bello…" },
-    { speaker: "ROMY", text: "Però è strano…" },
+    { speaker: "ROMY", text: "È strano però…" },
     { speaker: "ROMY", text: "Mi sembra di aver appena sognato." },
     { speaker: "ROMY", text: "Mi sembrava di cadere giù per un buco.", action: "showFinalWallpaper" }
   ]
