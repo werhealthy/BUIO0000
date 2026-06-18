@@ -255,6 +255,7 @@ const CAPPELLAIO_IDLE_FRAME_RATE = 3;
 const CAPPELLAIO_WALK_FRAME_RATE = 7;
 const CAPPELLAIO_DISPLAY_HEIGHT = 210;
 const ROAD_Y = (canvasHeight) => canvasHeight - 118;
+const FINAL_CITY_GROUND_Y = (canvasHeight) => canvasHeight - 52;
 const ROMY_DISPLAY_HEIGHT = 142;
 const CAT_DISPLAY_HEIGHT = 82;
 const DAISY_DISPLAY_HEIGHT = 56;
@@ -441,15 +442,15 @@ export class ForestScene extends Phaser.Scene {
   }
 
   createRomy() {
-    this.romy = this.physics.add.sprite(PLAYER_START_X, this.getRomyY(), 'romy-wake-01');
+    this.romy = this.physics.add.sprite(PLAYER_START_X, this.getRomyY(), 'romy-wake-04');
     this.romy.setName('Romy');
     this.romy.setDepth(20);
     this.romy.setOrigin(0.5, 1);
     this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
     this.romy.setCollideWorldBounds(true);
-    // INTRO WAKE INITIAL POSE: Romy starts hidden on romy_wake_01 so no idle frame can flash before wake.
+    // INTRO WAKE INITIAL POSE: Romy starts hidden on romy_wake_04, the lying frame, so no standing frame can flash before wake.
     this.romy.anims.stop();
-    this.romy.setTexture('romy-wake-01');
+    this.romy.setTexture('romy-wake-04');
     this.romy.setVisible(false);
 
     // Corpo fisico compatto: il movimento resta solo orizzontale e la base resta su ROAD_Y.
@@ -1480,9 +1481,10 @@ export class ForestScene extends Phaser.Scene {
     }
 
     // INTRO WAKE INITIAL POSE: this is the only intro setup path before the forest is revealed.
+    // The source wake sheet is numbered standing-to-lying, so wake_01 deliberately starts from romy_wake_04.
     this.isWakingUp = true;
     this.romy.anims.stop();
-    this.romy.setTexture('romy-wake-01');
+    this.romy.setTexture('romy-wake-04');
     this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
     this.romy.setPosition(this.romy.x || PLAYER_START_X, this.getRomyY());
     this.romy.setVelocity(0, 0);
@@ -1495,10 +1497,10 @@ export class ForestScene extends Phaser.Scene {
     }
 
     const poseTextures = {
-      wake_01: 'romy-wake-01',
-      wake_02: 'romy-wake-02',
-      wake_03: 'romy-wake-03',
-      wake_04: 'romy-wake-04'
+      wake_01: 'romy-wake-04',
+      wake_02: 'romy-wake-03',
+      wake_03: 'romy-wake-02',
+      wake_04: 'romy-wake-01'
     };
 
     this.romy.y = this.getRomyY();
@@ -1947,7 +1949,7 @@ export class ForestScene extends Phaser.Scene {
 
     this.finalSleepSequenceStarted = true;
     this.stopRomy();
-    const sleepFrames = ['romy-wake-04', 'romy-wake-03', 'romy-wake-02', 'romy-wake-01'];
+    const sleepFrames = ['romy-wake-01', 'romy-wake-02', 'romy-wake-03', 'romy-wake-04'];
     this.romy.anims.stop();
     sleepFrames.forEach((texture, index) => {
       this.time.delayedCall(index * FINAL_SLEEP_FRAME_DELAY + 80, () => {
@@ -2027,10 +2029,11 @@ export class ForestScene extends Phaser.Scene {
     this.interactables?.forEach((interactable) => interactable.container?.setVisible(false));
     this.finalCitySceneActive = true;
     this.showFinalBackgroundPlaceholder(!this.textures.exists(textureKey));
-    this.romy.setVisible(true).setAlpha(1).setAngle(0).setPosition(Math.round(this.scale.width * 0.44), this.getRomyY());
+    const finalSceneGroundY = FINAL_CITY_GROUND_Y(this.scale.height);
+    this.romy.setVisible(true).setAlpha(1).setAngle(0).setPosition(Math.round(this.scale.width * 0.44), finalSceneGroundY);
     this.playRomyIdleAnimation();
     this.createCheccoPlaceholder();
-    this.checcoContainer?.setPosition(Math.round(this.scale.width * 0.57), this.getRomyY()).setVisible(true);
+    this.checcoContainer?.setPosition(Math.round(this.scale.width * 0.57), finalSceneGroundY).setVisible(true);
     this.cameras.main.stopFollow();
     this.cameras.main.scrollX = 0;
     this.BlackTransition?.setVisible(true).setAlpha(1);
