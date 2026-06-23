@@ -3,11 +3,14 @@ import { MenuScene } from '../scenes/MenuScene.js';
 import { GameState } from './GameState.js';
 
 const MUSIC_FADE_DURATION = 1650;
-const MENU_MUSIC_VOLUME = 0.36;
-const GAME_MUSIC_VOLUME = 0.42;
+const MENU_MUSIC_VOLUME = 0.24;
+const GAME_MUSIC_VOLUME = 0.28;
 const CUTSCENE_COVER_DEPTH = 4999;
 
 const BASE_PLAY_CUTSCENE_VIDEO = ForestScene.prototype.playCutsceneVideo;
+
+let activeMusicKey = null;
+let activeMusicVolume = GAME_MUSIC_VOLUME;
 
 const MUSIC_TRACKS = {
   menu: { key: 'title-screen', volume: MENU_MUSIC_VOLUME },
@@ -39,9 +42,7 @@ const FINAL_BACKGROUND_TO_TRACK = {
 const MUSIC_KEYS = new Set(Object.values(MUSIC_TRACKS).map((track) => track.key));
 
 const getSoundList = (scene) => scene?.sound?.sounds ?? [];
-
-const getMusicSounds = (scene) => getSoundList(scene)
-  .filter((sound) => sound && MUSIC_KEYS.has(sound.key));
+const getMusicSounds = (scene) => getSoundList(scene).filter((sound) => sound && MUSIC_KEYS.has(sound.key));
 
 const unlockAudio = (scene) => {
   try {
@@ -60,8 +61,7 @@ const ensureTargetSound = (scene, track) => {
     return null;
   }
 
-  const existing = getMusicSounds(scene)
-    .find((sound) => sound.key === track.key && (sound.isPlaying || sound.isPaused));
+  const existing = getMusicSounds(scene).find((sound) => sound.key === track.key && (sound.isPlaying || sound.isPaused));
   if (existing) {
     return existing;
   }
@@ -109,6 +109,9 @@ const enforceMusicCrossfade = (scene, trackId, options = {}) => {
   const targetVolume = options.volume ?? track.volume;
   const targetSound = ensureTargetSound(scene, track);
 
+  activeMusicKey = track.key;
+  activeMusicVolume = targetVolume;
+
   getMusicSounds(scene).forEach((sound) => {
     if (sound === targetSound || sound.key === track.key) {
       if (sound.volume <= 0.01) {
@@ -124,6 +127,33 @@ const enforceMusicCrossfade = (scene, trackId, options = {}) => {
         sound.destroy?.();
       });
     }
+  });
+};
+
+const keepActiveMusicAtSceneVolume = (scene) => {
+  if (!activeMusicKey) {
+    return;
+  }
+
+  getMusicSounds(scene).forEach((sound) => {
+    if (sound.key !== activeMusicKey || !sound.isPlaying) {
+      return;
+    }
+
+    if (Math.abs((sound.volume ?? 0) - activeMusicVolume) > 0.02) {
+      scene.tweens?.killTweensOf(sound);
+      sound.setVolume?.(activeMusicVolume);
+    }
+  });
+};
+
+const guardMusicVolumeDuringVideo = (scene, duration = 2400) => {
+  keepActiveMusicAtSceneVolume(scene);
+  const repeats = Math.ceil(duration / 120);
+  scene.time?.addEvent({
+    delay: 120,
+    repeat: repeats,
+    callback: () => keepActiveMusicAtSceneVolume(scene)
   });
 };
 
@@ -145,7 +175,26 @@ const destroyCutsceneCover = (scene) => {
 
 const trackForArea = (area) => AREA_TO_TRACK[area] ?? AREA_TO_TRACK.forest;
 
+const installVideoMusicWrapper = () => {
+  if (ForestScene.prototype.__videoMusicWrapperInstalled) {
+    return;
+  }
+
+  ForestScene.prototype.__videoMusicWrapperInstalled = true;
+  ForestScene.prototype.playCutsceneVideo = function patchedVideoMusicWrapper(videoKey, onComplete, options = {}) {
+    createCutsceneCover(this);
+    guardMusicVolumeDuringVideo(this, 3600);
+    return BASE_PLAY_CUTSCENE_VIDEO.call(this, videoKey, () => {
+      guardMusicVolumeDuringVideo(this, 600);
+      destroyCutsceneCover(this);
+      onComplete?.();
+    }, options);
+  };
+};
+
 export const installMusicFadePatch = () => {
+  installVideoMusicWrapper();
+
   if (ForestScene.prototype.__musicFadePatchInstalled) {
     return;
   }
@@ -153,6 +202,7 @@ export const installMusicFadePatch = () => {
 
   const originalMenuCreate = MenuScene.prototype.create;
   MenuScene.prototype.create = function patchedMusicMenuCreate(...args) {
+    installVideoMusicWrapper();
     const result = originalMenuCreate.apply(this, args);
     this.time.delayedCall(80, () => enforceMusicCrossfade(this, 'menu', { duration: 1200, volume: MENU_MUSIC_VOLUME }));
     return result;
@@ -160,6 +210,7 @@ export const installMusicFadePatch = () => {
 
   const originalForestCreate = ForestScene.prototype.create;
   ForestScene.prototype.create = function patchedMusicForestCreate(...args) {
+    installVideoMusicWrapper();
     const result = originalForestCreate.apply(this, args);
     this.time.delayedCall(90, () => {
       enforceMusicCrossfade(this, trackForArea(GameState.currentArea ?? 'forest'), { duration: MUSIC_FADE_DURATION });
@@ -169,17 +220,10 @@ export const installMusicFadePatch = () => {
 
   const originalTransitionToArea = ForestScene.prototype.transitionToArea;
   ForestScene.prototype.transitionToArea = function patchedMusicTransitionToArea(area, ...args) {
+    installVideoMusicWrapper();
     const result = originalTransitionToArea.call(this, area, ...args);
     this.time.delayedCall(40, () => enforceMusicCrossfade(this, trackForArea(area), { duration: MUSIC_FADE_DURATION }));
     return result;
-  };
-
-  ForestScene.prototype.playCutsceneVideo = function patchedMusicCutsceneVideo(videoKey, onComplete, options = {}) {
-    createCutsceneCover(this);
-    return BASE_PLAY_CUTSCENE_VIDEO.call(this, videoKey, () => {
-      destroyCutsceneCover(this);
-      onComplete?.();
-    }, options);
   };
 
   const originalShowFinalEndingScene = ForestScene.prototype.showFinalEndingScene;
@@ -201,3 +245,5 @@ export const installMusicFadePatch = () => {
 };
 
 setTimeout(installMusicFadePatch, 0);
+setTimeout(installVideoMusicWrapper, 250);
+setTimeout(installVideoMusicWrapper, 1000);
