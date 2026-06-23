@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { playSfx } from '../systems/SfxPatch.js';
+import { playSfx, unlockSfxAudio } from '../systems/SfxPatch.js';
 import '../systems/AmbientFxPatch.js';
+import '../systems/MusicFadePatch.js';
 
 const backgroundAssets = import.meta.glob('../assets/backgrounds/background_menu_final.png', {
   eager: true,
@@ -58,6 +59,8 @@ export class MenuScene extends Phaser.Scene {
         });
       }
     }
+
+    unlockSfxAudio(this);
   }
 
   startGame(source = 'keyboard') {
@@ -171,6 +174,7 @@ export class MenuScene extends Phaser.Scene {
       text.setColor('#fff5cf');
     });
     box.on('pointerdown', () => {
+      this.unlockAudioOnUserGesture();
       playSfx(this, label === 'Inizia' ? 'start' : 'ui-click');
       onClick();
     });
