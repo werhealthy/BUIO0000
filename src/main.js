@@ -13,6 +13,8 @@ const PLAYER_START_X = 130;
 const MUSIC_VOLUME = 0.42;
 const MENU_MUSIC_VOLUME = 0.36;
 const MUSIC_FADE_DURATION = 850;
+const CUTSCENE_COVER_DEPTH = 4999;
+const ROMY_INTRO_LYING_TEXTURE = 'romy-wake-01';
 const SOUND_UNLOCKED_EVENT = Phaser.Sound?.Events?.UNLOCKED ?? 'unlocked';
 
 const SPEAKER_TO_EXISTING_TEXTURE = {
@@ -344,8 +346,9 @@ const originalCreateRomy = ForestScene.prototype.createRomy;
 ForestScene.prototype.createRomy = function patchedCreateRomy(...args) {
   originalCreateRomy.apply(this, args);
   this.romy?.anims?.stop();
-  this.romy?.setTexture?.('romy-wake-01');
+  this.romy?.setTexture?.(ROMY_INTRO_LYING_TEXTURE);
   if (this.romy) {
+    this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
     this.romy.setVisible(false);
   }
 };
@@ -357,7 +360,7 @@ ForestScene.prototype.prepareRomyWakeIntroPose = function patchedPrepareRomyWake
 
   this.isWakingUp = true;
   this.romy.anims.stop();
-  this.romy.setTexture('romy-wake-01');
+  this.romy.setTexture(ROMY_INTRO_LYING_TEXTURE);
   this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
   this.romy.setPosition(this.romy.x || PLAYER_START_X, this.getRomyY());
   this.romy.setVelocity(0, 0);
@@ -394,6 +397,49 @@ ForestScene.prototype.setRomyPose = function patchedSetRomyPose(pose) {
   this.romy.anims.stop();
   this.romy.setTexture(texture);
   this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
+};
+
+const originalStopRomy = ForestScene.prototype.stopRomy;
+ForestScene.prototype.stopRomy = function patchedStopRomy(...args) {
+  if (this.isWakingUp && this.romy) {
+    const currentWakeTexture = this.romy.texture?.key?.startsWith('romy-wake-')
+      ? this.romy.texture.key
+      : ROMY_INTRO_LYING_TEXTURE;
+    this.romy.y = this.getRomyY();
+    this.romy.setVelocity(0, 0);
+    this.romy.anims.stop();
+    this.romy.setTexture(currentWakeTexture);
+    this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
+    return;
+  }
+
+  return originalStopRomy.apply(this, args);
+};
+
+const createCutsceneCover = (scene) => {
+  scene.cutsceneCover?.destroy?.();
+  const cover = scene.add
+    .rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 1)
+    .setOrigin(0, 0)
+    .setScrollFactor(0)
+    .setDepth(CUTSCENE_COVER_DEPTH)
+    .setVisible(true);
+  scene.cutsceneCover = cover;
+  return cover;
+};
+
+const destroyCutsceneCover = (scene) => {
+  scene.cutsceneCover?.destroy?.();
+  scene.cutsceneCover = null;
+};
+
+const originalPlayCutsceneVideo = ForestScene.prototype.playCutsceneVideo;
+ForestScene.prototype.playCutsceneVideo = function patchedPlayCutsceneVideo(videoKey, onComplete, options = {}) {
+  createCutsceneCover(this);
+  return originalPlayCutsceneVideo.call(this, videoKey, () => {
+    destroyCutsceneCover(this);
+    onComplete?.();
+  }, options);
 };
 
 ForestScene.prototype.playRomySleepSequence = function patchedPlayRomySleepSequence() {
