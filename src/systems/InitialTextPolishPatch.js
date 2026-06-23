@@ -1,4 +1,5 @@
 import './PostRuntimeFixPatch.js';
+import './MovementAudioStabilityPatch.js';
 import { ForestScene } from '../scenes/ForestScene.js';
 
 const TYPING_DELAY = 22;
