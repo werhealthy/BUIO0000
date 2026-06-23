@@ -1,3 +1,4 @@
+import './SafeSoundVolumePatch.js';
 import { ForestScene } from '../scenes/ForestScene.js';
 import { DialogueManager } from './DialogueManager.js';
 
@@ -259,23 +260,7 @@ export const installProceduralSfxPatch = () => {
       }
       return sourceDialogueConfirmChoice.apply(this, args);
     };
-
-    const sourceSkipCurrentDialogueBlock = DialogueManager.prototype.skipCurrentDialogueBlock;
-    DialogueManager.prototype.skipCurrentDialogueBlock = function patchedSfxSkipBlock(...args) {
-      if (this.active && !this.choosing) {
-        playSfx(this.scene, 'ui-click');
-      }
-      return sourceSkipCurrentDialogueBlock.apply(this, args);
-    };
-
-    const sourceEndDialogue = DialogueManager.prototype.endDialogue;
-    DialogueManager.prototype.endDialogue = function patchedSfxEndDialogue(...args) {
-      if (this.active) {
-        playSfx(this.scene, 'dialogue-close');
-      }
-      return sourceEndDialogue.apply(this, args);
-    };
   }
 };
 
-setTimeout(installProceduralSfxPatch, 0);
+installProceduralSfxPatch();
