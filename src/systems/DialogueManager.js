@@ -13,41 +13,75 @@ const PORTRAIT_CENTER_Y = 56;
 const PORTRAIT_INNER_PADDING = 10;
 const PORTRAIT_CONTENT_MAX_WIDTH = PORTRAIT_FRAME_RADIUS * 2 - PORTRAIT_INNER_PADDING * 2;
 const PORTRAIT_CONTENT_MAX_HEIGHT = PORTRAIT_FRAME_RADIUS * 2 - PORTRAIT_INNER_PADDING * 2;
+const PORTRAIT_FALLBACK_TEXTURE_KEY = '__dialogue_portrait_fallback';
 
-const PORTRAITS = {
-  romy: { texture: 'romy-idle-01', daisyTexture: 'romy-daisy-idle-01', flipX: false, offsetY: 0 },
-  cat: { texture: 'cat-idle-01', flipX: true, offsetY: 0 },
-  daisy: { texture: 'daisy-idle-01', flipX: false, offsetY: 0 },
-  onofrio: { texture: 'onofrio-idle-01', fallbackTextures: ['onofrio-idle-02', 'onofrio-idle-03'], flipX: false, offsetY: 0 },
-  cappellaio: { texture: 'cappellaio_idle_01', colourTexture: 'cappellaio_idle_colour_01', flipX: false, offsetY: 0 },
-  madama: { texture: 'madama-idle-01', flipX: false, offsetY: 0 },
-  spose: { texture: 'spose-idle-01', fallbackTextures: ['spose-idle-02', 'spose-idle-03', 'spose-idle-04'], flipX: false, offsetY: 0 },
-  cavallo: { texture: 'cavallo-idle-01', fallbackTextures: ['cavallo-idle-02', 'cavallo-idle-03'], flipX: false, offsetY: 0 },
-  cecco: { texture: 'cecco-idle-01', fallbackTextures: ['cecco-idle-02', 'cecco-idle-03', 'cecco-idle-04'], flipX: false, offsetY: 0 }
-};
+export const PORTRAIT_ASSETS = [
+  { id: 'romy', key: 'portrait-romy', fileName: 'portrait_romy.png', path: 'src/assets/portraits/portrait_romy.png' },
+  { id: 'cat', key: 'portrait-cat', fileName: 'portrait_cat.png', path: 'src/assets/portraits/portrait_cat.png' },
+  { id: 'daisy', key: 'portrait-daisy', fileName: 'portrait_daisy.png', path: 'src/assets/portraits/portrait_daisy.png' },
+  { id: 'onofrio', key: 'portrait-onofrio', fileName: 'portrait_onofrio.png', path: 'src/assets/portraits/portrait_onofrio.png' },
+  { id: 'cappellaio', key: 'portrait-cappellaio', fileName: 'portrait_cappellaio.png', path: 'src/assets/portraits/portrait_cappellaio.png' },
+  { id: 'madama', key: 'portrait-madama', fileName: 'portrait_madama.png', path: 'src/assets/portraits/portrait_madama.png' },
+  { id: 'sposine', key: 'portrait-sposine', fileName: 'portrait_sposine.png', path: 'src/assets/portraits/portrait_sposine.png' },
+  { id: 'cavallo', key: 'portrait-cavallo', fileName: 'portrait_cavallo.png', path: 'src/assets/portraits/portrait_cavallo.png' },
+  { id: 'cecco', key: 'portrait-cecco', fileName: 'portrait_cecco.png', path: 'src/assets/portraits/portrait_cecco.png' }
+];
+
+const PORTRAIT_ASSET_MODULES = import.meta.glob('../assets/portraits/*.{png,PNG}', {
+  eager: true,
+  import: 'default',
+  query: '?url'
+});
+
+const resolvePortraitUrl = (fileName) => (
+  PORTRAIT_ASSET_MODULES[`../assets/portraits/${fileName}`]
+  ?? PORTRAIT_ASSET_MODULES[`../assets/portraits/${fileName.replace('.png', '.PNG')}`]
+  ?? null
+);
+
+const PORTRAITS = Object.fromEntries(
+  PORTRAIT_ASSETS.map((asset) => [
+    asset.id,
+    {
+      ...asset,
+      url: resolvePortraitUrl(asset.fileName),
+      flipX: false,
+      offsetX: 0,
+      offsetY: 0
+    }
+  ])
+);
 
 const SPEAKER_ALIASES = {
   romy: 'romy',
   protagonista: 'romy',
   gatto: 'cat',
-  cat: 'cat',
   micio: 'cat',
+  cat: 'cat',
   fiore: 'daisy',
   daisy: 'daisy',
   margherita: 'daisy',
   onofrio: 'onofrio',
   cappellaio: 'cappellaio',
+  'cappellaio matto': 'cappellaio',
   'cappellaio croccante': 'cappellaio',
+  hatter: 'cappellaio',
   madama: 'madama',
   'madama caratura': 'madama',
-  spose: 'spose',
-  sposine: 'spose',
-  'sposina uno': 'spose',
-  'sposina due': 'spose',
+  sposine: 'sposine',
+  spose: 'sposine',
+  'sposina uno': 'sposine',
+  'sposina due': 'sposine',
   cavallo: 'cavallo',
+  pittore: 'cavallo',
+  'cavallo pittore': 'cavallo',
   checco: 'cecco',
   cecco: 'cecco',
-  sistema: null
+  sistema: null,
+  system: null,
+  narratore: null,
+  narrator: null,
+  cartello: null
 };
 
 const getAutoAdvanceDelay = (line = {}) => {
@@ -63,38 +97,36 @@ const getAutoAdvanceDelay = (line = {}) => {
   return Phaser.Math.Clamp(textLength < 95 ? 1600 : 2400, 1200, 2800);
 };
 
-const normalizeSpeaker = (speaker = '') => String(speaker).trim().toLowerCase();
+export const normalizeSpeakerName = (speaker = '') => String(speaker ?? '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[’'`]/g, '')
+  .replace(/[_-]+/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .toLowerCase();
 
-const getPortraitKeyForSpeaker = (speaker = '') => {
-  const normalizedSpeaker = normalizeSpeaker(speaker);
-  const portraitKey = Object.prototype.hasOwnProperty.call(SPEAKER_ALIASES, normalizedSpeaker)
+const getPortraitIdForSpeaker = (speaker = '') => {
+  const normalizedSpeaker = normalizeSpeakerName(speaker);
+  return Object.prototype.hasOwnProperty.call(SPEAKER_ALIASES, normalizedSpeaker)
     ? SPEAKER_ALIASES[normalizedSpeaker]
     : null;
-  const portrait = PORTRAITS[portraitKey];
-  let textureKey = portrait?.texture ?? null;
+};
 
-  if (portraitKey === 'romy' && GameState.hasDaisy) {
-    textureKey = portrait.daisyTexture ?? textureKey;
-  }
+const isSystemSpeaker = (speaker = '') => {
+  const normalizedSpeaker = normalizeSpeakerName(speaker);
+  return Object.prototype.hasOwnProperty.call(SPEAKER_ALIASES, normalizedSpeaker)
+    && SPEAKER_ALIASES[normalizedSpeaker] === null;
+};
 
-  if (portraitKey === 'cappellaio' && GameState.hatterColored) {
-    textureKey = portrait.colourTexture ?? textureKey;
-  }
-
-  if (DEBUG_PORTRAITS) {
-    console.debug('[Portrait] lookup', { speaker, normalizedSpeaker, portraitKey, textureKey });
-  }
-
-  return textureKey;
+const getPortraitKeyForSpeaker = (speaker = '') => {
+  const portraitId = getPortraitIdForSpeaker(speaker);
+  return PORTRAITS[portraitId]?.key ?? null;
 };
 
 const getPortraitConfigForSpeaker = (speaker = '') => {
-  const normalizedSpeaker = normalizeSpeaker(speaker);
-  const portraitKey = Object.prototype.hasOwnProperty.call(SPEAKER_ALIASES, normalizedSpeaker)
-    ? SPEAKER_ALIASES[normalizedSpeaker]
-    : null;
-
-  return PORTRAITS[portraitKey] ?? null;
+  const portraitId = getPortraitIdForSpeaker(speaker);
+  return PORTRAITS[portraitId] ?? null;
 };
 
 export class DialogueManager {
@@ -112,9 +144,81 @@ export class DialogueManager {
     this.systemMode = false;
     this.autoAdvanceEvent = null;
     this.context = {};
+    this.pendingPortraitLoads = new Set();
+    this.failedPortraitLoads = new Set();
+    this.warnedMissingPortraits = new Set();
 
+    this.ensurePortraitFallbackTexture();
+    this.queueAvailablePortraitAssets();
     this.createUi();
     this.hideUi();
+  }
+
+  ensurePortraitFallbackTexture() {
+    if (this.scene.textures.exists(PORTRAIT_FALLBACK_TEXTURE_KEY)) {
+      return;
+    }
+
+    const graphics = this.scene.make.graphics({ x: 0, y: 0, add: false });
+    graphics.fillStyle(0xffffff, 0);
+    graphics.fillRect(0, 0, 2, 2);
+    graphics.generateTexture(PORTRAIT_FALLBACK_TEXTURE_KEY, 2, 2);
+    graphics.destroy();
+  }
+
+  queueAvailablePortraitAssets() {
+    PORTRAIT_ASSETS.forEach((asset) => {
+      const portrait = PORTRAITS[asset.id];
+      if (portrait?.url) {
+        this.queuePortraitTexture(portrait);
+      }
+    });
+  }
+
+  queuePortraitTexture(portrait) {
+    if (!portrait?.url || this.scene.textures.exists(portrait.key) || this.pendingPortraitLoads.has(portrait.key)) {
+      return false;
+    }
+
+    this.pendingPortraitLoads.add(portrait.key);
+    this.scene.load.image(portrait.key, portrait.url);
+
+    if (!this.portraitLoaderHandlersRegistered) {
+      this.portraitLoaderHandlersRegistered = true;
+      this.scene.load.on('filecomplete', (key) => {
+        if (this.pendingPortraitLoads.has(key)) {
+          this.pendingPortraitLoads.delete(key);
+          this.refreshPortraitForCurrentLine();
+        }
+      });
+      this.scene.load.on('loaderror', (file) => {
+        const key = file?.key;
+        if (!this.pendingPortraitLoads.has(key)) {
+          return;
+        }
+        this.pendingPortraitLoads.delete(key);
+        this.failedPortraitLoads.add(key);
+        const asset = PORTRAIT_ASSETS.find((entry) => entry.key === key);
+        this.warnMissingPortrait(asset?.path ?? key, key);
+        this.refreshPortraitForCurrentLine();
+      });
+    }
+
+    if (!this.scene.load.isLoading()) {
+      this.scene.load.start();
+    }
+
+    return true;
+  }
+
+  warnMissingPortrait(speaker, key) {
+    const warningKey = `${speaker}:${key}`;
+    if (this.warnedMissingPortraits.has(warningKey)) {
+      return;
+    }
+
+    this.warnedMissingPortraits.add(warningKey);
+    console.warn(`Missing portrait asset for speaker: ${speaker} / key: ${key}`);
   }
 
   createUi() {
@@ -149,8 +253,8 @@ export class DialogueManager {
 
     this.portraitContainer = this.scene.add.container(boxLeft + PORTRAIT_CENTER_X, boxTop + PORTRAIT_CENTER_Y).setScrollFactor(0).setDepth(1003);
     this.portraitFrame = this.scene.add.graphics();
-    this.portraitSprite = this.scene.add.sprite(0, 0, 'romy-idle-01').setOrigin(0.5, 0.5);
-    this.portraitMaskShape = this.scene.add.graphics().setVisible(false);
+    this.portraitSprite = this.scene.add.image(0, 0, PORTRAIT_FALLBACK_TEXTURE_KEY).setOrigin(0.5, 0.5).setScrollFactor(0).setAlpha(1);
+    this.portraitMaskShape = this.scene.add.graphics().setScrollFactor(0).setVisible(false);
     this.portraitMaskShape.fillStyle(0xffffff, 1);
     this.portraitMaskShape.fillCircle(boxLeft + PORTRAIT_CENTER_X, boxTop + PORTRAIT_CENTER_Y, PORTRAIT_FRAME_RADIUS - PORTRAIT_INNER_PADDING / 2);
     this.portraitMask = this.portraitMaskShape.createGeometryMask();
@@ -331,7 +435,7 @@ export class DialogueManager {
     this.runAction(this.currentLine.showAction);
 
     const speaker = this.currentLine.speaker ?? '';
-    this.systemMode = normalizeSpeaker(speaker) === 'sistema';
+    this.systemMode = isSystemSpeaker(speaker);
     this.choiceQuestionMode = this.hasChoices(this.currentLine);
 
     if (this.choiceQuestionMode) {
@@ -347,6 +451,10 @@ export class DialogueManager {
     this.hideSystemUi();
     this.hideChoicePromptUi();
     this.showStandardUi();
+    this.renderStandardLine(speaker);
+  }
+
+  renderStandardLine(speaker) {
     const hasPortrait = this.updatePortraitForSpeaker(speaker);
     const textLeft = this.getTextLeft(hasPortrait);
     const wrapWidth = this.layout.boxRight - textLeft - this.layout.textRightPadding;
@@ -371,10 +479,30 @@ export class DialogueManager {
     this.scheduleAutoAdvance();
   }
 
+  refreshPortraitForCurrentLine() {
+    if (!this.active || this.systemMode || this.choiceQuestionMode || !this.currentLine) {
+      return;
+    }
+
+    const speaker = this.currentLine.speaker ?? '';
+    const hasPortrait = this.updatePortraitForSpeaker(speaker);
+    const textLeft = this.getTextLeft(hasPortrait);
+    const wrapWidth = this.layout.boxRight - textLeft - this.layout.textRightPadding;
+
+    this.drawNamePlate(hasPortrait && speaker);
+    this.speakerText.setPosition(textLeft, this.layout.boxTop + 14);
+    this.bodyText.setPosition(textLeft, this.layout.boxTop + 43);
+    this.bodyText.setWordWrapWidth(wrapWidth);
+
+    if (this.choosing) {
+      this.renderChoices();
+    }
+  }
+
   showSystemLine() {
     this.hideStandardUi();
     this.hideChoicePromptUi();
-    this.portraitContainer.setVisible(false);
+    this.hidePortrait();
     this.systemGraphics.setVisible(true);
     this.systemText.setVisible(true);
     this.systemHintText.setVisible(true);
@@ -428,7 +556,7 @@ export class DialogueManager {
     this.hideStandardUi();
     this.hideSystemUi();
     this.hideChoicePromptUi();
-    this.portraitContainer.setVisible(false);
+    this.hidePortrait();
     this.choiceQuestionMode = true;
     this.choosing = true;
     this.choiceIndex = 0;
@@ -445,7 +573,7 @@ export class DialogueManager {
     const wrapWidth = panelWidth - 74;
     const estimatedLines = Math.max(1, Math.ceil(questionLength * 8.4 / wrapWidth));
     const panelHeight = Phaser.Math.Clamp(96 + estimatedLines * 25, 128, 230);
-    const speakerLabel = normalizeSpeaker(speaker) === 'sistema' ? 'CARTELLO' : speaker;
+    const speakerLabel = isSystemSpeaker(speaker) ? 'CARTELLO' : speaker;
 
     this.choicePromptGraphics.setVisible(true);
     this.choicePromptSpeakerText.setVisible(Boolean(speakerLabel));
@@ -485,38 +613,49 @@ export class DialogueManager {
 
   updatePortraitForSpeaker(speaker) {
     const originalSpeaker = speaker;
-    const normalizedSpeaker = String(speaker || '').trim().toLowerCase();
+    const normalizedSpeaker = normalizeSpeakerName(speaker);
     const portrait = getPortraitConfigForSpeaker(normalizedSpeaker);
-    let portraitKey = getPortraitKeyForSpeaker(normalizedSpeaker);
+    const portraitKey = getPortraitKeyForSpeaker(normalizedSpeaker);
 
-    if (portrait && (!portraitKey || !this.scene.textures.exists(portraitKey))) {
-      portraitKey = portrait.fallbackTextures?.find((fallbackTexture) => this.scene.textures.exists(fallbackTexture)) ?? portraitKey;
+    if (!portrait || !portraitKey) {
+      this.hidePortrait();
+      if (DEBUG_PORTRAITS) {
+        console.debug('[Portrait] hidden: no portrait mapping', { speaker: originalSpeaker, normalizedSpeaker });
+      }
+      return false;
     }
 
-    const textureExists = Boolean(portraitKey && this.scene.textures.exists(portraitKey));
+    if (!this.scene.textures.exists(portraitKey)) {
+      const queued = this.queuePortraitTexture(portrait);
+      this.hidePortrait();
 
-    if (!portrait || !textureExists) {
-      this.portraitContainer.setVisible(false);
-      this.portraitFrame.setVisible(false);
-      this.portraitSprite.setVisible(false);
+      if (!queued && !portrait.url) {
+        this.warnMissingPortrait(originalSpeaker, portraitKey);
+      }
+
       if (DEBUG_PORTRAITS) {
-        console.debug('[Portrait] hidden', {
+        console.debug('[Portrait] hidden: texture unavailable', {
           speaker: originalSpeaker,
           normalizedSpeaker,
           portraitKey,
-          textureExists,
-          containerVisible: this.portraitContainer.visible,
-          imageVisible: this.portraitSprite.visible
+          hasUrl: Boolean(portrait.url),
+          queued,
+          failed: this.failedPortraitLoads.has(portraitKey)
         });
       }
       return false;
     }
 
-    this.portraitContainer.setVisible(true).setDepth(1003);
+    this.portraitContainer.setVisible(true).setDepth(1003).setScrollFactor(0);
     this.portraitFrame.setVisible(true);
-    this.portraitSprite.setVisible(true);
-    this.portraitSprite.setTexture(portraitKey);
-    this.portraitSprite.setFlipX(portrait.flipX);
+    this.portraitSprite
+      .setVisible(true)
+      .setAlpha(1)
+      .setTexture(portraitKey)
+      .setOrigin(0.5, 0.5)
+      .setFlipX(portrait.flipX)
+      .setPosition(0, 0)
+      .setScrollFactor(0);
     this.resizePortraitInsideCircle();
     this.portraitSprite.setPosition(portrait.offsetX ?? 0, portrait.offsetY ?? 0);
     this.drawFixedPortraitFrame();
@@ -526,12 +665,25 @@ export class DialogueManager {
         speaker: originalSpeaker,
         normalizedSpeaker,
         portraitKey,
-        textureExists,
         containerVisible: this.portraitContainer.visible,
-        imageVisible: this.portraitSprite.visible
+        imageVisible: this.portraitSprite.visible,
+        imageSize: { width: this.portraitSprite.width, height: this.portraitSprite.height },
+        scale: this.portraitSprite.scaleX
       });
     }
     return true;
+  }
+
+  hidePortrait() {
+    this.portraitContainer.setVisible(false);
+    this.portraitFrame.setVisible(false);
+    this.portraitSprite
+      .setVisible(false)
+      .setAlpha(1)
+      .setTexture(PORTRAIT_FALLBACK_TEXTURE_KEY)
+      .setPosition(0, 0)
+      .setScale(1)
+      .setFlipX(false);
   }
 
   resizePortraitInsideCircle() {
@@ -543,10 +695,17 @@ export class DialogueManager {
       return;
     }
 
+    this.portraitSprite.setScale(1);
     const scale = Math.min(
       PORTRAIT_CONTENT_MAX_HEIGHT / this.portraitSprite.height,
       PORTRAIT_CONTENT_MAX_WIDTH / this.portraitSprite.width
     );
+
+    if (!Number.isFinite(scale) || scale <= 0) {
+      this.portraitSprite.setScale(1);
+      return;
+    }
+
     this.portraitSprite.setScale(scale);
   }
 
@@ -910,7 +1069,7 @@ export class DialogueManager {
     this.hideStandardUi();
     this.hideSystemUi();
     this.hideChoicePromptUi();
-    this.portraitContainer.setVisible(false);
+    this.hidePortrait();
     this.clearChoices();
   }
 
