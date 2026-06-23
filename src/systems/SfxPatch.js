@@ -1,4 +1,7 @@
 import './SafeSoundVolumePatch.js';
+import './DialogueTypingPatch.js';
+import './WorldAmbientFxPatch.js';
+import './ForestAmbienceBoostPatch.js';
 import { ForestScene } from '../scenes/ForestScene.js';
 import { DialogueManager } from './DialogueManager.js';
 
