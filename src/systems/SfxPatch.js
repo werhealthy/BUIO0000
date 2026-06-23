@@ -1,15 +1,8 @@
 import { ForestScene } from '../scenes/ForestScene.js';
 import { DialogueManager } from './DialogueManager.js';
 
-const SFX_MASTER_VOLUME = 0.42;
-const FOOTSTEP_INTERVAL = 310;
-const CUTSCENE_COVER_DEPTH = 4999;
-
-const SOURCE_PLAY_CUTSCENE_VIDEO = ForestScene.prototype.playCutsceneVideo;
-const SOURCE_FOREST_UPDATE = ForestScene.prototype.update;
-const SOURCE_DIALOGUE_SKIP_OR_NEXT = DialogueManager.prototype.skipOrNextLine;
-const SOURCE_DIALOGUE_CHOICE_INPUT = DialogueManager.prototype.handleChoiceInput;
-const SOURCE_DIALOGUE_CONFIRM_CHOICE = DialogueManager.prototype.confirmChoice;
+const SFX_MASTER_VOLUME = 0.9;
+const FOOTSTEP_INTERVAL = 285;
 
 const rateLimitState = new WeakMap();
 const noiseBuffers = new WeakMap();
@@ -70,7 +63,7 @@ const getNoiseBuffer = (context) => {
     return cached;
   }
 
-  const length = Math.max(1, Math.floor(context.sampleRate * 0.09));
+  const length = Math.max(1, Math.floor(context.sampleRate * 0.11));
   const buffer = context.createBuffer(1, length, context.sampleRate);
   const data = buffer.getChannelData(0);
   for (let index = 0; index < length; index += 1) {
@@ -107,7 +100,7 @@ const playTone = (scene, {
   oscillator.connect(gain);
   gain.connect(context.destination);
   oscillator.start(now);
-  oscillator.stop(now + duration + 0.02);
+  oscillator.stop(now + duration + 0.03);
   oscillator.addEventListener('ended', () => {
     oscillator.disconnect();
     gain.disconnect();
@@ -143,7 +136,7 @@ const playNoise = (scene, {
   filter.connect(gain);
   gain.connect(context.destination);
   source.start(now);
-  source.stop(now + duration + 0.02);
+  source.stop(now + duration + 0.03);
   source.addEventListener('ended', () => {
     source.disconnect();
     filter.disconnect();
@@ -158,21 +151,21 @@ export const playSfx = (scene, type, options = {}) => {
   }
 
   const config = {
-    start: { rate: 220, action: () => playTone(scene, { frequency: 360, endFrequency: 620, duration: 0.14, volume: 0.18, type: 'triangle' }) },
-    'ui-click': { rate: 100, action: () => playTone(scene, { frequency: 520, endFrequency: 300, duration: 0.055, volume: 0.14, type: 'square' }) },
-    'ui-hover': { rate: 120, action: () => playTone(scene, { frequency: 620, endFrequency: 760, duration: 0.045, volume: 0.055, type: 'sine' }) },
-    'dialogue-next': { rate: 90, action: () => playTone(scene, { frequency: 430, endFrequency: 510, duration: 0.045, volume: 0.06, type: 'triangle' }) },
-    'choice-move': { rate: 110, action: () => playTone(scene, { frequency: 300, endFrequency: 380, duration: 0.05, volume: 0.075, type: 'triangle' }) },
-    'choice-confirm': { rate: 160, action: () => playTone(scene, { frequency: 420, endFrequency: 720, duration: 0.1, volume: 0.12, type: 'triangle' }) },
+    start: { rate: 220, action: () => playTone(scene, { frequency: 360, endFrequency: 720, duration: 0.18, volume: 0.28, type: 'triangle' }) },
+    'ui-click': { rate: 100, action: () => playTone(scene, { frequency: 520, endFrequency: 280, duration: 0.07, volume: 0.22, type: 'square' }) },
+    'ui-hover': { rate: 120, action: () => playTone(scene, { frequency: 620, endFrequency: 800, duration: 0.055, volume: 0.12, type: 'sine' }) },
+    'dialogue-next': { rate: 90, action: () => playTone(scene, { frequency: 430, endFrequency: 540, duration: 0.055, volume: 0.12, type: 'triangle' }) },
+    'choice-move': { rate: 110, action: () => playTone(scene, { frequency: 300, endFrequency: 410, duration: 0.06, volume: 0.14, type: 'triangle' }) },
+    'choice-confirm': { rate: 160, action: () => playTone(scene, { frequency: 420, endFrequency: 780, duration: 0.12, volume: 0.2, type: 'triangle' }) },
     footstep: {
       rate: options.interval ?? FOOTSTEP_INTERVAL,
       action: () => {
-        playNoise(scene, { duration: 0.045, volume: 0.075, frequency: 520 });
+        playNoise(scene, { duration: 0.052, volume: 0.16, frequency: 520 });
         playTone(scene, {
-          frequency: 86 + Math.random() * 16,
+          frequency: 92 + Math.random() * 18,
           endFrequency: 58,
-          duration: 0.055,
-          volume: 0.045,
+          duration: 0.065,
+          volume: 0.09,
           type: 'sine'
         });
         return true;
@@ -192,85 +185,61 @@ export const playSfx = (scene, type, options = {}) => {
   return config.action();
 };
 
-const createCutsceneCover = (scene) => {
-  scene.cutsceneCover?.destroy?.();
-  scene.cutsceneCover = scene.add
-    .rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 1)
-    .setOrigin(0, 0)
-    .setScrollFactor(0)
-    .setDepth(CUTSCENE_COVER_DEPTH)
-    .setVisible(true);
-  return scene.cutsceneCover;
-};
-
-const destroyCutsceneCover = (scene) => {
-  scene.cutsceneCover?.destroy?.();
-  scene.cutsceneCover = null;
-};
-
 const isRomyWalking = (scene) => {
   const velocityX = scene?.romy?.body?.velocity?.x ?? 0;
+  const currentAnimKey = scene?.romy?.anims?.currentAnim?.key ?? '';
   return Boolean(
     scene?.romy?.visible
-    && Math.abs(velocityX) > 6
     && !scene.isTransitioning
+    && !scene.isCutscenePlaying
     && !scene.isWakingUp
     && !scene.dialogueManager?.isActive?.()
+    && (Math.abs(velocityX) > 6 || currentAnimKey.includes('walk'))
   );
 };
 
-const installForestSfxPatch = () => {
+export const installProceduralSfxPatch = () => {
   if (ForestScene.prototype.__proceduralSfxPatchInstalled) {
     return;
   }
-
   ForestScene.prototype.__proceduralSfxPatchInstalled = true;
 
-  ForestScene.prototype.playCutsceneVideo = function patchedNoDuckingCutsceneVideo(videoKey, onComplete, options = {}) {
-    createCutsceneCover(this);
-    return SOURCE_PLAY_CUTSCENE_VIDEO.call(this, videoKey, () => {
-      destroyCutsceneCover(this);
-      onComplete?.();
-    }, options);
-  };
-
+  const sourceForestUpdate = ForestScene.prototype.update;
   ForestScene.prototype.update = function patchedSfxUpdate(...args) {
-    const result = SOURCE_FOREST_UPDATE?.apply(this, args);
+    const result = sourceForestUpdate?.apply(this, args);
     if (isRomyWalking(this)) {
       playSfx(this, 'footstep');
     }
     return result;
   };
-};
 
-const installDialogueSfxPatch = () => {
-  if (DialogueManager.prototype.__proceduralSfxPatchInstalled) {
-    return;
+  if (!DialogueManager.prototype.__proceduralSfxPatchInstalled) {
+    DialogueManager.prototype.__proceduralSfxPatchInstalled = true;
+
+    const sourceDialogueSkipOrNext = DialogueManager.prototype.skipOrNextLine;
+    DialogueManager.prototype.skipOrNextLine = function patchedSfxSkipOrNextLine(...args) {
+      if (this.active && !this.choosing && !this.waitingForAction) {
+        playSfx(this.scene, 'dialogue-next');
+      }
+      return sourceDialogueSkipOrNext.apply(this, args);
+    };
+
+    const sourceDialogueChoiceInput = DialogueManager.prototype.handleChoiceInput;
+    DialogueManager.prototype.handleChoiceInput = function patchedSfxHandleChoiceInput(direction, ...args) {
+      if (this.active && this.choosing) {
+        playSfx(this.scene, 'choice-move');
+      }
+      return sourceDialogueChoiceInput.call(this, direction, ...args);
+    };
+
+    const sourceDialogueConfirmChoice = DialogueManager.prototype.confirmChoice;
+    DialogueManager.prototype.confirmChoice = function patchedSfxConfirmChoice(...args) {
+      if (this.active && this.choosing) {
+        playSfx(this.scene, 'choice-confirm');
+      }
+      return sourceDialogueConfirmChoice.apply(this, args);
+    };
   }
-
-  DialogueManager.prototype.__proceduralSfxPatchInstalled = true;
-
-  DialogueManager.prototype.skipOrNextLine = function patchedSfxSkipOrNextLine(...args) {
-    if (this.active && !this.choosing && !this.waitingForAction) {
-      playSfx(this.scene, 'dialogue-next');
-    }
-    return SOURCE_DIALOGUE_SKIP_OR_NEXT.apply(this, args);
-  };
-
-  DialogueManager.prototype.handleChoiceInput = function patchedSfxHandleChoiceInput(direction, ...args) {
-    if (this.active && this.choosing) {
-      playSfx(this.scene, 'choice-move');
-    }
-    return SOURCE_DIALOGUE_CHOICE_INPUT.call(this, direction, ...args);
-  };
-
-  DialogueManager.prototype.confirmChoice = function patchedSfxConfirmChoice(...args) {
-    if (this.active && this.choosing) {
-      playSfx(this.scene, 'choice-confirm');
-    }
-    return SOURCE_DIALOGUE_CONFIRM_CHOICE.apply(this, args);
-  };
 };
 
-installDialogueSfxPatch();
-setTimeout(installForestSfxPatch, 0);
+setTimeout(installProceduralSfxPatch, 0);
