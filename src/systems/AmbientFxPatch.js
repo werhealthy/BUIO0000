@@ -2,13 +2,9 @@ import Phaser from 'phaser';
 import { ForestScene } from '../scenes/ForestScene.js';
 import { GameState } from './GameState.js';
 
-const AMBIENT_DEPTH = 16;
-const AMBIENT_FRONT_DEPTH = 18;
-const AMBIENT_TEXTURES = {
-  dot: 'ambient-dot',
-  petal: 'ambient-petal',
-  mist: 'ambient-mist'
-};
+const AMBIENT_BACK_DEPTH = 7;
+const AMBIENT_MID_DEPTH = 15;
+const AMBIENT_FRONT_DEPTH = 22;
 
 const FINAL_BACKGROUND_TO_AMBIENT_AREA = {
   'background-grecia': 'grecia',
@@ -23,229 +19,188 @@ const normalizeAmbientArea = (area = 'forest') => {
   return area || 'forest';
 };
 
-const ensureAmbientTexture = (scene, key, draw, width, height) => {
-  if (scene.textures.exists(key)) {
-    return;
-  }
-
-  const graphics = scene.make.graphics({ x: 0, y: 0, add: false });
-  draw(graphics);
-  graphics.generateTexture(key, width, height);
-  graphics.destroy();
-};
-
-const ensureAmbientTextures = (scene) => {
-  ensureAmbientTexture(scene, AMBIENT_TEXTURES.dot, (graphics) => {
-    graphics.fillStyle(0xffffff, 0.22);
-    graphics.fillCircle(8, 8, 8);
-    graphics.fillStyle(0xffffff, 0.74);
-    graphics.fillCircle(8, 8, 3.2);
-  }, 16, 16);
-
-  ensureAmbientTexture(scene, AMBIENT_TEXTURES.petal, (graphics) => {
-    graphics.fillStyle(0xffffff, 0.82);
-    graphics.fillEllipse(10, 5, 18, 8);
-    graphics.fillStyle(0xffffff, 0.42);
-    graphics.fillEllipse(11, 5, 9, 3.5);
-  }, 22, 12);
-
-  ensureAmbientTexture(scene, AMBIENT_TEXTURES.mist, (graphics) => {
-    graphics.fillStyle(0xffffff, 0.045);
-    graphics.fillCircle(32, 32, 31);
-    graphics.fillStyle(0xffffff, 0.08);
-    graphics.fillCircle(32, 32, 18);
-  }, 64, 64);
-};
-
-const destroyAmbientFx = (scene) => {
-  scene.ambientFxObjects?.forEach((object) => {
-    object?.stop?.();
-    object?.destroy?.();
-  });
+const clearAmbientFx = (scene) => {
+  scene.ambientFxObjects?.forEach((object) => object?.destroy?.());
+  scene.ambientFxTweens?.forEach((tween) => tween?.stop?.());
   scene.ambientFxObjects = [];
+  scene.ambientFxTweens = [];
 };
 
-const addAmbientEmitter = (scene, textureKey, config, options = {}) => {
-  const emitter = scene.add.particles(0, 0, textureKey, config);
-  emitter
-    .setScrollFactor(options.scrollFactor ?? 0)
-    .setDepth(options.depth ?? AMBIENT_DEPTH)
-    .setAlpha(options.alpha ?? 1);
-  scene.ambientFxObjects.push(emitter);
-  return emitter;
+const trackObject = (scene, object) => {
+  scene.ambientFxObjects.push(object);
+  return object;
 };
 
-const addBreathingTint = (scene, color, alpha = 0.08) => {
-  const { width, height } = scene.scale;
-  const overlay = scene.add
-    .rectangle(0, 0, width, height, color, alpha)
-    .setOrigin(0, 0)
+const trackTween = (scene, tween) => {
+  scene.ambientFxTweens.push(tween);
+  return tween;
+};
+
+const addCircle = (scene, {
+  x,
+  y,
+  radius = 2,
+  color = 0xffffff,
+  alpha = 0.45,
+  depth = AMBIENT_MID_DEPTH,
+  blendMode = Phaser.BlendModes.ADD
+}) => trackObject(
+  scene,
+  scene.add.circle(x, y, radius, color, alpha)
+    .setDepth(depth)
     .setScrollFactor(0)
-    .setDepth(AMBIENT_DEPTH - 1)
-    .setBlendMode(Phaser.BlendModes.ADD);
+    .setBlendMode(blendMode)
+);
 
-  scene.tweens.add({
+const addEllipse = (scene, {
+  x,
+  y,
+  width = 10,
+  height = 4,
+  color = 0xffffff,
+  alpha = 0.45,
+  depth = AMBIENT_MID_DEPTH,
+  blendMode = Phaser.BlendModes.NORMAL
+}) => trackObject(
+  scene,
+  scene.add.ellipse(x, y, width, height, color, alpha)
+    .setDepth(depth)
+    .setScrollFactor(0)
+    .setBlendMode(blendMode)
+);
+
+const addBreathingTint = (scene, color, alpha = 0.07) => {
+  const { width, height } = scene.scale;
+  const overlay = trackObject(
+    scene,
+    scene.add.rectangle(0, 0, width, height, color, alpha)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(AMBIENT_BACK_DEPTH)
+      .setBlendMode(Phaser.BlendModes.ADD)
+  );
+
+  trackTween(scene, scene.tweens.add({
     targets: overlay,
-    alpha: alpha * 0.42,
-    duration: 2800,
+    alpha: alpha * 0.35,
+    duration: 2600,
     yoyo: true,
     repeat: -1,
     ease: 'Sine.easeInOut'
-  });
+  }));
+};
 
-  scene.ambientFxObjects.push(overlay);
-  return overlay;
+const addFloatingDots = (scene, {
+  count = 32,
+  color = 0xffffff,
+  minRadius = 1.6,
+  maxRadius = 4.2,
+  minAlpha = 0.18,
+  maxAlpha = 0.58,
+  yMin = 20,
+  yMax = scene.scale.height - 20,
+  xDrift = 36,
+  yDrift = 28,
+  durationMin = 2600,
+  durationMax = 7200,
+  depth = AMBIENT_MID_DEPTH
+} = {}) => {
+  const { width } = scene.scale;
+
+  for (let i = 0; i < count; i += 1) {
+    const particle = addCircle(scene, {
+      x: Phaser.Math.Between(-20, width + 20),
+      y: Phaser.Math.Between(yMin, yMax),
+      radius: Phaser.Math.FloatBetween(minRadius, maxRadius),
+      color,
+      alpha: Phaser.Math.FloatBetween(minAlpha, maxAlpha),
+      depth
+    });
+
+    trackTween(scene, scene.tweens.add({
+      targets: particle,
+      x: particle.x + Phaser.Math.Between(-xDrift, xDrift),
+      y: particle.y + Phaser.Math.Between(-yDrift, yDrift),
+      scale: { from: Phaser.Math.FloatBetween(0.72, 1.05), to: Phaser.Math.FloatBetween(1.08, 1.72) },
+      alpha: { from: particle.alpha * 0.28, to: particle.alpha },
+      duration: Phaser.Math.Between(durationMin, durationMax),
+      delay: Phaser.Math.Between(0, 1800),
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    }));
+  }
+};
+
+const addPetals = (scene, count = 24) => {
+  const { width, height } = scene.scale;
+
+  for (let i = 0; i < count; i += 1) {
+    const petal = addEllipse(scene, {
+      x: Phaser.Math.Between(-40, width + 40),
+      y: Phaser.Math.Between(-60, Math.round(height * 0.34)),
+      width: Phaser.Math.FloatBetween(9, 20),
+      height: Phaser.Math.FloatBetween(3, 7),
+      color: Phaser.Utils.Array.GetRandom([0xfff0f6, 0xffffff, 0xffc7de]),
+      alpha: Phaser.Math.FloatBetween(0.32, 0.64),
+      depth: AMBIENT_FRONT_DEPTH,
+      blendMode: Phaser.BlendModes.NORMAL
+    });
+
+    trackTween(scene, scene.tweens.add({
+      targets: petal,
+      x: petal.x + Phaser.Math.Between(-90, 120),
+      y: height + Phaser.Math.Between(20, 90),
+      angle: Phaser.Math.Between(-160, 160),
+      alpha: 0,
+      duration: Phaser.Math.Between(6200, 10800),
+      delay: Phaser.Math.Between(0, 4200),
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+      onRepeat: () => {
+        petal.setPosition(Phaser.Math.Between(-40, width + 40), Phaser.Math.Between(-80, 20));
+        petal.setAlpha(Phaser.Math.FloatBetween(0.32, 0.64));
+      }
+    }));
+  }
 };
 
 const createForestAmbientFx = (scene) => {
-  const { width, height } = scene.scale;
-  addAmbientEmitter(scene, AMBIENT_TEXTURES.dot, {
-    x: { min: -40, max: width + 40 },
-    y: { min: height * 0.08, max: height * 0.92 },
-    lifespan: { min: 4200, max: 8200 },
-    speedX: { min: -5, max: 8 },
-    speedY: { min: -10, max: -2 },
-    scale: { start: 0.18, end: 0.03 },
-    alpha: { start: 0, peak: 0.38, end: 0 },
-    tint: 0xdaf7d7,
-    frequency: 190,
-    quantity: 1,
-    blendMode: Phaser.BlendModes.ADD
-  });
-
-  addAmbientEmitter(scene, AMBIENT_TEXTURES.dot, {
-    x: { min: -20, max: width + 20 },
-    y: { min: height * 0.18, max: height * 0.72 },
-    lifespan: { min: 2600, max: 5400 },
-    speedX: { min: -14, max: 14 },
-    speedY: { min: -8, max: 4 },
-    scale: { start: 0.34, end: 0.02 },
-    alpha: { start: 0, peak: 0.62, end: 0 },
-    tint: 0xfff2a0,
-    frequency: 520,
-    blendMode: Phaser.BlendModes.ADD
-  }, { depth: AMBIENT_FRONT_DEPTH });
+  addFloatingDots(scene, { count: 46, color: 0xdaf7d7, minAlpha: 0.2, maxAlpha: 0.48, depth: AMBIENT_BACK_DEPTH });
+  addFloatingDots(scene, { count: 18, color: 0xfff2a0, minRadius: 2.4, maxRadius: 5.2, minAlpha: 0.35, maxAlpha: 0.82, yMax: Math.round(scene.scale.height * 0.75), depth: AMBIENT_FRONT_DEPTH, durationMin: 1800, durationMax: 4600 });
 };
 
 const createMadamaAmbientFx = (scene) => {
-  const { width, height } = scene.scale;
-  addBreathingTint(scene, 0xffd36b, 0.075);
-  addAmbientEmitter(scene, AMBIENT_TEXTURES.dot, {
-    x: { min: 0, max: width },
-    y: { min: height * 0.12, max: height * 0.82 },
-    lifespan: { min: 1700, max: 3600 },
-    speedX: { min: -10, max: 10 },
-    speedY: { min: -16, max: -4 },
-    scale: { start: 0.13, end: 0.01 },
-    alpha: { start: 0, peak: 0.85, end: 0 },
-    tint: 0xffd36b,
-    frequency: 120,
-    quantity: 1,
-    blendMode: Phaser.BlendModes.ADD
-  }, { depth: AMBIENT_FRONT_DEPTH });
+  addBreathingTint(scene, 0xffd36b, 0.09);
+  addFloatingDots(scene, { count: 62, color: 0xffd36b, minRadius: 1.2, maxRadius: 3.5, minAlpha: 0.35, maxAlpha: 0.92, yMin: 40, yMax: Math.round(scene.scale.height * 0.85), depth: AMBIENT_FRONT_DEPTH, xDrift: 22, yDrift: 48, durationMin: 1400, durationMax: 4200 });
 };
 
 const createSposineAmbientFx = (scene) => {
-  const { width, height } = scene.scale;
-  addBreathingTint(scene, 0xffc7de, 0.055);
-  addAmbientEmitter(scene, AMBIENT_TEXTURES.petal, {
-    x: { min: -60, max: width + 60 },
-    y: { min: -40, max: height * 0.12 },
-    lifespan: { min: 5400, max: 9200 },
-    speedX: { min: -16, max: 22 },
-    speedY: { min: 10, max: 30 },
-    rotate: { min: -40, max: 40 },
-    angularVelocity: { min: -18, max: 18 },
-    scale: { start: 0.26, end: 0.08 },
-    alpha: { start: 0, peak: 0.52, end: 0 },
-    tint: 0xffeef6,
-    frequency: 360,
-    quantity: 1,
-    blendMode: Phaser.BlendModes.NORMAL
-  }, { depth: AMBIENT_FRONT_DEPTH });
+  addBreathingTint(scene, 0xffc7de, 0.07);
+  addPetals(scene, 34);
+  addFloatingDots(scene, { count: 20, color: 0xffffff, minAlpha: 0.16, maxAlpha: 0.38, depth: AMBIENT_MID_DEPTH });
 };
 
 const createCavalloAmbientFx = (scene) => {
-  const { width, height } = scene.scale;
-  addBreathingTint(scene, 0x8ec9ff, 0.045);
-  addAmbientEmitter(scene, AMBIENT_TEXTURES.dot, {
-    x: { min: -20, max: width + 20 },
-    y: { min: height * 0.08, max: height * 0.88 },
-    lifespan: { min: 5200, max: 9600 },
-    speedX: { min: -7, max: 7 },
-    speedY: { min: -6, max: 5 },
-    scale: { start: 0.16, end: 0.03 },
-    alpha: { start: 0, peak: 0.34, end: 0 },
-    tint: 0xd8efff,
-    frequency: 150,
-    quantity: 1,
-    blendMode: Phaser.BlendModes.ADD
-  });
-
-  addAmbientEmitter(scene, AMBIENT_TEXTURES.dot, {
-    x: { min: 0, max: width },
-    y: { min: height * 0.18, max: height * 0.74 },
-    lifespan: { min: 3000, max: 6200 },
-    speedX: { min: -12, max: 12 },
-    speedY: { min: -12, max: 8 },
-    scale: { start: 0.1, end: 0.01 },
-    alpha: { start: 0, peak: 0.56, end: 0 },
-    tint: 0x7ee7ff,
-    frequency: 420,
-    blendMode: Phaser.BlendModes.ADD
-  }, { depth: AMBIENT_FRONT_DEPTH });
+  addBreathingTint(scene, 0x8ec9ff, 0.065);
+  addFloatingDots(scene, { count: 50, color: 0xd8efff, minAlpha: 0.18, maxAlpha: 0.42, depth: AMBIENT_MID_DEPTH, durationMin: 5200, durationMax: 10400 });
+  addFloatingDots(scene, { count: 18, color: 0x7ee7ff, minRadius: 1.2, maxRadius: 3.2, minAlpha: 0.32, maxAlpha: 0.7, depth: AMBIENT_FRONT_DEPTH });
 };
 
 const createFinaleAmbientFx = (scene) => {
-  const { width, height } = scene.scale;
-  addBreathingTint(scene, 0xf5f0a8, 0.07);
-  addAmbientEmitter(scene, AMBIENT_TEXTURES.mist, {
-    x: { min: -80, max: width + 80 },
-    y: { min: height * 0.28, max: height + 80 },
-    lifespan: { min: 7600, max: 12800 },
-    speedX: { min: -8, max: 8 },
-    speedY: { min: -18, max: -5 },
-    scale: { start: 0.58, end: 0.9 },
-    alpha: { start: 0, peak: 0.22, end: 0 },
-    frequency: 540,
-    quantity: 1,
-    blendMode: Phaser.BlendModes.ADD
-  });
-
-  addAmbientEmitter(scene, AMBIENT_TEXTURES.dot, {
-    x: { min: -40, max: width + 40 },
-    y: { min: height * 0.22, max: height * 0.92 },
-    lifespan: { min: 3600, max: 7600 },
-    speedX: { min: -8, max: 8 },
-    speedY: { min: -24, max: -7 },
-    scale: { start: 0.22, end: 0.02 },
-    alpha: { start: 0, peak: 0.6, end: 0 },
-    tint: 0xfff5b8,
-    frequency: 230,
-    blendMode: Phaser.BlendModes.ADD
-  }, { depth: AMBIENT_FRONT_DEPTH });
+  addBreathingTint(scene, 0xf5f0a8, 0.09);
+  addFloatingDots(scene, { count: 62, color: 0xfff5b8, minRadius: 2, maxRadius: 5.4, minAlpha: 0.28, maxAlpha: 0.78, depth: AMBIENT_FRONT_DEPTH, yMin: Math.round(scene.scale.height * 0.18), yMax: scene.scale.height + 40, yDrift: 68, durationMin: 3600, durationMax: 8200 });
 };
 
 const createTravelAmbientFx = (scene, area) => {
-  const { width, height } = scene.scale;
   const tintByArea = {
     grecia: 0xbfeaff,
     sicilia: 0xffdf9f,
     bristol: 0xcdd8ff
   };
-  addBreathingTint(scene, tintByArea[area] ?? 0xffffff, 0.04);
-  addAmbientEmitter(scene, AMBIENT_TEXTURES.dot, {
-    x: { min: -30, max: width + 30 },
-    y: { min: height * 0.12, max: height * 0.88 },
-    lifespan: { min: 5000, max: 9800 },
-    speedX: { min: -9, max: 9 },
-    speedY: { min: -10, max: 3 },
-    scale: { start: 0.14, end: 0.02 },
-    alpha: { start: 0, peak: 0.28, end: 0 },
-    tint: tintByArea[area] ?? 0xffffff,
-    frequency: 230,
-    blendMode: Phaser.BlendModes.ADD
-  });
+  const tint = tintByArea[area] ?? 0xffffff;
+  addBreathingTint(scene, tint, 0.06);
+  addFloatingDots(scene, { count: 42, color: tint, minAlpha: 0.18, maxAlpha: 0.52, depth: AMBIENT_FRONT_DEPTH, durationMin: 4300, durationMax: 9000 });
 };
 
 const createAmbientFx = (scene, area = 'forest') => {
@@ -258,10 +213,10 @@ const createAmbientFx = (scene, area = 'forest') => {
     return;
   }
 
-  ensureAmbientTextures(scene);
-  destroyAmbientFx(scene);
+  clearAmbientFx(scene);
   scene.currentAmbientArea = normalizedArea;
   scene.ambientFxObjects = [];
+  scene.ambientFxTweens = [];
 
   if (normalizedArea === 'madama') {
     createMadamaAmbientFx(scene);
@@ -287,14 +242,14 @@ const createAmbientFx = (scene, area = 'forest') => {
   createForestAmbientFx(scene);
 };
 
-const patchForestSceneAmbientFx = () => {
+export const installAmbientFxPatch = () => {
   if (ForestScene.prototype.__ambientFxPatched) {
     return;
   }
   ForestScene.prototype.__ambientFxPatched = true;
 
-  ForestScene.prototype.clearAmbientFx = function clearAmbientFx() {
-    destroyAmbientFx(this);
+  ForestScene.prototype.clearAmbientFx = function clearAmbientFxForScene() {
+    clearAmbientFx(this);
     this.currentAmbientArea = null;
   };
 
@@ -305,7 +260,7 @@ const patchForestSceneAmbientFx = () => {
   const originalCreate = ForestScene.prototype.create;
   ForestScene.prototype.create = function patchedAmbientCreate(...args) {
     const result = originalCreate.apply(this, args);
-    this.createAmbientFx(GameState.currentArea ?? 'forest');
+    this.time.delayedCall(60, () => this.createAmbientFx(GameState.currentArea ?? 'forest'));
     return result;
   };
 
@@ -331,4 +286,4 @@ const patchForestSceneAmbientFx = () => {
   };
 };
 
-patchForestSceneAmbientFx();
+setTimeout(installAmbientFxPatch, 0);
