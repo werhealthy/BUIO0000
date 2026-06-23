@@ -79,12 +79,12 @@ const SPEAKER_ALIASES = {
 };
 
 const MUSIC_TRACKS = {
-  menu: { key: 'music-title-screen', file: 'title_screen.mp3', volume: MENU_MUSIC_VOLUME },
-  forest: { key: 'music-forest', file: 'bosco_scena_iniziale.mp3', volume: MUSIC_VOLUME },
+  menu: { key: 'title-screen', file: 'title_screen.mp3', volume: MENU_MUSIC_VOLUME },
+  forest: { key: 'music-forest-initial', file: 'bosco_scena_iniziale.mp3', volume: MUSIC_VOLUME },
   madama: { key: 'music-madama', file: 'bosco_scena_madame.mp3', volume: MUSIC_VOLUME },
   sposine: { key: 'music-sposine', file: 'bosco_scena_matrimonio.mp3', volume: MUSIC_VOLUME },
   cavallo: { key: 'music-cavallo', file: 'bosco_scena_museo.mp3', volume: MUSIC_VOLUME },
-  finale: { key: 'music-finale', file: 'bosco_scena_finale.mp3', volume: MUSIC_VOLUME },
+  finale: { key: 'music-meadow-final', file: 'bosco_scena_finale.mp3', volume: MUSIC_VOLUME },
   grecia: { key: 'music-grecia', file: 'scena_grecia.mp3', volume: MUSIC_VOLUME },
   sicilia: { key: 'music-sicilia', file: 'scena_sicilia.mp3', volume: MUSIC_VOLUME },
   bristol: { key: 'music-bristol', file: 'scena_bristol.mp3', volume: MUSIC_VOLUME }
@@ -107,9 +107,13 @@ const FINAL_BACKGROUND_TO_MUSIC_TRACK = {
 
 const MUSIC_STATE = {
   currentKey: null,
+  currentTrackId: null,
   currentSound: null,
   pendingTrackId: null,
-  warnedMissingTracks: new Set()
+  targetVolume: MUSIC_VOLUME,
+  ducked: false,
+  warnedMissingTracks: new Set(),
+  loadErrorHandlerScenes: new WeakSet()
 };
 
 const getPublicAssetPath = (relativePath) => {
@@ -120,13 +124,31 @@ const getPublicAssetPath = (relativePath) => {
 
 const getMusicAssetPath = (fileName) => getPublicAssetPath(`assets/audio/${fileName}`);
 
+const getTrackPath = (track) => getMusicAssetPath(track.file);
+
 const preloadMusicTracks = (scene) => {
+  if (!scene || MUSIC_STATE.loadErrorHandlerScenes.has(scene)) {
+    return;
+  }
+
+  MUSIC_STATE.loadErrorHandlerScenes.add(scene);
+  scene.load.on('loaderror', (file) => {
+    const failedTrack = Object.entries(MUSIC_TRACKS)
+      .find(([, track]) => track.key === file?.key);
+    if (!failedTrack) {
+      return;
+    }
+
+    const [trackId, track] = failedTrack;
+    warnMissingMusicTrack(trackId, track);
+  });
+
   Object.values(MUSIC_TRACKS).forEach((track) => {
     if (!track?.key || !track?.file || scene.cache.audio.exists(track.key)) {
       return;
     }
 
-    scene.load.audio(track.key, getMusicAssetPath(track.file));
+    scene.load.audio(track.key, getTrackPath(track));
   });
 };
 
@@ -153,7 +175,7 @@ const warnMissingMusicTrack = (trackId, track) => {
   }
 
   MUSIC_STATE.warnedMissingTracks.add(warningKey);
-  console.warn(`[Music] Missing audio asset for track: ${trackId} / file: ${track?.file ?? 'unknown'}`);
+  console.warn(`Missing music track: ${trackId} ${track ? getTrackPath(track) : 'unknown'}`);
 };
 
 const fadeOutAndDestroyCurrentMusic = (scene, fadeDuration = MUSIC_FADE_DURATION) => {
@@ -164,6 +186,7 @@ const fadeOutAndDestroyCurrentMusic = (scene, fadeDuration = MUSIC_FADE_DURATION
 
   MUSIC_STATE.currentSound = null;
   MUSIC_STATE.currentKey = null;
+  MUSIC_STATE.currentTrackId = null;
 
   scene.tweens.add({
     targets: previousSound,
@@ -177,7 +200,11 @@ const fadeOutAndDestroyCurrentMusic = (scene, fadeDuration = MUSIC_FADE_DURATION
   });
 };
 
-const playSceneMusic = (scene, trackId, options = {}) => {
+const stopMusic = (scene, options = {}) => {
+  fadeOutAndDestroyCurrentMusic(scene, options.fadeDuration ?? MUSIC_FADE_DURATION);
+};
+
+const playMusic = (scene, trackId, options = {}) => {
   const track = MUSIC_TRACKS[trackId];
   if (!scene?.sound || !track) {
     return;
@@ -188,7 +215,7 @@ const playSceneMusic = (scene, trackId, options = {}) => {
   if (scene.sound.locked) {
     scene.sound.once(SOUND_UNLOCKED_EVENT, () => {
       if (MUSIC_STATE.pendingTrackId === trackId) {
-        playSceneMusic(scene, trackId, options);
+        playMusic(scene, trackId, options);
       }
     });
     return;
@@ -205,11 +232,14 @@ const playSceneMusic = (scene, trackId, options = {}) => {
 
   const fadeDuration = options.fadeDuration ?? MUSIC_FADE_DURATION;
   const volume = options.volume ?? track.volume ?? MUSIC_VOLUME;
+  MUSIC_STATE.targetVolume = volume;
+  MUSIC_STATE.ducked = false;
   fadeOutAndDestroyCurrentMusic(scene, fadeDuration);
 
   const nextSound = scene.sound.add(track.key, { loop: true, volume: 0 });
   MUSIC_STATE.currentSound = nextSound;
   MUSIC_STATE.currentKey = track.key;
+  MUSIC_STATE.currentTrackId = trackId;
 
   try {
     nextSound.play();
@@ -231,9 +261,43 @@ const playSceneMusic = (scene, trackId, options = {}) => {
   });
 };
 
+const fadeToMusic = (scene, trackId, options = {}) => playMusic(scene, trackId, options);
+
+const duckMusicForCutscene = (scene, options = {}) => {
+  const sound = MUSIC_STATE.currentSound;
+  if (!scene?.tweens || !sound || MUSIC_STATE.ducked) {
+    return;
+  }
+
+  MUSIC_STATE.ducked = true;
+  scene.tweens.killTweensOf(sound);
+  scene.tweens.add({
+    targets: sound,
+    volume: options.volume ?? 0.08,
+    duration: options.fadeDuration ?? 320,
+    ease: 'Sine.easeInOut'
+  });
+};
+
+const restoreMusicAfterCutscene = (scene, options = {}) => {
+  const sound = MUSIC_STATE.currentSound;
+  if (!scene?.tweens || !sound || !MUSIC_STATE.ducked) {
+    return;
+  }
+
+  MUSIC_STATE.ducked = false;
+  scene.tweens.killTweensOf(sound);
+  scene.tweens.add({
+    targets: sound,
+    volume: MUSIC_STATE.targetVolume,
+    duration: options.fadeDuration ?? 420,
+    ease: 'Sine.easeInOut'
+  });
+};
+
 const playMusicForArea = (scene, area, options = {}) => {
   const trackId = AREA_TO_MUSIC_TRACK[area] ?? AREA_TO_MUSIC_TRACK.forest;
-  playSceneMusic(scene, trackId, options);
+  fadeToMusic(scene, trackId, options);
 };
 
 const getSpeakerId = (speaker = '') => {
@@ -342,13 +406,21 @@ MenuScene.prototype.preload = function patchedMenuPreload(...args) {
 const originalMenuCreate = MenuScene.prototype.create;
 MenuScene.prototype.create = function patchedMenuCreate(...args) {
   originalMenuCreate.apply(this, args);
-  playSceneMusic(this, 'menu', { fadeDuration: 1200, volume: MENU_MUSIC_VOLUME });
+  this.input.once('pointerdown', () => {
+    unlockSceneAudio(this);
+    playMusic(this, 'menu', { fadeDuration: 420, volume: MENU_MUSIC_VOLUME });
+  });
+  this.input.keyboard?.once('keydown', () => {
+    unlockSceneAudio(this);
+    playMusic(this, 'menu', { fadeDuration: 420, volume: MENU_MUSIC_VOLUME });
+  });
+  playMusic(this, 'menu', { fadeDuration: 1200, volume: MENU_MUSIC_VOLUME });
 };
 
 const originalMenuStartGame = MenuScene.prototype.startGame;
 MenuScene.prototype.startGame = function patchedMenuStartGame(...args) {
   unlockSceneAudio(this);
-  playSceneMusic(this, 'forest', { fadeDuration: 420 });
+  fadeToMusic(this, 'forest', { fadeDuration: 420 });
   return originalMenuStartGame.apply(this, args);
 };
 
@@ -361,6 +433,14 @@ ForestScene.prototype.preload = function patchedForestPreload(...args) {
 const originalForestCreate = ForestScene.prototype.create;
 ForestScene.prototype.create = function patchedForestCreate(...args) {
   originalForestCreate.apply(this, args);
+  this.input.once('pointerdown', () => {
+    unlockSceneAudio(this);
+    playMusicForArea(this, GameState.currentArea ?? 'forest', { fadeDuration: 420 });
+  });
+  this.input.keyboard?.once('keydown', () => {
+    unlockSceneAudio(this);
+    playMusicForArea(this, GameState.currentArea ?? 'forest', { fadeDuration: 420 });
+  });
   unlockSceneAudio(this);
   playMusicForArea(this, GameState.currentArea ?? 'forest', { fadeDuration: 900 });
 };
@@ -494,10 +574,17 @@ const destroyCutsceneCover = (scene) => {
 const originalPlayCutsceneVideo = ForestScene.prototype.playCutsceneVideo;
 ForestScene.prototype.playCutsceneVideo = function patchedPlayCutsceneVideo(videoKey, onComplete, options = {}) {
   createCutsceneCover(this);
-  return originalPlayCutsceneVideo.call(this, videoKey, () => {
+  duckMusicForCutscene(this);
+  let restored = false;
+  const completeWithMusic = () => {
+    if (!restored) {
+      restored = true;
+      restoreMusicAfterCutscene(this);
+    }
     destroyCutsceneCover(this);
     onComplete?.();
-  }, options);
+  };
+  return originalPlayCutsceneVideo.call(this, videoKey, completeWithMusic, options);
 };
 
 const originalPlayAreaIntroCutscene = ForestScene.prototype.playAreaIntroCutscene;
@@ -605,7 +692,7 @@ ForestScene.prototype.showFinalEndingScene = function patchedShowFinalEndingScen
   const backgroundKey = this.getFinalEndingBackgroundKey?.();
   const trackId = FINAL_BACKGROUND_TO_MUSIC_TRACK[backgroundKey];
   if (trackId) {
-    playSceneMusic(this, trackId, { fadeDuration: 1200 });
+    fadeToMusic(this, trackId, { fadeDuration: 1200 });
   }
   return originalShowFinalEndingScene.apply(this, args);
 };
@@ -624,6 +711,7 @@ const getPathCredit = () => {
 };
 
 ForestScene.prototype.showFinalCredits = function showFinalCredits() {
+  fadeToMusic(this, 'menu', { fadeDuration: 1200, volume: MENU_MUSIC_VOLUME });
   this.finalWallpaperButton?.destroy();
   this.finalCreditsContainer?.destroy();
 
@@ -679,6 +767,7 @@ ForestScene.prototype.showFinalCredits = function showFinalCredits() {
 
 const originalShowFinalWallpaper = ForestScene.prototype.showFinalWallpaper;
 ForestScene.prototype.showFinalWallpaper = function patchedShowFinalWallpaper(...args) {
+  fadeToMusic(this, 'menu', { fadeDuration: 1200, volume: MENU_MUSIC_VOLUME });
   const originalShowNewGameButton = this.showNewGameButton?.bind(this);
   this.showNewGameButton = () => {
     if (this.finalCreditsShown) {
