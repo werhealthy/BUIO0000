@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { MenuScene } from '../scenes/MenuScene.js';
 import { ForestScene } from '../scenes/ForestScene.js';
 import { GameState } from './GameState.js';
