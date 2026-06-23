@@ -3,6 +3,7 @@ import { playSfx, unlockSfxAudio } from '../systems/SfxPatch.js';
 import '../systems/AmbientFxPatch.js';
 import '../systems/MusicFadePatch.js';
 import '../systems/IntroAudioPatch.js';
+import '../systems/VideoAudioGuardPatch.js';
 
 const backgroundAssets = import.meta.glob('../assets/backgrounds/background_menu_final.png', {
   eager: true,
