@@ -10,6 +10,9 @@ const PORTRAIT_FIT_WIDTH = 76;
 const PORTRAIT_FIT_HEIGHT = 76;
 const ROMY_DISPLAY_HEIGHT = 142;
 const PLAYER_START_X = 130;
+const MUSIC_VOLUME = 0.42;
+const MENU_MUSIC_VOLUME = 0.36;
+const MUSIC_FADE_DURATION = 850;
 
 const SPEAKER_TO_EXISTING_TEXTURE = {
   romy: () => (GameState.hasDaisy ? 'romy-daisy-idle-01' : 'romy-idle-01'),
@@ -49,6 +52,148 @@ const SPEAKER_ALIASES = {
   narratore: null,
   narrator: null,
   cartello: null
+};
+
+const MUSIC_TRACKS = {
+  menu: { key: 'music-title-screen', file: 'title_screen.mp3', volume: MENU_MUSIC_VOLUME },
+  forest: { key: 'music-forest', file: 'bosco_scena_iniziale.mp3', volume: MUSIC_VOLUME },
+  madama: { key: 'music-madama', file: 'bosco_scena_madame.mp3', volume: MUSIC_VOLUME },
+  sposine: { key: 'music-sposine', file: 'bosco_scena_matrimonio.mp3', volume: MUSIC_VOLUME },
+  cavallo: { key: 'music-cavallo', file: 'bosco_scena_museo.mp3', volume: MUSIC_VOLUME },
+  finale: { key: 'music-finale', file: 'bosco_scena_finale.mp3', volume: MUSIC_VOLUME },
+  grecia: { key: 'music-grecia', file: 'scena_grecia.mp3', volume: MUSIC_VOLUME },
+  sicilia: { key: 'music-sicilia', file: 'scena_sicilia.mp3', volume: MUSIC_VOLUME },
+  bristol: { key: 'music-bristol', file: 'scena_bristol.mp3', volume: MUSIC_VOLUME }
+};
+
+const AREA_TO_MUSIC_TRACK = {
+  forest: 'forest',
+  madama: 'madama',
+  sposine: 'sposine',
+  cavallo: 'cavallo',
+  pittore: 'cavallo',
+  finale: 'finale'
+};
+
+const FINAL_BACKGROUND_TO_MUSIC_TRACK = {
+  'background-grecia': 'grecia',
+  'background-sicilia': 'sicilia',
+  'background-bristol': 'bristol'
+};
+
+const MUSIC_STATE = {
+  currentKey: null,
+  currentSound: null,
+  pendingTrackId: null,
+  warnedMissingTracks: new Set()
+};
+
+const getPublicAssetPath = (relativePath) => {
+  const base = import.meta.env.BASE_URL || '/';
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+  return `${normalizedBase}${relativePath.replace(/^\//, '')}`;
+};
+
+const getMusicAssetPath = (fileName) => getPublicAssetPath(`assets/audio/${fileName}`);
+
+const preloadMusicTracks = (scene) => {
+  Object.values(MUSIC_TRACKS).forEach((track) => {
+    if (!track?.key || !track?.file || scene.cache.audio.exists(track.key)) {
+      return;
+    }
+
+    scene.load.audio(track.key, getMusicAssetPath(track.file));
+  });
+};
+
+const warnMissingMusicTrack = (trackId, track) => {
+  const warningKey = track?.key ?? trackId;
+  if (MUSIC_STATE.warnedMissingTracks.has(warningKey)) {
+    return;
+  }
+
+  MUSIC_STATE.warnedMissingTracks.add(warningKey);
+  console.warn(`[Music] Missing audio asset for track: ${trackId} / file: ${track?.file ?? 'unknown'}`);
+};
+
+const fadeOutAndDestroyCurrentMusic = (scene, fadeDuration = MUSIC_FADE_DURATION) => {
+  const previousSound = MUSIC_STATE.currentSound;
+  if (!previousSound) {
+    return;
+  }
+
+  MUSIC_STATE.currentSound = null;
+  MUSIC_STATE.currentKey = null;
+
+  scene.tweens.add({
+    targets: previousSound,
+    volume: 0,
+    duration: fadeDuration,
+    ease: 'Sine.easeInOut',
+    onComplete: () => {
+      previousSound.stop();
+      previousSound.destroy();
+    }
+  });
+};
+
+const playSceneMusic = (scene, trackId, options = {}) => {
+  const track = MUSIC_TRACKS[trackId];
+  if (!scene?.sound || !track) {
+    return;
+  }
+
+  MUSIC_STATE.pendingTrackId = trackId;
+
+  if (scene.sound.locked) {
+    scene.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
+      if (MUSIC_STATE.pendingTrackId === trackId) {
+        playSceneMusic(scene, trackId, options);
+      }
+    });
+    return;
+  }
+
+  if (!scene.cache.audio.exists(track.key)) {
+    warnMissingMusicTrack(trackId, track);
+    return;
+  }
+
+  if (MUSIC_STATE.currentKey === track.key && MUSIC_STATE.currentSound?.isPlaying) {
+    return;
+  }
+
+  const fadeDuration = options.fadeDuration ?? MUSIC_FADE_DURATION;
+  const volume = options.volume ?? track.volume ?? MUSIC_VOLUME;
+  fadeOutAndDestroyCurrentMusic(scene, fadeDuration);
+
+  const nextSound = scene.sound.add(track.key, { loop: true, volume: 0 });
+  MUSIC_STATE.currentSound = nextSound;
+  MUSIC_STATE.currentKey = track.key;
+
+  try {
+    nextSound.play();
+  } catch (error) {
+    console.warn(`[Music] Could not play track: ${trackId}`, error);
+    nextSound.destroy();
+    if (MUSIC_STATE.currentSound === nextSound) {
+      MUSIC_STATE.currentSound = null;
+      MUSIC_STATE.currentKey = null;
+    }
+    return;
+  }
+
+  scene.tweens.add({
+    targets: nextSound,
+    volume,
+    duration: fadeDuration,
+    ease: 'Sine.easeInOut'
+  });
+};
+
+const playMusicForArea = (scene, area, options = {}) => {
+  const trackId = AREA_TO_MUSIC_TRACK[area] ?? AREA_TO_MUSIC_TRACK.forest;
+  playSceneMusic(scene, trackId, options);
 };
 
 const getSpeakerId = (speaker = '') => {
@@ -147,6 +292,52 @@ const removeDuplicateMovementHint = () => {
 };
 
 removeDuplicateMovementHint();
+
+const originalMenuPreload = MenuScene.prototype.preload;
+MenuScene.prototype.preload = function patchedMenuPreload(...args) {
+  originalMenuPreload.apply(this, args);
+  preloadMusicTracks(this);
+};
+
+const originalMenuCreate = MenuScene.prototype.create;
+MenuScene.prototype.create = function patchedMenuCreate(...args) {
+  originalMenuCreate.apply(this, args);
+  playSceneMusic(this, 'menu', { fadeDuration: 1200, volume: MENU_MUSIC_VOLUME });
+};
+
+const originalMenuStartGame = MenuScene.prototype.startGame;
+MenuScene.prototype.startGame = function patchedMenuStartGame(...args) {
+  playSceneMusic(this, 'forest', { fadeDuration: 420 });
+  return originalMenuStartGame.apply(this, args);
+};
+
+const originalForestPreload = ForestScene.prototype.preload;
+ForestScene.prototype.preload = function patchedForestPreload(...args) {
+  originalForestPreload.apply(this, args);
+  preloadMusicTracks(this);
+};
+
+const originalForestCreate = ForestScene.prototype.create;
+ForestScene.prototype.create = function patchedForestCreate(...args) {
+  originalForestCreate.apply(this, args);
+  playMusicForArea(this, GameState.currentArea ?? 'forest', { fadeDuration: 900 });
+};
+
+const originalTransitionToArea = ForestScene.prototype.transitionToArea;
+ForestScene.prototype.transitionToArea = function patchedTransitionToArea(area, ...args) {
+  playMusicForArea(this, area, { fadeDuration: 760 });
+  return originalTransitionToArea.call(this, area, ...args);
+};
+
+const originalShowFinalEndingScene = ForestScene.prototype.showFinalEndingScene;
+ForestScene.prototype.showFinalEndingScene = function patchedShowFinalEndingScene(...args) {
+  const backgroundKey = this.getFinalEndingBackgroundKey?.();
+  const trackId = FINAL_BACKGROUND_TO_MUSIC_TRACK[backgroundKey];
+  if (trackId) {
+    playSceneMusic(this, trackId, { fadeDuration: 1200 });
+  }
+  return originalShowFinalEndingScene.apply(this, args);
+};
 
 const originalCreateRomy = ForestScene.prototype.createRomy;
 ForestScene.prototype.createRomy = function patchedCreateRomy(...args) {
@@ -265,7 +456,7 @@ ForestScene.prototype.showFinalCredits = function showFinalCredits() {
     'Vitto nelle vesti di Onofrio',
     'Gigi nelle vesti del Cappellaio Matto',
     'Checco nelle vesti di Checco',
-    'L iconico coniglio nelle vesti del Coniglio Bianco',
+    'L’iconico coniglio nelle vesti del Coniglio Bianco',
     getPathCredit(),
     '',
     'Grazie per aver giocato.'
