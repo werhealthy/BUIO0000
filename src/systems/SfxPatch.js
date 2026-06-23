@@ -1,8 +1,8 @@
 import { ForestScene } from '../scenes/ForestScene.js';
 import { DialogueManager } from './DialogueManager.js';
 
-const SFX_MASTER_VOLUME = 0.9;
-const FOOTSTEP_INTERVAL = 285;
+const SFX_MASTER_VOLUME = 1.35;
+const FOOTSTEP_INTERVAL = 270;
 
 const rateLimitState = new WeakMap();
 const noiseBuffers = new WeakMap();
@@ -151,21 +151,26 @@ export const playSfx = (scene, type, options = {}) => {
   }
 
   const config = {
-    start: { rate: 220, action: () => playTone(scene, { frequency: 360, endFrequency: 720, duration: 0.18, volume: 0.28, type: 'triangle' }) },
-    'ui-click': { rate: 100, action: () => playTone(scene, { frequency: 520, endFrequency: 280, duration: 0.07, volume: 0.22, type: 'square' }) },
-    'ui-hover': { rate: 120, action: () => playTone(scene, { frequency: 620, endFrequency: 800, duration: 0.055, volume: 0.12, type: 'sine' }) },
-    'dialogue-next': { rate: 90, action: () => playTone(scene, { frequency: 430, endFrequency: 540, duration: 0.055, volume: 0.12, type: 'triangle' }) },
-    'choice-move': { rate: 110, action: () => playTone(scene, { frequency: 300, endFrequency: 410, duration: 0.06, volume: 0.14, type: 'triangle' }) },
-    'choice-confirm': { rate: 160, action: () => playTone(scene, { frequency: 420, endFrequency: 780, duration: 0.12, volume: 0.2, type: 'triangle' }) },
+    start: { rate: 200, action: () => playTone(scene, { frequency: 360, endFrequency: 760, duration: 0.2, volume: 0.38, type: 'triangle' }) },
+    'ui-click': { rate: 80, action: () => playTone(scene, { frequency: 560, endFrequency: 260, duration: 0.075, volume: 0.34, type: 'square' }) },
+    'ui-hover': { rate: 90, action: () => playTone(scene, { frequency: 660, endFrequency: 860, duration: 0.055, volume: 0.2, type: 'sine' }) },
+    'dialogue-open': { rate: 140, action: () => playTone(scene, { frequency: 260, endFrequency: 430, duration: 0.11, volume: 0.24, type: 'triangle' }) },
+    'dialogue-next': { rate: 65, action: () => playTone(scene, { frequency: 460, endFrequency: 580, duration: 0.06, volume: 0.24, type: 'triangle' }) },
+    'dialogue-close': { rate: 180, action: () => playTone(scene, { frequency: 360, endFrequency: 220, duration: 0.1, volume: 0.2, type: 'sine' }) },
+    'choice-open': { rate: 160, action: () => playTone(scene, { frequency: 380, endFrequency: 620, duration: 0.12, volume: 0.25, type: 'triangle' }) },
+    'choice-move': { rate: 85, action: () => playTone(scene, { frequency: 320, endFrequency: 440, duration: 0.06, volume: 0.24, type: 'triangle' }) },
+    'choice-confirm': { rate: 130, action: () => playTone(scene, { frequency: 420, endFrequency: 820, duration: 0.13, volume: 0.34, type: 'triangle' }) },
+    transition: { rate: 450, action: () => playNoise(scene, { duration: 0.16, volume: 0.16, frequency: 380, type: 'lowpass' }) },
+    pickup: { rate: 260, action: () => playTone(scene, { frequency: 620, endFrequency: 980, duration: 0.16, volume: 0.3, type: 'triangle' }) },
     footstep: {
       rate: options.interval ?? FOOTSTEP_INTERVAL,
       action: () => {
-        playNoise(scene, { duration: 0.052, volume: 0.16, frequency: 520 });
+        playNoise(scene, { duration: 0.055, volume: 0.24, frequency: 520 });
         playTone(scene, {
           frequency: 92 + Math.random() * 18,
           endFrequency: 58,
-          duration: 0.065,
-          volume: 0.09,
+          duration: 0.07,
+          volume: 0.13,
           type: 'sine'
         });
         return true;
@@ -213,15 +218,30 @@ export const installProceduralSfxPatch = () => {
     return result;
   };
 
+  const sourceTransitionToArea = ForestScene.prototype.transitionToArea;
+  ForestScene.prototype.transitionToArea = function patchedSfxTransitionToArea(...args) {
+    playSfx(this, 'transition');
+    return sourceTransitionToArea?.apply(this, args);
+  };
+
   if (!DialogueManager.prototype.__proceduralSfxPatchInstalled) {
     DialogueManager.prototype.__proceduralSfxPatchInstalled = true;
 
-    const sourceDialogueSkipOrNext = DialogueManager.prototype.skipOrNextLine;
-    DialogueManager.prototype.skipOrNextLine = function patchedSfxSkipOrNextLine(...args) {
-      if (this.active && !this.choosing && !this.waitingForAction) {
-        playSfx(this.scene, 'dialogue-next');
+    const sourceStartDialogue = DialogueManager.prototype.startDialogue;
+    DialogueManager.prototype.startDialogue = function patchedSfxStartDialogue(...args) {
+      const result = sourceStartDialogue.apply(this, args);
+      playSfx(this.scene, this.choosing ? 'choice-open' : 'dialogue-open');
+      return result;
+    };
+
+    const sourceShowCurrentLine = DialogueManager.prototype.showCurrentLine;
+    DialogueManager.prototype.showCurrentLine = function patchedSfxShowCurrentLine(...args) {
+      const previousIndex = this.currentIndex;
+      const result = sourceShowCurrentLine.apply(this, args);
+      if (this.active && this.currentIndex === previousIndex && this.currentIndex > 0) {
+        playSfx(this.scene, this.choosing ? 'choice-open' : 'dialogue-next');
       }
-      return sourceDialogueSkipOrNext.apply(this, args);
+      return result;
     };
 
     const sourceDialogueChoiceInput = DialogueManager.prototype.handleChoiceInput;
@@ -238,6 +258,22 @@ export const installProceduralSfxPatch = () => {
         playSfx(this.scene, 'choice-confirm');
       }
       return sourceDialogueConfirmChoice.apply(this, args);
+    };
+
+    const sourceSkipCurrentDialogueBlock = DialogueManager.prototype.skipCurrentDialogueBlock;
+    DialogueManager.prototype.skipCurrentDialogueBlock = function patchedSfxSkipBlock(...args) {
+      if (this.active && !this.choosing) {
+        playSfx(this.scene, 'ui-click');
+      }
+      return sourceSkipCurrentDialogueBlock.apply(this, args);
+    };
+
+    const sourceEndDialogue = DialogueManager.prototype.endDialogue;
+    DialogueManager.prototype.endDialogue = function patchedSfxEndDialogue(...args) {
+      if (this.active) {
+        playSfx(this.scene, 'dialogue-close');
+      }
+      return sourceEndDialogue.apply(this, args);
     };
   }
 };
