@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { playSfx } from '../systems/SfxPatch.js';
 import '../systems/AmbientFxPatch.js';
 
 const backgroundAssets = import.meta.glob('../assets/backgrounds/background_menu_final.png', {
@@ -24,11 +25,11 @@ export class MenuScene extends Phaser.Scene {
     this.fitBackgroundCover();
     this.createMenuParticles();
 
-    this.createButton(width / 2, height * 0.72, 'Inizia', true, () => this.startGame());
+    this.createButton(width / 2, height * 0.72, 'Inizia', true, () => this.startGame('button'));
 
 
-    this.input.keyboard.on('keydown-SPACE', () => this.startGame());
-    this.input.keyboard.on('keydown-E', () => this.startGame());
+    this.input.keyboard.on('keydown-SPACE', () => this.startGame('keyboard'));
+    this.input.keyboard.on('keydown-E', () => this.startGame('keyboard'));
     this.scale.on('resize', () => {
       this.fitBackgroundCover();
       this.createMenuParticles();
@@ -59,12 +60,15 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  startGame() {
+  startGame(source = 'keyboard') {
     if (this.starting) {
       return;
     }
     this.starting = true;
     this.unlockAudioOnUserGesture();
+    if (source !== 'button') {
+      playSfx(this, 'start');
+    }
     this.cameras.main.fadeOut(420, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.scene.start('ForestScene');
@@ -156,6 +160,7 @@ export class MenuScene extends Phaser.Scene {
 
     box.setInteractive({ useHandCursor: true });
     box.on('pointerover', () => {
+      playSfx(this, 'ui-hover');
       box.setFillStyle(0x203d3c, 0.98);
       box.setStrokeStyle(2, 0xffedb0, 1);
       text.setColor('#ffffff');
@@ -165,7 +170,10 @@ export class MenuScene extends Phaser.Scene {
       box.setStrokeStyle(2, stroke, 0.86);
       text.setColor('#fff5cf');
     });
-    box.on('pointerdown', onClick);
+    box.on('pointerdown', () => {
+      playSfx(this, label === 'Inizia' ? 'start' : 'ui-click');
+      onClick();
+    });
 
     return container;
   }
