@@ -13,6 +13,7 @@ const PLAYER_START_X = 130;
 const MUSIC_VOLUME = 0.42;
 const MENU_MUSIC_VOLUME = 0.36;
 const MUSIC_FADE_DURATION = 850;
+const SOUND_UNLOCKED_EVENT = Phaser.Sound?.Events?.UNLOCKED ?? 'unlocked';
 
 const SPEAKER_TO_EXISTING_TEXTURE = {
   romy: () => (GameState.hasDaisy ? 'romy-daisy-idle-01' : 'romy-idle-01'),
@@ -146,7 +147,7 @@ const playSceneMusic = (scene, trackId, options = {}) => {
   MUSIC_STATE.pendingTrackId = trackId;
 
   if (scene.sound.locked) {
-    scene.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
+    scene.sound.once(SOUND_UNLOCKED_EVENT, () => {
       if (MUSIC_STATE.pendingTrackId === trackId) {
         playSceneMusic(scene, trackId, options);
       }
