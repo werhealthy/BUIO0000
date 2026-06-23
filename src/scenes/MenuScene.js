@@ -250,13 +250,12 @@ export class MenuScene extends Phaser.Scene {
     graphics.beginPath();
     graphics.moveTo(-width / 2 + 18, -height / 2 + 4);
     graphics.lineTo(width / 2 - 22, -height / 2 - 2);
-    graphics.quadraticCurveTo(width / 2 + 6, -height / 2 + 8, width / 2 - 2, -6);
+    graphics.lineTo(width / 2 - 2, -6);
     graphics.lineTo(width / 2 - 8, height / 2 - 10);
-    graphics.quadraticCurveTo(width / 2 - 12, height / 2 + 8, width / 2 - 34, height / 2 + 2);
+    graphics.lineTo(width / 2 - 34, height / 2 + 2);
     graphics.lineTo(-width / 2 + 24, height / 2 + 5);
-    graphics.quadraticCurveTo(-width / 2 - 6, height / 2 - 2, -width / 2 + 2, 6);
+    graphics.lineTo(-width / 2 + 2, 6);
     graphics.lineTo(-width / 2 + 8, -height / 2 + 14);
-    graphics.quadraticCurveTo(-width / 2 + 8, -height / 2 + 4, -width / 2 + 18, -height / 2 + 4);
     graphics.closePath();
     graphics.fillPath();
     graphics.strokePath();
