@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import './systems/gameHotfixes.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { ForestScene } from './scenes/ForestScene.js';
 import './style.css';
