@@ -9,13 +9,34 @@ import './style.css';
 const PORTRAIT_FIT_WIDTH = 76;
 const PORTRAIT_FIT_HEIGHT = 76;
 const ROMY_DISPLAY_HEIGHT = 142;
-const PLAYER_START_X = 130;
+const PLAYER_START_X = 260;
+const CAT_FOLLOW_DISTANCE = 92;
 const MUSIC_VOLUME = 0.42;
 const MENU_MUSIC_VOLUME = 0.36;
 const MUSIC_FADE_DURATION = 850;
 const CUTSCENE_COVER_DEPTH = 4999;
 const ROMY_INTRO_LYING_TEXTURE = 'romy-wake-01';
 const SOUND_UNLOCKED_EVENT = Phaser.Sound?.Events?.UNLOCKED ?? 'unlocked';
+
+const ROMY_IDLE_KEYS = ['romy-idle-01', 'romy-idle-02', 'romy-idle-03'];
+const ROMY_WALK_KEYS = ['romy-walk-01', 'romy-walk-02', 'romy-walk-03', 'romy-walk-04'];
+const ROMY_DAISY_IDLE_KEYS = ['romy-daisy-idle-01', 'romy-daisy-idle-02', 'romy-daisy-idle-03'];
+const ROMY_DAISY_WALK_KEYS = ['romy-daisy-walk-01', 'romy-daisy-walk-02', 'romy-daisy-walk-03', 'romy-daisy-walk-04'];
+
+const AREA_SPAWN_X = {
+  forest: PLAYER_START_X,
+  madama: 160,
+  sposine: 160,
+  cavallo: 160,
+  finale: 160,
+  pittore: 160
+};
+
+const AREA_INTRO_FLAGS = {
+  madama: 'madamaIntroCutscenePlayed',
+  sposine: 'sposineIntroCutscenePlayed',
+  cavallo: 'cavalloIntroCutscenePlayed'
+};
 
 const SPEAKER_TO_EXISTING_TEXTURE = {
   romy: () => (GameState.hasDaisy ? 'romy-daisy-idle-01' : 'romy-idle-01'),
@@ -107,6 +128,22 @@ const preloadMusicTracks = (scene) => {
 
     scene.load.audio(track.key, getMusicAssetPath(track.file));
   });
+};
+
+const unlockSceneAudio = (scene) => {
+  if (!scene?.sound) {
+    return;
+  }
+
+  try {
+    scene.sound.unlock?.();
+    const context = scene.sound.context;
+    if (context?.state === 'suspended') {
+      context.resume?.();
+    }
+  } catch (error) {
+    console.warn('[Music] Could not unlock audio context', error);
+  }
 };
 
 const warnMissingMusicTrack = (trackId, track) => {
@@ -310,6 +347,7 @@ MenuScene.prototype.create = function patchedMenuCreate(...args) {
 
 const originalMenuStartGame = MenuScene.prototype.startGame;
 MenuScene.prototype.startGame = function patchedMenuStartGame(...args) {
+  unlockSceneAudio(this);
   playSceneMusic(this, 'forest', { fadeDuration: 420 });
   return originalMenuStartGame.apply(this, args);
 };
@@ -323,34 +361,54 @@ ForestScene.prototype.preload = function patchedForestPreload(...args) {
 const originalForestCreate = ForestScene.prototype.create;
 ForestScene.prototype.create = function patchedForestCreate(...args) {
   originalForestCreate.apply(this, args);
+  unlockSceneAudio(this);
   playMusicForArea(this, GameState.currentArea ?? 'forest', { fadeDuration: 900 });
 };
 
-const originalTransitionToArea = ForestScene.prototype.transitionToArea;
-ForestScene.prototype.transitionToArea = function patchedTransitionToArea(area, ...args) {
-  playMusicForArea(this, area, { fadeDuration: 760 });
-  return originalTransitionToArea.call(this, area, ...args);
+const makeFrameList = (keys) => keys.map((key) => ({ key }));
+const existingKeys = (scene, keys) => keys.filter((key) => scene.textures.exists(key));
+const ensureSpriteAnimation = (scene, key, textureKeys, frameRate) => {
+  if (scene.anims.exists(key)) {
+    return true;
+  }
+
+  const frames = existingKeys(scene, textureKeys);
+  if (frames.length < 2) {
+    return false;
+  }
+
+  scene.anims.create({
+    key,
+    frames: makeFrameList(frames),
+    frameRate,
+    repeat: -1
+  });
+  return true;
 };
 
-const originalShowFinalEndingScene = ForestScene.prototype.showFinalEndingScene;
-ForestScene.prototype.showFinalEndingScene = function patchedShowFinalEndingScene(...args) {
-  const backgroundKey = this.getFinalEndingBackgroundKey?.();
-  const trackId = FINAL_BACKGROUND_TO_MUSIC_TRACK[backgroundKey];
-  if (trackId) {
-    playSceneMusic(this, trackId, { fadeDuration: 1200 });
-  }
-  return originalShowFinalEndingScene.apply(this, args);
-};
+ForestScene.prototype.createRomy = function patchedCreateRomy() {
+  // Create Romy directly on the lying wake frame. Do not call the original method:
+  // the original creates her first on romy-wake-04, which can flash for one frame.
+  this.romy = this.physics.add.sprite(PLAYER_START_X, this.getRomyY(), ROMY_INTRO_LYING_TEXTURE);
+  this.romy.setName('Romy');
+  this.romy.setDepth(20);
+  this.romy.setOrigin(0.5, 1);
+  this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
+  this.romy.setCollideWorldBounds(true);
+  this.romy.anims.stop();
+  this.romy.setTexture(ROMY_INTRO_LYING_TEXTURE);
+  this.romy.setVisible(false);
 
-const originalCreateRomy = ForestScene.prototype.createRomy;
-ForestScene.prototype.createRomy = function patchedCreateRomy(...args) {
-  originalCreateRomy.apply(this, args);
-  this.romy?.anims?.stop();
-  this.romy?.setTexture?.(ROMY_INTRO_LYING_TEXTURE);
-  if (this.romy) {
-    this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
-    this.romy.setVisible(false);
-  }
+  const bodyWidth = 48 / this.romy.scaleX;
+  const bodyHeight = ROMY_DISPLAY_HEIGHT / this.romy.scaleY;
+  this.romy.body.setSize(bodyWidth, bodyHeight);
+  this.romy.body.setOffset((this.romy.width - bodyWidth) / 2, this.romy.height - bodyHeight);
+  this.romyShadow = this.createContactShadow(this.romy, { width: 64, height: 14, alpha: 0.34, depth: 19 });
+
+  ensureSpriteAnimation(this, 'romy-idle', ROMY_IDLE_KEYS, 3);
+  ensureSpriteAnimation(this, 'romy-walk', ROMY_WALK_KEYS, 7);
+  ensureSpriteAnimation(this, 'romy-daisy-idle', ROMY_DAISY_IDLE_KEYS, 3);
+  ensureSpriteAnimation(this, 'romy-daisy-walk', ROMY_DAISY_WALK_KEYS, 7);
 };
 
 ForestScene.prototype.prepareRomyWakeIntroPose = function patchedPrepareRomyWakeIntroPose(makeVisible = false) {
@@ -442,6 +500,82 @@ ForestScene.prototype.playCutsceneVideo = function patchedPlayCutsceneVideo(vide
   }, options);
 };
 
+const originalPlayAreaIntroCutscene = ForestScene.prototype.playAreaIntroCutscene;
+ForestScene.prototype.transitionToArea = function patchedTransitionToArea(area) {
+  const targetX = AREA_SPAWN_X[area];
+
+  if (!targetX) {
+    return;
+  }
+
+  playMusicForArea(this, area, { fadeDuration: 760 });
+  this.isTransitioning = true;
+  GameState.currentArea = area;
+
+  if (area !== 'finale') {
+    GameState.currentPath = area;
+  }
+
+  this.interactHint?.setVisible(false);
+  this.stopRomy();
+  this.BlackTransition?.setVisible(true).setAlpha(0);
+
+  const revealGameplay = () => {
+    this.tweens.add({
+      targets: this.BlackTransition,
+      alpha: 0,
+      duration: 360,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.BlackTransition?.setVisible(false);
+        this.isTransitioning = false;
+      }
+    });
+  };
+
+  this.tweens.add({
+    targets: this.BlackTransition,
+    alpha: 1,
+    duration: 360,
+    ease: 'Sine.easeInOut',
+    onComplete: () => {
+      this.updateAreaBackground(area);
+      this.romy.setPosition(targetX, this.getRomyY());
+
+      const cat = this.interactables?.find((interactable) => interactable.id === 'cat');
+      if (cat?.container && this.catIntroStarted) {
+        cat.container.setPosition(Math.max(0, targetX - CAT_FOLLOW_DISTANCE), this.getRomyY());
+        cat.entranceComplete = true;
+      }
+
+      this.cameras.main.scrollY = 0;
+      this.cameras.main.scrollX = 0;
+
+      if (area === 'finale') {
+        GameState.finalMeadowStarted = false;
+        this.showFinalBackgroundPlaceholder(!this.textures.exists('background-margherite'));
+        this.finalMeadowContainer?.setPosition(1460, this.groundY).setVisible(true);
+        const finalDaisy = this.interactables?.find((interactable) => interactable.id === 'final_daisy');
+        finalDaisy?.container?.setPosition(1900, this.groundY);
+        finalDaisy?.sprite?.setVisible(false);
+      } else {
+        this.showFinalBackgroundPlaceholder(false);
+        this.finalMeadowContainer?.setVisible(false);
+      }
+
+      this.updateNpcVisibility();
+
+      const flagKey = AREA_INTRO_FLAGS[area];
+      if (flagKey && !GameState[flagKey]) {
+        originalPlayAreaIntroCutscene.call(this, area, revealGameplay);
+        return;
+      }
+
+      revealGameplay();
+    }
+  });
+};
+
 ForestScene.prototype.playRomySleepSequence = function patchedPlayRomySleepSequence() {
   if (this.finalSleepSequenceStarted) {
     return;
@@ -464,6 +598,16 @@ ForestScene.prototype.playRomySleepSequence = function patchedPlayRomySleepSeque
     duration: 2400,
     ease: 'Sine.easeInOut'
   });
+};
+
+const originalShowFinalEndingScene = ForestScene.prototype.showFinalEndingScene;
+ForestScene.prototype.showFinalEndingScene = function patchedShowFinalEndingScene(...args) {
+  const backgroundKey = this.getFinalEndingBackgroundKey?.();
+  const trackId = FINAL_BACKGROUND_TO_MUSIC_TRACK[backgroundKey];
+  if (trackId) {
+    playSceneMusic(this, trackId, { fadeDuration: 1200 });
+  }
+  return originalShowFinalEndingScene.apply(this, args);
 };
 
 const getPathCredit = () => {
