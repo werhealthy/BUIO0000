@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import '../systems/AmbientFxPatch.js';
+
 const backgroundAssets = import.meta.glob('../assets/backgrounds/background_menu_final.png', {
   eager: true,
   query: '?url',
