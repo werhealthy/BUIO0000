@@ -237,72 +237,81 @@ export class MenuScene extends Phaser.Scene {
   }
 
   createButton(x, y, label, onClick) {
-    const width = 166;
-    const height = 44;
-    const hitWidth = width + 32;
-    const hitHeight = height + 24;
+    const width = 146;
+    const height = 38;
+    const hitWidth = 212;
+    const hitHeight = 78;
     const container = this.add.container(x, y).setDepth(24);
 
-    const hitAreaVisual = this.add.rectangle(0, 0, hitWidth, hitHeight, 0x000000, 0).setOrigin(0.5);
-    const backGlow = this.add.ellipse(0, 0, width + 26, height + 18, 0x96d5c5, 0.06)
+    const aura = this.add.ellipse(0, 0, width + 22, height + 14, 0xaad6c8, 0.035)
       .setOrigin(0.5)
       .setBlendMode(Phaser.BlendModes.ADD);
-    const panel = this.add.rectangle(0, 0, width, height, 0x0d2022, 0.74)
-      .setStrokeStyle(1, 0xbfd2bf, 0.58)
+    const panel = this.add.rectangle(0, 0, width, height, 0x0a171b, 0.68)
+      .setStrokeStyle(1, 0x9bb8ac, 0.48)
       .setOrigin(0.5);
-    const innerLine = this.add.rectangle(0, 0, width - 12, height - 10, 0x152f31, 0.26)
-      .setStrokeStyle(1, 0x719487, 0.3)
+    const innerLine = this.add.rectangle(0, 0, width - 12, height - 10, 0x173033, 0.14)
+      .setStrokeStyle(1, 0x5d7f75, 0.22)
       .setOrigin(0.5);
-    const leftMark = this.add.text(-width / 2 + 15, 0, '✦', {
+    const leftMark = this.add.text(-width / 2 + 14, 0, '•', {
       fontFamily: 'Georgia, Times New Roman, serif',
-      fontSize: '11px',
-      color: '#9cb9ad'
-    }).setOrigin(0.5).setAlpha(0.62);
-    const rightMark = this.add.text(width / 2 - 15, 0, '✦', {
+      fontSize: '14px',
+      color: '#8fa89e'
+    }).setOrigin(0.5).setAlpha(0.72);
+    const rightMark = this.add.text(width / 2 - 14, 0, '•', {
       fontFamily: 'Georgia, Times New Roman, serif',
-      fontSize: '11px',
-      color: '#9cb9ad'
-    }).setOrigin(0.5).setAlpha(0.62);
-
+      fontSize: '14px',
+      color: '#8fa89e'
+    }).setOrigin(0.5).setAlpha(0.72);
     const text = this.add.text(0, -1, label, {
       fontFamily: 'Georgia, Times New Roman, serif',
-      fontSize: '22px',
+      fontSize: '20px',
       fontStyle: 'bold',
-      color: '#dde4cd',
-      shadow: { offsetX: 1, offsetY: 2, color: '#06100f', blur: 0, fill: true }
-    }).setOrigin(0.5).setPadding(0, 0, 0, 6);
+      color: '#d7dfd0',
+      shadow: { offsetX: 1, offsetY: 1, color: '#06100f', blur: 0, fill: true }
+    }).setOrigin(0.5).setPadding(0, 0, 0, 5);
+    const hitZone = this.add.rectangle(0, 0, hitWidth, hitHeight, 0x000000, 0.001)
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
 
-    container.add([hitAreaVisual, backGlow, panel, innerLine, leftMark, rightMark, text]);
-    container.setSize(hitWidth, hitHeight);
-    container.setInteractive(new Phaser.Geom.Rectangle(-hitWidth / 2, -hitHeight / 2, hitWidth, hitHeight), Phaser.Geom.Rectangle.Contains);
+    container.add([aura, panel, innerLine, leftMark, rightMark, text, hitZone]);
+    container.hitZone = hitZone;
+    container.isHovering = false;
 
     const setHoverState = (isHovering) => {
+      if (container.isHovering === isHovering || this.starting) {
+        return;
+      }
+      container.isHovering = isHovering;
+      this.tweens.killTweensOf([aura, panel, innerLine, text, leftMark, rightMark]);
+
       if (isHovering) {
         playSfx(this, 'ui-hover');
-        this.tweens.add({ targets: container, scale: 1.028, duration: 140, ease: 'Sine.easeOut' });
-        backGlow.setAlpha(0.18);
-        panel.setFillStyle(0x132b2d, 0.86).setStrokeStyle(1, 0xe2e3c7, 0.72);
-        innerLine.setFillStyle(0x1b3939, 0.34);
-        text.setColor('#f0eddc');
-        leftMark.setAlpha(0.9);
-        rightMark.setAlpha(0.9);
+        aura.setAlpha(0.14);
+        panel.setFillStyle(0x102529, 0.78).setStrokeStyle(1, 0xd8dbc0, 0.68);
+        innerLine.setFillStyle(0x1b383b, 0.22).setStrokeStyle(1, 0x8fb7a8, 0.38);
+        text.setColor('#f0ead9');
+        leftMark.setAlpha(1);
+        rightMark.setAlpha(1);
         return;
       }
 
-      this.tweens.add({ targets: container, scale: 1, duration: 160, ease: 'Sine.easeOut' });
-      backGlow.setAlpha(0.06);
-      panel.setFillStyle(0x0d2022, 0.74).setStrokeStyle(1, 0xbfd2bf, 0.58);
-      innerLine.setFillStyle(0x152f31, 0.26);
-      text.setColor('#dde4cd');
-      leftMark.setAlpha(0.62);
-      rightMark.setAlpha(0.62);
+      aura.setAlpha(0.035);
+      panel.setFillStyle(0x0a171b, 0.68).setStrokeStyle(1, 0x9bb8ac, 0.48);
+      innerLine.setFillStyle(0x173033, 0.14).setStrokeStyle(1, 0x5d7f75, 0.22);
+      text.setColor('#d7dfd0');
+      leftMark.setAlpha(0.72);
+      rightMark.setAlpha(0.72);
     };
 
-    container.on('pointerover', () => setHoverState(true));
-    container.on('pointerout', () => setHoverState(false));
-    container.on('pointerdown', () => {
+    hitZone.on('pointerover', () => setHoverState(true));
+    hitZone.on('pointerout', () => setHoverState(false));
+    hitZone.on('pointerdown', () => {
+      if (this.starting) {
+        return;
+      }
+      hitZone.disableInteractive();
       playSfx(this, 'start');
-      this.tweens.add({ targets: container, scale: 0.985, duration: 80, yoyo: true, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: [panel, innerLine, text, leftMark, rightMark, aura], alpha: 0.42, duration: 120, yoyo: true, ease: 'Sine.easeInOut' });
       onClick?.();
     });
 
@@ -408,6 +417,7 @@ export class MenuScene extends Phaser.Scene {
     this.time.delayedCall(80, () => this.stopMenuAndGameMusic());
     this.scheduleForestMusicFromMenu();
 
+    this.startButton?.hitZone?.disableInteractive?.();
     this.startButton?.disableInteractive?.();
     this.tweens.add({ targets: [this.startButton, this.soundPrompt].filter(Boolean), alpha: 0, duration: 260, ease: 'Sine.easeOut' });
 
