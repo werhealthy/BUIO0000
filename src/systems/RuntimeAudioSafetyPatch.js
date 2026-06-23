@@ -63,6 +63,7 @@ let startClickedAt = 0;
 let forestMusicTimer = null;
 let installed = false;
 
+const BASE_MENU_CREATE = MenuScene.prototype.create;
 const BASE_FOREST_CREATE = ForestScene.prototype.create;
 const BASE_PLAY_CUTSCENE_VIDEO = ForestScene.prototype.playCutsceneVideo;
 const BASE_PLAY_AREA_INTRO_CUTSCENE = ForestScene.prototype.playAreaIntroCutscene;
@@ -236,6 +237,16 @@ const startForestMusicWhenReady = (scene) => {
 
 const trackForArea = (area) => AREA_TO_TRACK[area] ?? 'forest';
 
+const installMenuCreate = () => {
+  MenuScene.prototype.create = function runtimeSafeMenuCreate(...args) {
+    const result = BASE_MENU_CREATE.apply(this, args);
+    playMusicSafe(this, 'menu', { duration: 900, volume: MENU_VOLUME });
+    this.input.once('pointerdown', () => playMusicSafe(this, 'menu', { duration: 650, volume: MENU_VOLUME }));
+    this.input.keyboard?.once('keydown', () => playMusicSafe(this, 'menu', { duration: 650, volume: MENU_VOLUME }));
+    return result;
+  };
+};
+
 const installStartFlow = () => {
   MenuScene.prototype.startGame = function runtimeSafeStartGame(source = 'keyboard') {
     if (this.starting) {
@@ -382,15 +393,14 @@ const installFinalMusic = () => {
 };
 
 const installRuntimeAudioSafetyPatch = () => {
+  installMenuCreate();
+  installStartFlow();
+  installVideoFlow();
   if (installed) {
-    installVideoFlow();
-    installStartFlow();
     return;
   }
   installed = true;
-  installStartFlow();
   installForestCreate();
-  installVideoFlow();
   installAreaTransition();
   installFinalMusic();
 };
