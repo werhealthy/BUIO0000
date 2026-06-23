@@ -43,6 +43,9 @@ const GAME_MUSIC_KEYS = new Set([
   'music-bristol'
 ]);
 const ALL_MUSIC_KEYS = new Set([...MENU_MUSIC_KEYS, ...GAME_MUSIC_KEYS]);
+const MENU_VOLUME = 0.16;
+const FOREST_VOLUME = 0.2;
+const FOREST_MUSIC_DELAY = 2000;
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -60,7 +63,13 @@ export class MenuScene extends Phaser.Scene {
     this.fitBackgroundCover();
     this.createMenuParticles();
     this.createSoundPrompt();
+    this.startButton = this.createButton(width / 2, height * 0.72, 'Inizia', () => this.safeStartGame('button'));
     this.tryStartMenuMusic();
+
+    this.input.once('pointerdown', () => this.enableAudioFromGesture());
+    this.input.keyboard?.once('keydown', () => this.enableAudioFromGesture());
+    this.input.keyboard?.on('keydown-SPACE', () => this.safeStartGame('keyboard'));
+    this.input.keyboard?.on('keydown-E', () => this.safeStartGame('keyboard'));
 
     this.scale.on('resize', () => {
       this.fitBackgroundCover();
@@ -69,22 +78,7 @@ export class MenuScene extends Phaser.Scene {
       this.layoutStartButton();
     });
 
-    this.input.once('pointerdown', () => this.enableAudioFromGesture());
-    this.input.keyboard?.once('keydown', () => this.enableAudioFromGesture());
-
-    loadRuntimePatches().finally(() => {
-      if (!this.scene?.isActive?.('MenuScene')) {
-        return;
-      }
-
-      // Instance-level start flow: this wins over older prototype patches and keeps
-      // the visual progression independent from the audio unlock state.
-      this.startGame = this.safeStartGame.bind(this);
-      this.startButton = this.createButton(width / 2, height * 0.72, 'Inizia', true, () => this.startGame('button'));
-      this.input.keyboard.on('keydown-SPACE', () => this.startGame('keyboard'));
-      this.input.keyboard.on('keydown-E', () => this.startGame('keyboard'));
-      this.layoutStartButton();
-    });
+    loadRuntimePatches();
   }
 
   fitBackgroundCover() {
@@ -120,9 +114,9 @@ export class MenuScene extends Phaser.Scene {
         targets: particle,
         x: x + Phaser.Math.Between(-drift, drift),
         y: y + Phaser.Math.Between(-drift, drift),
-        scale: { from: 0.85, to: 1.28 },
-        alpha: { from: alpha * 0.35, to: alpha },
-        duration: Phaser.Math.Between(1800, 4800),
+        scale: { from: 0.75, to: 1.35 },
+        alpha: { from: alpha * 0.25, to: alpha },
+        duration: Phaser.Math.Between(1900, 5200),
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
@@ -132,23 +126,23 @@ export class MenuScene extends Phaser.Scene {
       return particle;
     };
 
-    for (let index = 0; index < 34; index += 1) {
+    for (let index = 0; index < 42; index += 1) {
       const x = Phaser.Math.Between(18, Math.max(18, width - 18));
-      const y = Phaser.Math.Between(20, Math.max(20, height - 20));
-      const radius = Phaser.Math.FloatBetween(1.2, 3.8);
-      const color = Phaser.Math.RND.pick([0xfff4ba, 0xcaffd9, 0xb7f4ff, 0xffffff]);
-      const alpha = Phaser.Math.FloatBetween(0.15, 0.44);
-      createGlow(x, y, radius, color, alpha, -6, 26);
+      const y = Phaser.Math.Between(18, Math.max(18, height - 18));
+      const radius = Phaser.Math.FloatBetween(1, 3.6);
+      const color = Phaser.Math.RND.pick([0xfff0a8, 0xc5ffd5, 0xa9ebff, 0xf8ffe1]);
+      const alpha = Phaser.Math.FloatBetween(0.12, 0.42);
+      createGlow(x, y, radius, color, alpha, -6, 30);
     }
 
-    for (let index = 0; index < 8; index += 1) {
+    for (let index = 0; index < 10; index += 1) {
       const mist = this.add.ellipse(
         Phaser.Math.Between(0, width),
-        Phaser.Math.Between(Math.round(height * 0.18), Math.round(height * 0.82)),
-        Phaser.Math.Between(90, 180),
-        Phaser.Math.Between(12, 26),
-        0xd9fff0,
-        Phaser.Math.FloatBetween(0.025, 0.06)
+        Phaser.Math.Between(Math.round(height * 0.16), Math.round(height * 0.84)),
+        Phaser.Math.Between(90, 210),
+        Phaser.Math.Between(10, 28),
+        0xd0fff0,
+        Phaser.Math.FloatBetween(0.02, 0.055)
       )
         .setScrollFactor(0)
         .setDepth(-14)
@@ -156,9 +150,9 @@ export class MenuScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: mist,
-        x: mist.x + Phaser.Math.Between(-50, 50),
-        alpha: { from: mist.alpha * 0.4, to: mist.alpha },
-        duration: Phaser.Math.Between(5600, 9200),
+        x: mist.x + Phaser.Math.Between(-70, 70),
+        alpha: { from: mist.alpha * 0.35, to: mist.alpha },
+        duration: Phaser.Math.Between(5800, 9800),
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
@@ -167,14 +161,14 @@ export class MenuScene extends Phaser.Scene {
       this.menuParticles.push(mist);
     }
 
-    const halo = this.add.circle(width / 2, height * 0.54, Math.max(width, height) * 0.18, 0xd7ffe6, 0.055)
+    const halo = this.add.circle(width / 2, height * 0.54, Math.max(width, height) * 0.18, 0xd7ffe6, 0.05)
       .setScrollFactor(0)
       .setDepth(-18)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({
       targets: halo,
-      scale: { from: 0.92, to: 1.08 },
-      alpha: { from: 0.035, to: 0.075 },
+      scale: { from: 0.9, to: 1.12 },
+      alpha: { from: 0.03, to: 0.07 },
       duration: 5200,
       yoyo: true,
       repeat: -1,
@@ -187,8 +181,8 @@ export class MenuScene extends Phaser.Scene {
     this.soundPrompt?.destroy?.();
     const { width, height } = this.scale;
     const container = this.add.container(width / 2, height - 42).setScrollFactor(0).setDepth(40).setAlpha(0.92);
-    const bg = this.add.rectangle(0, 0, 300, 34, 0x061b1f, 0.58)
-      .setStrokeStyle(1, 0xbde8d0, 0.42)
+    const bg = this.add.rectangle(0, 0, 286, 34, 0x061b1f, 0.52)
+      .setStrokeStyle(1, 0xbde8d0, 0.35)
       .setOrigin(0.5);
     const text = this.add.text(0, 0, 'clicca per attivare il suono', {
       fontFamily: 'Georgia, Times New Roman, serif',
@@ -201,7 +195,7 @@ export class MenuScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: container,
-      alpha: { from: 0.55, to: 0.95 },
+      alpha: { from: 0.52, to: 0.95 },
       duration: 1500,
       yoyo: true,
       repeat: -1,
@@ -240,60 +234,75 @@ export class MenuScene extends Phaser.Scene {
     this.startButton.setPosition(width / 2, height * 0.72);
   }
 
-  createButton(x, y, label, primary, onClick) {
-    const width = primary ? 214 : 168;
-    const height = 62;
+  createButton(x, y, label, onClick) {
+    const width = 224;
+    const height = 66;
     const container = this.add.container(x, y).setDepth(24);
 
-    const glow = this.add.rectangle(0, 4, width + 22, height + 20, 0xb6fff0, 0.08)
-      .setStrokeStyle(1, 0xd7fff3, 0.18)
-      .setOrigin(0.5);
-    const shadow = this.add.rectangle(0, 8, width, height, 0x020809, 0.46).setOrigin(0.5);
-    const background = this.add.rectangle(0, 0, width, height, primary ? 0x123238 : 0x182a2e, primary ? 0.96 : 0.86)
-      .setStrokeStyle(3, primary ? 0xe3c67a : 0x9aa895, 0.96)
-      .setOrigin(0.5);
-    const inner = this.add.rectangle(0, 0, width - 14, height - 12, primary ? 0x1e4a4d : 0x243638, 0.72)
-      .setStrokeStyle(1, 0xf9efbd, 0.28)
+    const shadow = this.add.ellipse(0, 10, width + 34, height + 16, 0x020606, 0.42).setOrigin(0.5);
+    const backGlow = this.add.ellipse(0, 2, width + 26, height + 18, 0x9ee6d2, 0.1)
+      .setStrokeStyle(1, 0xd5fff1, 0.16)
       .setOrigin(0.5);
 
-    const leftRune = this.add.text(-width / 2 + 18, 0, '✦', {
+    const graphics = this.add.graphics();
+    graphics.fillStyle(0x17282b, 0.96);
+    graphics.lineStyle(3, 0x8fa28f, 0.92);
+    graphics.beginPath();
+    graphics.moveTo(-width / 2 + 18, -height / 2 + 4);
+    graphics.lineTo(width / 2 - 22, -height / 2 - 2);
+    graphics.quadraticCurveTo(width / 2 + 6, -height / 2 + 8, width / 2 - 2, -6);
+    graphics.lineTo(width / 2 - 8, height / 2 - 10);
+    graphics.quadraticCurveTo(width / 2 - 12, height / 2 + 8, width / 2 - 34, height / 2 + 2);
+    graphics.lineTo(-width / 2 + 24, height / 2 + 5);
+    graphics.quadraticCurveTo(-width / 2 - 6, height / 2 - 2, -width / 2 + 2, 6);
+    graphics.lineTo(-width / 2 + 8, -height / 2 + 14);
+    graphics.quadraticCurveTo(-width / 2 + 8, -height / 2 + 4, -width / 2 + 18, -height / 2 + 4);
+    graphics.closePath();
+    graphics.fillPath();
+    graphics.strokePath();
+
+    const inner = this.add.rectangle(0, 0, width - 26, height - 20, 0x223b3a, 0.52)
+      .setStrokeStyle(1, 0xc9d7a2, 0.2)
+      .setOrigin(0.5);
+
+    const vineLeft = this.add.text(-width / 2 + 22, 0, '☾', {
       fontFamily: 'Georgia, Times New Roman, serif',
-      fontSize: '16px',
-      color: '#f5d98c'
-    }).setOrigin(0.5);
-    const rightRune = this.add.text(width / 2 - 18, 0, '✦', {
+      fontSize: '20px',
+      color: '#b8d6be'
+    }).setOrigin(0.5).setAlpha(0.88);
+    const vineRight = this.add.text(width / 2 - 22, 0, '☽', {
       fontFamily: 'Georgia, Times New Roman, serif',
-      fontSize: '16px',
-      color: '#f5d98c'
-    }).setOrigin(0.5);
+      fontSize: '20px',
+      color: '#b8d6be'
+    }).setOrigin(0.5).setAlpha(0.88);
 
     const text = this.add.text(0, -1, label, {
       fontFamily: 'Georgia, Times New Roman, serif',
-      fontSize: '25px',
+      fontSize: '27px',
       fontStyle: 'bold',
-      color: '#fff2bf',
-      shadow: { offsetX: 0, offsetY: 2, color: '#071215', blur: 0, fill: true }
+      color: '#e9edd2',
+      shadow: { offsetX: 2, offsetY: 3, color: '#06100f', blur: 0, fill: true }
     }).setOrigin(0.5).setPadding(0, 0, 0, 8);
 
-    container.add([glow, shadow, background, inner, leftRune, rightRune, text]);
+    container.add([shadow, backGlow, graphics, inner, vineLeft, vineRight, text]);
     container.setSize(width, height);
-    container.setInteractive({ useHandCursor: true });
+    container.setInteractive(new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height), Phaser.Geom.Rectangle.Contains);
 
     container.on('pointerover', () => {
       playSfx(this, 'ui-hover');
-      this.tweens.add({ targets: container, scale: 1.045, duration: 120, ease: 'Sine.easeOut' });
-      background.setFillStyle(primary ? 0x1b4a4e : 0x243638, 1);
-      glow.setAlpha(0.18);
+      this.tweens.add({ targets: container, scale: 1.035, duration: 120, ease: 'Sine.easeOut' });
+      backGlow.setAlpha(0.2);
+      inner.setFillStyle(0x2b4743, 0.68);
     });
 
     container.on('pointerout', () => {
       this.tweens.add({ targets: container, scale: 1, duration: 140, ease: 'Sine.easeOut' });
-      background.setFillStyle(primary ? 0x123238 : 0x182a2e, primary ? 0.96 : 0.86);
-      glow.setAlpha(0.08);
+      backGlow.setAlpha(0.1);
+      inner.setFillStyle(0x223b3a, 0.52);
     });
 
     container.on('pointerdown', () => {
-      playSfx(this, primary ? 'start' : 'ui-click');
+      playSfx(this, 'start');
       this.tweens.add({ targets: container, scale: 0.97, duration: 70, yoyo: true, ease: 'Sine.easeInOut' });
       onClick?.();
     });
@@ -311,7 +320,7 @@ export class MenuScene extends Phaser.Scene {
       if (existing) {
         return;
       }
-      const music = this.sound.add('title-screen', { loop: true, volume: 0.16 });
+      const music = this.sound.add('title-screen', { loop: true, volume: MENU_VOLUME });
       music.play();
     } catch (error) {
       console.warn('[MenuScene] Menu music autoplay was blocked.', error);
@@ -361,6 +370,29 @@ export class MenuScene extends Phaser.Scene {
     unlockSfxAudio(this);
   }
 
+  scheduleForestMusicFromMenu() {
+    const soundManager = this.sound;
+    const cache = this.cache;
+    window.clearTimeout?.(window.__buioForestMusicTimer);
+    window.__buioForestMusicTimer = window.setTimeout(() => {
+      if (!soundManager || soundManager.locked || !cache?.audio?.exists('music-forest-initial')) {
+        return;
+      }
+
+      try {
+        const existing = soundManager.sounds?.find((sound) => sound?.key === 'music-forest-initial' && sound.isPlaying);
+        if (existing) {
+          return;
+        }
+        const music = soundManager.add('music-forest-initial', { loop: true, volume: 0 });
+        music.play();
+        music.setVolume?.(FOREST_VOLUME);
+      } catch (error) {
+        console.warn('[MenuScene] Could not start forest music from menu handoff.', error);
+      }
+    }, FOREST_MUSIC_DELAY);
+  }
+
   safeStartGame(source = 'keyboard') {
     if (this.starting) {
       return;
@@ -373,7 +405,14 @@ export class MenuScene extends Phaser.Scene {
     }
 
     this.stopMenuAndGameMusic();
-    this.time.delayedCall(60, () => this.stopMenuAndGameMusic());
+    this.time.delayedCall(80, () => this.stopMenuAndGameMusic());
+    this.scheduleForestMusicFromMenu();
+
+    const { width, height } = this.scale;
+    const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(9999);
 
     let sceneStarted = false;
     const startForest = () => {
@@ -384,8 +423,13 @@ export class MenuScene extends Phaser.Scene {
       this.scene.start('ForestScene');
     };
 
-    this.cameras.main.fadeOut(420, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, startForest);
-    this.time.delayedCall(560, startForest);
+    this.tweens.add({
+      targets: overlay,
+      alpha: 1,
+      duration: 360,
+      ease: 'Sine.easeInOut',
+      onComplete: startForest
+    });
+    this.time.delayedCall(520, startForest);
   }
 }
