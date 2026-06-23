@@ -9,10 +9,34 @@ import './style.css';
 const PORTRAIT_FIT_WIDTH = 76;
 const PORTRAIT_FIT_HEIGHT = 76;
 const ROMY_DISPLAY_HEIGHT = 142;
-const PLAYER_START_X = 130;
+const PLAYER_START_X = 260;
+const CAT_FOLLOW_DISTANCE = 92;
 const MUSIC_VOLUME = 0.42;
 const MENU_MUSIC_VOLUME = 0.36;
 const MUSIC_FADE_DURATION = 850;
+const CUTSCENE_COVER_DEPTH = 4999;
+const ROMY_INTRO_LYING_TEXTURE = 'romy-wake-01';
+const SOUND_UNLOCKED_EVENT = Phaser.Sound?.Events?.UNLOCKED ?? 'unlocked';
+
+const ROMY_IDLE_KEYS = ['romy-idle-01', 'romy-idle-02', 'romy-idle-03'];
+const ROMY_WALK_KEYS = ['romy-walk-01', 'romy-walk-02', 'romy-walk-03', 'romy-walk-04'];
+const ROMY_DAISY_IDLE_KEYS = ['romy-daisy-idle-01', 'romy-daisy-idle-02', 'romy-daisy-idle-03'];
+const ROMY_DAISY_WALK_KEYS = ['romy-daisy-walk-01', 'romy-daisy-walk-02', 'romy-daisy-walk-03', 'romy-daisy-walk-04'];
+
+const AREA_SPAWN_X = {
+  forest: PLAYER_START_X,
+  madama: 160,
+  sposine: 160,
+  cavallo: 160,
+  finale: 160,
+  pittore: 160
+};
+
+const AREA_INTRO_FLAGS = {
+  madama: 'madamaIntroCutscenePlayed',
+  sposine: 'sposineIntroCutscenePlayed',
+  cavallo: 'cavalloIntroCutscenePlayed'
+};
 
 const SPEAKER_TO_EXISTING_TEXTURE = {
   romy: () => (GameState.hasDaisy ? 'romy-daisy-idle-01' : 'romy-idle-01'),
@@ -55,12 +79,12 @@ const SPEAKER_ALIASES = {
 };
 
 const MUSIC_TRACKS = {
-  menu: { key: 'music-title-screen', file: 'title_screen.mp3', volume: MENU_MUSIC_VOLUME },
-  forest: { key: 'music-forest', file: 'bosco_scena_iniziale.mp3', volume: MUSIC_VOLUME },
+  menu: { key: 'title-screen', file: 'title_screen.mp3', volume: MENU_MUSIC_VOLUME },
+  forest: { key: 'music-forest-initial', file: 'bosco_scena_iniziale.mp3', volume: MUSIC_VOLUME },
   madama: { key: 'music-madama', file: 'bosco_scena_madame.mp3', volume: MUSIC_VOLUME },
   sposine: { key: 'music-sposine', file: 'bosco_scena_matrimonio.mp3', volume: MUSIC_VOLUME },
   cavallo: { key: 'music-cavallo', file: 'bosco_scena_museo.mp3', volume: MUSIC_VOLUME },
-  finale: { key: 'music-finale', file: 'bosco_scena_finale.mp3', volume: MUSIC_VOLUME },
+  finale: { key: 'music-meadow-final', file: 'bosco_scena_finale.mp3', volume: MUSIC_VOLUME },
   grecia: { key: 'music-grecia', file: 'scena_grecia.mp3', volume: MUSIC_VOLUME },
   sicilia: { key: 'music-sicilia', file: 'scena_sicilia.mp3', volume: MUSIC_VOLUME },
   bristol: { key: 'music-bristol', file: 'scena_bristol.mp3', volume: MUSIC_VOLUME }
@@ -83,9 +107,13 @@ const FINAL_BACKGROUND_TO_MUSIC_TRACK = {
 
 const MUSIC_STATE = {
   currentKey: null,
+  currentTrackId: null,
   currentSound: null,
   pendingTrackId: null,
-  warnedMissingTracks: new Set()
+  targetVolume: MUSIC_VOLUME,
+  ducked: false,
+  warnedMissingTracks: new Set(),
+  loadErrorHandlerScenes: new WeakSet()
 };
 
 const getPublicAssetPath = (relativePath) => {
@@ -96,14 +124,48 @@ const getPublicAssetPath = (relativePath) => {
 
 const getMusicAssetPath = (fileName) => getPublicAssetPath(`assets/audio/${fileName}`);
 
+const getTrackPath = (track) => getMusicAssetPath(track.file);
+
 const preloadMusicTracks = (scene) => {
+  if (!scene || MUSIC_STATE.loadErrorHandlerScenes.has(scene)) {
+    return;
+  }
+
+  MUSIC_STATE.loadErrorHandlerScenes.add(scene);
+  scene.load.on('loaderror', (file) => {
+    const failedTrack = Object.entries(MUSIC_TRACKS)
+      .find(([, track]) => track.key === file?.key);
+    if (!failedTrack) {
+      return;
+    }
+
+    const [trackId, track] = failedTrack;
+    warnMissingMusicTrack(trackId, track);
+  });
+
   Object.values(MUSIC_TRACKS).forEach((track) => {
     if (!track?.key || !track?.file || scene.cache.audio.exists(track.key)) {
       return;
     }
 
-    scene.load.audio(track.key, getMusicAssetPath(track.file));
+    scene.load.audio(track.key, getTrackPath(track));
   });
+};
+
+const unlockSceneAudio = (scene) => {
+  if (!scene?.sound) {
+    return;
+  }
+
+  try {
+    scene.sound.unlock?.();
+    const context = scene.sound.context;
+    if (context?.state === 'suspended') {
+      context.resume?.();
+    }
+  } catch (error) {
+    console.warn('[Music] Could not unlock audio context', error);
+  }
 };
 
 const warnMissingMusicTrack = (trackId, track) => {
@@ -113,7 +175,7 @@ const warnMissingMusicTrack = (trackId, track) => {
   }
 
   MUSIC_STATE.warnedMissingTracks.add(warningKey);
-  console.warn(`[Music] Missing audio asset for track: ${trackId} / file: ${track?.file ?? 'unknown'}`);
+  console.warn(`Missing music track: ${trackId} ${track ? getTrackPath(track) : 'unknown'}`);
 };
 
 const fadeOutAndDestroyCurrentMusic = (scene, fadeDuration = MUSIC_FADE_DURATION) => {
@@ -124,6 +186,7 @@ const fadeOutAndDestroyCurrentMusic = (scene, fadeDuration = MUSIC_FADE_DURATION
 
   MUSIC_STATE.currentSound = null;
   MUSIC_STATE.currentKey = null;
+  MUSIC_STATE.currentTrackId = null;
 
   scene.tweens.add({
     targets: previousSound,
@@ -137,7 +200,11 @@ const fadeOutAndDestroyCurrentMusic = (scene, fadeDuration = MUSIC_FADE_DURATION
   });
 };
 
-const playSceneMusic = (scene, trackId, options = {}) => {
+const stopMusic = (scene, options = {}) => {
+  fadeOutAndDestroyCurrentMusic(scene, options.fadeDuration ?? MUSIC_FADE_DURATION);
+};
+
+const playMusic = (scene, trackId, options = {}) => {
   const track = MUSIC_TRACKS[trackId];
   if (!scene?.sound || !track) {
     return;
@@ -146,9 +213,9 @@ const playSceneMusic = (scene, trackId, options = {}) => {
   MUSIC_STATE.pendingTrackId = trackId;
 
   if (scene.sound.locked) {
-    scene.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
+    scene.sound.once(SOUND_UNLOCKED_EVENT, () => {
       if (MUSIC_STATE.pendingTrackId === trackId) {
-        playSceneMusic(scene, trackId, options);
+        playMusic(scene, trackId, options);
       }
     });
     return;
@@ -165,11 +232,14 @@ const playSceneMusic = (scene, trackId, options = {}) => {
 
   const fadeDuration = options.fadeDuration ?? MUSIC_FADE_DURATION;
   const volume = options.volume ?? track.volume ?? MUSIC_VOLUME;
+  MUSIC_STATE.targetVolume = volume;
+  MUSIC_STATE.ducked = false;
   fadeOutAndDestroyCurrentMusic(scene, fadeDuration);
 
   const nextSound = scene.sound.add(track.key, { loop: true, volume: 0 });
   MUSIC_STATE.currentSound = nextSound;
   MUSIC_STATE.currentKey = track.key;
+  MUSIC_STATE.currentTrackId = trackId;
 
   try {
     nextSound.play();
@@ -191,9 +261,43 @@ const playSceneMusic = (scene, trackId, options = {}) => {
   });
 };
 
+const fadeToMusic = (scene, trackId, options = {}) => playMusic(scene, trackId, options);
+
+const duckMusicForCutscene = (scene, options = {}) => {
+  const sound = MUSIC_STATE.currentSound;
+  if (!scene?.tweens || !sound || MUSIC_STATE.ducked) {
+    return;
+  }
+
+  MUSIC_STATE.ducked = true;
+  scene.tweens.killTweensOf(sound);
+  scene.tweens.add({
+    targets: sound,
+    volume: options.volume ?? 0.08,
+    duration: options.fadeDuration ?? 320,
+    ease: 'Sine.easeInOut'
+  });
+};
+
+const restoreMusicAfterCutscene = (scene, options = {}) => {
+  const sound = MUSIC_STATE.currentSound;
+  if (!scene?.tweens || !sound || !MUSIC_STATE.ducked) {
+    return;
+  }
+
+  MUSIC_STATE.ducked = false;
+  scene.tweens.killTweensOf(sound);
+  scene.tweens.add({
+    targets: sound,
+    volume: MUSIC_STATE.targetVolume,
+    duration: options.fadeDuration ?? 420,
+    ease: 'Sine.easeInOut'
+  });
+};
+
 const playMusicForArea = (scene, area, options = {}) => {
   const trackId = AREA_TO_MUSIC_TRACK[area] ?? AREA_TO_MUSIC_TRACK.forest;
-  playSceneMusic(scene, trackId, options);
+  fadeToMusic(scene, trackId, options);
 };
 
 const getSpeakerId = (speaker = '') => {
@@ -302,12 +406,21 @@ MenuScene.prototype.preload = function patchedMenuPreload(...args) {
 const originalMenuCreate = MenuScene.prototype.create;
 MenuScene.prototype.create = function patchedMenuCreate(...args) {
   originalMenuCreate.apply(this, args);
-  playSceneMusic(this, 'menu', { fadeDuration: 1200, volume: MENU_MUSIC_VOLUME });
+  this.input.once('pointerdown', () => {
+    unlockSceneAudio(this);
+    playMusic(this, 'menu', { fadeDuration: 420, volume: MENU_MUSIC_VOLUME });
+  });
+  this.input.keyboard?.once('keydown', () => {
+    unlockSceneAudio(this);
+    playMusic(this, 'menu', { fadeDuration: 420, volume: MENU_MUSIC_VOLUME });
+  });
+  playMusic(this, 'menu', { fadeDuration: 1200, volume: MENU_MUSIC_VOLUME });
 };
 
 const originalMenuStartGame = MenuScene.prototype.startGame;
 MenuScene.prototype.startGame = function patchedMenuStartGame(...args) {
-  playSceneMusic(this, 'forest', { fadeDuration: 420 });
+  unlockSceneAudio(this);
+  fadeToMusic(this, 'forest', { fadeDuration: 420 });
   return originalMenuStartGame.apply(this, args);
 };
 
@@ -320,33 +433,62 @@ ForestScene.prototype.preload = function patchedForestPreload(...args) {
 const originalForestCreate = ForestScene.prototype.create;
 ForestScene.prototype.create = function patchedForestCreate(...args) {
   originalForestCreate.apply(this, args);
+  this.input.once('pointerdown', () => {
+    unlockSceneAudio(this);
+    playMusicForArea(this, GameState.currentArea ?? 'forest', { fadeDuration: 420 });
+  });
+  this.input.keyboard?.once('keydown', () => {
+    unlockSceneAudio(this);
+    playMusicForArea(this, GameState.currentArea ?? 'forest', { fadeDuration: 420 });
+  });
+  unlockSceneAudio(this);
   playMusicForArea(this, GameState.currentArea ?? 'forest', { fadeDuration: 900 });
 };
 
-const originalTransitionToArea = ForestScene.prototype.transitionToArea;
-ForestScene.prototype.transitionToArea = function patchedTransitionToArea(area, ...args) {
-  playMusicForArea(this, area, { fadeDuration: 760 });
-  return originalTransitionToArea.call(this, area, ...args);
+const makeFrameList = (keys) => keys.map((key) => ({ key }));
+const existingKeys = (scene, keys) => keys.filter((key) => scene.textures.exists(key));
+const ensureSpriteAnimation = (scene, key, textureKeys, frameRate) => {
+  if (scene.anims.exists(key)) {
+    return true;
+  }
+
+  const frames = existingKeys(scene, textureKeys);
+  if (frames.length < 2) {
+    return false;
+  }
+
+  scene.anims.create({
+    key,
+    frames: makeFrameList(frames),
+    frameRate,
+    repeat: -1
+  });
+  return true;
 };
 
-const originalShowFinalEndingScene = ForestScene.prototype.showFinalEndingScene;
-ForestScene.prototype.showFinalEndingScene = function patchedShowFinalEndingScene(...args) {
-  const backgroundKey = this.getFinalEndingBackgroundKey?.();
-  const trackId = FINAL_BACKGROUND_TO_MUSIC_TRACK[backgroundKey];
-  if (trackId) {
-    playSceneMusic(this, trackId, { fadeDuration: 1200 });
-  }
-  return originalShowFinalEndingScene.apply(this, args);
-};
+ForestScene.prototype.createRomy = function patchedCreateRomy() {
+  // Create Romy directly on the lying wake frame. Do not call the original method:
+  // the original creates her first on romy-wake-04, which can flash for one frame.
+  this.romy = this.physics.add.sprite(PLAYER_START_X, this.getRomyY(), ROMY_INTRO_LYING_TEXTURE);
+  this.romy.setName('Romy');
+  this.romy.setDepth(20);
+  this.romy.setOrigin(0.5, 1);
+  this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
+  this.romy.setCollideWorldBounds(true);
+  this.romy.anims.stop();
+  this.romy.setTexture(ROMY_INTRO_LYING_TEXTURE);
+  this.romy.setVisible(false);
 
-const originalCreateRomy = ForestScene.prototype.createRomy;
-ForestScene.prototype.createRomy = function patchedCreateRomy(...args) {
-  originalCreateRomy.apply(this, args);
-  this.romy?.anims?.stop();
-  this.romy?.setTexture?.('romy-wake-01');
-  if (this.romy) {
-    this.romy.setVisible(false);
-  }
+  const bodyWidth = 48 / this.romy.scaleX;
+  const bodyHeight = ROMY_DISPLAY_HEIGHT / this.romy.scaleY;
+  this.romy.body.setSize(bodyWidth, bodyHeight);
+  this.romy.body.setOffset((this.romy.width - bodyWidth) / 2, this.romy.height - bodyHeight);
+  this.romyShadow = this.createContactShadow(this.romy, { width: 64, height: 14, alpha: 0.34, depth: 19 });
+
+  ensureSpriteAnimation(this, 'romy-idle', ROMY_IDLE_KEYS, 3);
+  ensureSpriteAnimation(this, 'romy-walk', ROMY_WALK_KEYS, 7);
+  ensureSpriteAnimation(this, 'romy-daisy-idle', ROMY_DAISY_IDLE_KEYS, 3);
+  ensureSpriteAnimation(this, 'romy-daisy-walk', ROMY_DAISY_WALK_KEYS, 7);
 };
 
 ForestScene.prototype.prepareRomyWakeIntroPose = function patchedPrepareRomyWakeIntroPose(makeVisible = false) {
@@ -356,7 +498,7 @@ ForestScene.prototype.prepareRomyWakeIntroPose = function patchedPrepareRomyWake
 
   this.isWakingUp = true;
   this.romy.anims.stop();
-  this.romy.setTexture('romy-wake-01');
+  this.romy.setTexture(ROMY_INTRO_LYING_TEXTURE);
   this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
   this.romy.setPosition(this.romy.x || PLAYER_START_X, this.getRomyY());
   this.romy.setVelocity(0, 0);
@@ -395,6 +537,132 @@ ForestScene.prototype.setRomyPose = function patchedSetRomyPose(pose) {
   this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
 };
 
+const originalStopRomy = ForestScene.prototype.stopRomy;
+ForestScene.prototype.stopRomy = function patchedStopRomy(...args) {
+  if (this.isWakingUp && this.romy) {
+    const currentWakeTexture = this.romy.texture?.key?.startsWith('romy-wake-')
+      ? this.romy.texture.key
+      : ROMY_INTRO_LYING_TEXTURE;
+    this.romy.y = this.getRomyY();
+    this.romy.setVelocity(0, 0);
+    this.romy.anims.stop();
+    this.romy.setTexture(currentWakeTexture);
+    this.setSpriteDisplayHeight(this.romy, ROMY_DISPLAY_HEIGHT);
+    return;
+  }
+
+  return originalStopRomy.apply(this, args);
+};
+
+const createCutsceneCover = (scene) => {
+  scene.cutsceneCover?.destroy?.();
+  const cover = scene.add
+    .rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 1)
+    .setOrigin(0, 0)
+    .setScrollFactor(0)
+    .setDepth(CUTSCENE_COVER_DEPTH)
+    .setVisible(true);
+  scene.cutsceneCover = cover;
+  return cover;
+};
+
+const destroyCutsceneCover = (scene) => {
+  scene.cutsceneCover?.destroy?.();
+  scene.cutsceneCover = null;
+};
+
+const originalPlayCutsceneVideo = ForestScene.prototype.playCutsceneVideo;
+ForestScene.prototype.playCutsceneVideo = function patchedPlayCutsceneVideo(videoKey, onComplete, options = {}) {
+  createCutsceneCover(this);
+  duckMusicForCutscene(this);
+  let restored = false;
+  const completeWithMusic = () => {
+    if (!restored) {
+      restored = true;
+      restoreMusicAfterCutscene(this);
+    }
+    destroyCutsceneCover(this);
+    onComplete?.();
+  };
+  return originalPlayCutsceneVideo.call(this, videoKey, completeWithMusic, options);
+};
+
+const originalPlayAreaIntroCutscene = ForestScene.prototype.playAreaIntroCutscene;
+ForestScene.prototype.transitionToArea = function patchedTransitionToArea(area) {
+  const targetX = AREA_SPAWN_X[area];
+
+  if (!targetX) {
+    return;
+  }
+
+  playMusicForArea(this, area, { fadeDuration: 760 });
+  this.isTransitioning = true;
+  GameState.currentArea = area;
+
+  if (area !== 'finale') {
+    GameState.currentPath = area;
+  }
+
+  this.interactHint?.setVisible(false);
+  this.stopRomy();
+  this.BlackTransition?.setVisible(true).setAlpha(0);
+
+  const revealGameplay = () => {
+    this.tweens.add({
+      targets: this.BlackTransition,
+      alpha: 0,
+      duration: 360,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.BlackTransition?.setVisible(false);
+        this.isTransitioning = false;
+      }
+    });
+  };
+
+  this.tweens.add({
+    targets: this.BlackTransition,
+    alpha: 1,
+    duration: 360,
+    ease: 'Sine.easeInOut',
+    onComplete: () => {
+      this.updateAreaBackground(area);
+      this.romy.setPosition(targetX, this.getRomyY());
+
+      const cat = this.interactables?.find((interactable) => interactable.id === 'cat');
+      if (cat?.container && this.catIntroStarted) {
+        cat.container.setPosition(Math.max(0, targetX - CAT_FOLLOW_DISTANCE), this.getRomyY());
+        cat.entranceComplete = true;
+      }
+
+      this.cameras.main.scrollY = 0;
+      this.cameras.main.scrollX = 0;
+
+      if (area === 'finale') {
+        GameState.finalMeadowStarted = false;
+        this.showFinalBackgroundPlaceholder(!this.textures.exists('background-margherite'));
+        this.finalMeadowContainer?.setPosition(1460, this.groundY).setVisible(true);
+        const finalDaisy = this.interactables?.find((interactable) => interactable.id === 'final_daisy');
+        finalDaisy?.container?.setPosition(1900, this.groundY);
+        finalDaisy?.sprite?.setVisible(false);
+      } else {
+        this.showFinalBackgroundPlaceholder(false);
+        this.finalMeadowContainer?.setVisible(false);
+      }
+
+      this.updateNpcVisibility();
+
+      const flagKey = AREA_INTRO_FLAGS[area];
+      if (flagKey && !GameState[flagKey]) {
+        originalPlayAreaIntroCutscene.call(this, area, revealGameplay);
+        return;
+      }
+
+      revealGameplay();
+    }
+  });
+};
+
 ForestScene.prototype.playRomySleepSequence = function patchedPlayRomySleepSequence() {
   if (this.finalSleepSequenceStarted) {
     return;
@@ -419,6 +687,16 @@ ForestScene.prototype.playRomySleepSequence = function patchedPlayRomySleepSeque
   });
 };
 
+const originalShowFinalEndingScene = ForestScene.prototype.showFinalEndingScene;
+ForestScene.prototype.showFinalEndingScene = function patchedShowFinalEndingScene(...args) {
+  const backgroundKey = this.getFinalEndingBackgroundKey?.();
+  const trackId = FINAL_BACKGROUND_TO_MUSIC_TRACK[backgroundKey];
+  if (trackId) {
+    fadeToMusic(this, trackId, { fadeDuration: 1200 });
+  }
+  return originalShowFinalEndingScene.apply(this, args);
+};
+
 const getPathCredit = () => {
   if (GameState.currentPath === 'sposine') {
     return 'Arie e Chiara nelle vesti delle Sposine';
@@ -433,6 +711,7 @@ const getPathCredit = () => {
 };
 
 ForestScene.prototype.showFinalCredits = function showFinalCredits() {
+  fadeToMusic(this, 'menu', { fadeDuration: 1200, volume: MENU_MUSIC_VOLUME });
   this.finalWallpaperButton?.destroy();
   this.finalCreditsContainer?.destroy();
 
@@ -488,6 +767,7 @@ ForestScene.prototype.showFinalCredits = function showFinalCredits() {
 
 const originalShowFinalWallpaper = ForestScene.prototype.showFinalWallpaper;
 ForestScene.prototype.showFinalWallpaper = function patchedShowFinalWallpaper(...args) {
+  fadeToMusic(this, 'menu', { fadeDuration: 1200, volume: MENU_MUSIC_VOLUME });
   const originalShowNewGameButton = this.showNewGameButton?.bind(this);
   this.showNewGameButton = () => {
     if (this.finalCreditsShown) {

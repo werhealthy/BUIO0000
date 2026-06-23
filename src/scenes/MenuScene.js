@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import '../systems/AmbientFxPatch.js';
+
 const backgroundAssets = import.meta.glob('../assets/backgrounds/background_menu_final.png', {
   eager: true,
   query: '?url',
@@ -33,11 +35,36 @@ export class MenuScene extends Phaser.Scene {
     });
   }
 
+  unlockAudioOnUserGesture() {
+    const soundManager = this.sound;
+
+    if (!soundManager) {
+      return;
+    }
+
+    try {
+      soundManager.unlock?.();
+    } catch (error) {
+      console.warn('[Audio] Could not unlock Phaser sound manager.', error);
+    }
+
+    const audioContext = soundManager.context;
+    if (audioContext?.state === 'suspended') {
+      const resumePromise = audioContext.resume?.();
+      if (resumePromise?.catch) {
+        resumePromise.catch((error) => {
+          console.warn('[Audio] Could not resume WebAudio context.', error);
+        });
+      }
+    }
+  }
+
   startGame() {
     if (this.starting) {
       return;
     }
     this.starting = true;
+    this.unlockAudioOnUserGesture();
     this.cameras.main.fadeOut(420, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.scene.start('ForestScene');
@@ -48,7 +75,6 @@ export class MenuScene extends Phaser.Scene {
     if (!this.background) {
       return;
     }
-
     const { width, height } = this.scale;
     const scale = Math.max(width / this.background.width, height / this.background.height);
     this.background.setPosition(width / 2, height / 2).setScale(scale);
